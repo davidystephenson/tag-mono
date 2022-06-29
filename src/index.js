@@ -15,3 +15,10 @@ const PORT = 3000;
 server.listen(PORT, () => {
     console.log(`listening on port: ${PORT}!`);
 });
+const players = new Map();
+io.on('connection', socket => {
+    console.log('socket.id:', socket.id);
+    const player = { id: socket.id };
+    players.set(socket.id, player);
+    console.log(players);
+});
