@@ -5,9 +5,14 @@
   "default": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc",
+    "build:server": "npx tsc",
     "build:client": "npx parcel build src/client/index.html",
-    "dev": "npm run build && npm run build:client && node build/server/index.js"
+    "start:server": "node build/server/index.js",
+    "start": "npm run build && npm run start:server",
+    "dev:server": "npm run build:server && npm run start:server",
+    "watch:server": "npx onchange -i -k 'src/server/**' -- npm run dev:server",
+    "watch:client": "npx onchange -i -k 'src/client/**' -- npm run build:client",
+    "dev": "npm run watch:server & npm run watch:client"
   },
   "repository": {
     "type": "git",
