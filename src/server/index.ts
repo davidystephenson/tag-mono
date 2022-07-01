@@ -3,26 +3,23 @@ import path from 'path'
 import http from 'http'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
-import Resurrect from 'resurrect-js'
 
 import { Player, State } from './types'
 import { INPUT } from './defaults'
 
 const app = express()
+
+const staticPath = path.join(__dirname, '..', '..', 'dist')
+const staticMiddleware = express.static(staticPath)
+app.use(staticMiddleware)
+
 const server = new http.Server(app)
 const io = new socketIo.Server(server)
-const staticPath = path.join(__dirname, '..', 'dist')
-console.log(staticPath)
 
+const players = new Map<string, Player>()
 const state: State = {
   direction: { x: 0, y: 0 }
 }
-
-const players = new Map<string, Player>()
-
-app.use(express.static(staticPath))
-
-const resurrect = new Resurrect({ prefix: '$', cleanup: true })
 
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
@@ -46,11 +43,11 @@ function tick (): void {
 
 const PORT = 3000
 server.listen(PORT, () => {
-  console.log(`listening on port: ${PORT}!`)
+  console.log(`Listening on :${PORT}`)
   setInterval(tick, 20)
 })
 io.on('connection', socket => {
-  console.log('socket.id:', socket.id)
+  console.log('New socket connected with id:', socket.id)
   const player: Player = {
     id: socket.id,
     input: INPUT
@@ -71,7 +68,6 @@ const engine = Matter.Engine.create()
 engine.gravity = { x: 0, y: 0, scale: 1 }
 const runner = Matter.Runner.create()
 
-const radius = 15
 const x = 0
 const y = 0
 const angle = 0
