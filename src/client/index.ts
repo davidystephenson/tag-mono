@@ -1,5 +1,4 @@
-import Matter, { Vertices } from 'matter-js'
-import { io, Socket } from 'socket.io-client'
+import { io } from 'socket.io-client'
 import { State, Control, Camera } from './types'
 import { Input } from '../types'
 
@@ -88,7 +87,7 @@ const draw = function (): void {
   context.clearRect(-w / 2, -h / 2, w, h)
   context.strokeStyle = 'rgba(0,0,0,0.25)'
 
-  context.fillStyle = 'Blue'
+  context.fillStyle = 'Red'
   context.beginPath()
   state.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
   context.closePath()
