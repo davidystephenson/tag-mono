@@ -47,7 +47,7 @@ server.listen(PORT, () => {
   setInterval(tick, 20)
 })
 io.on('connection', socket => {
-  console.log('New socket connected with id:', socket.id)
+  console.log('connection:', socket.id)
   const player: Player = {
     id: socket.id,
     input: INPUT
@@ -56,11 +56,28 @@ io.on('connection', socket => {
   socket.on('updateServer', msg => {
     player.input = msg.input
     const vector = { x: 0, y: 0 }
-    if (player.input.up) vector.y += -1
-    if (player.input.down) vector.y += 1
-    if (player.input.left) vector.x += -1
-    if (player.input.right) vector.x += 1
+    if (player.input.up) {
+      console.log('up:', socket.id)
+      vector.y += -1
+    }
+    if (player.input.down) {
+      console.log('down:', socket.id)
+      vector.y += 1
+    }
+    if (player.input.left) {
+      console.log('left:', socket.id)
+      vector.x += -1
+    }
+    if (player.input.right) {
+      console.log('right:', socket.id)
+      vector.x += 1
+    }
     state.direction = Matter.Vector.normalise(vector)
+  })
+
+  socket.on('disconnect', () => {
+    console.log('disconnect:', socket.id)
+    players.delete(socket.id)
   })
 })
 
