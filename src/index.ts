@@ -77,6 +77,9 @@ const y = 0
 const angle = 0
 const torso = Matter.Bodies.rectangle(x, y, 30, 30)
 const composite = Matter.Body.create({ parts: [torso] })
+composite.restitution = 0
+composite.friction = 0
+composite.frictionAir = 0.01
 Matter.Body.setCentre(composite, { x, y }, false)
 Matter.Body.setInertia(composite, 2 * composite.inertia)
 Matter.Body.setAngle(composite, angle)
