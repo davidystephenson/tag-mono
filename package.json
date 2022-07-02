@@ -9,9 +9,9 @@
     "start:server": "node build/server/index.js",
     "start:client": "npx parcel build src/client/index.html",
     "start": "npm run build && npm run start:server",
-    "dev:server": "npx onchange -i -k 'src/*' 'src/server/**' -- npm run start",
-    "dev:client": "npx onchange -i -k 'src/*' 'src/client/**' -- npm run start:client",
-    "dev": "npm run dev:server & npm run dev:client"
+    "dev:server": "npx onchange -i -k \"src/*\" \"src/server/**\" -- npm run start",
+    "dev:client": "npx onchange -i -k \"src/*\" \"src/client/**\" -- npm run start:client",
+    "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:client\""
   },
   "repository": {
     "type": "git",

@@ -87,7 +87,7 @@ const draw = function (): void {
   context.clearRect(-w / 2, -h / 2, w, h)
   context.strokeStyle = 'rgba(0,0,0,0.25)'
 
-  context.fillStyle = 'Red'
+  context.fillStyle = 'Blue'
   context.beginPath()
   state.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
   context.closePath()
