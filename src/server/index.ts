@@ -3,26 +3,23 @@ import path from 'path'
 import http from 'http'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
-import Resurrect from 'resurrect-js'
 
 import { Player, State } from './types'
 import { INPUT } from './defaults'
 
 const app = express()
+
+const staticPath = path.join(__dirname, '..', '..', 'dist')
+const staticMiddleware = express.static(staticPath)
+app.use(staticMiddleware)
+
 const server = new http.Server(app)
 const io = new socketIo.Server(server)
-const staticPath = path.join(__dirname, '..', 'dist')
-console.log(staticPath)
 
+const players = new Map<string, Player>()
 const state: State = {
   direction: { x: 0, y: 0 }
 }
-
-const players = new Map<string, Player>()
-
-app.use(express.static(staticPath))
-
-const resurrect = new Resurrect({ prefix: '$', cleanup: true })
 
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
@@ -46,11 +43,11 @@ function tick (): void {
 
 const PORT = 3000
 server.listen(PORT, () => {
-  console.log(`listening on port: ${PORT}!`)
+  console.log(`Listening on :${PORT}`)
   setInterval(tick, 20)
 })
 io.on('connection', socket => {
-  console.log('socket.id:', socket.id)
+  console.log('connection:', socket.id)
   const player: Player = {
     id: socket.id,
     input: INPUT
@@ -59,11 +56,28 @@ io.on('connection', socket => {
   socket.on('updateServer', msg => {
     player.input = msg.input
     const vector = { x: 0, y: 0 }
-    if (player.input.up) vector.y += -1
-    if (player.input.down) vector.y += 1
-    if (player.input.left) vector.x += -1
-    if (player.input.right) vector.x += 1
+    if (player.input.up) {
+      console.log('up:', socket.id)
+      vector.y += -1
+    }
+    if (player.input.down) {
+      console.log('down:', socket.id)
+      vector.y += 1
+    }
+    if (player.input.left) {
+      console.log('left:', socket.id)
+      vector.x += -1
+    }
+    if (player.input.right) {
+      console.log('right:', socket.id)
+      vector.x += 1
+    }
     state.direction = Matter.Vector.normalise(vector)
+  })
+
+  socket.on('disconnect', () => {
+    console.log('disconnect:', socket.id)
+    players.delete(socket.id)
   })
 })
 
@@ -71,7 +85,6 @@ const engine = Matter.Engine.create()
 engine.gravity = { x: 0, y: 0, scale: 1 }
 const runner = Matter.Runner.create()
 
-const radius = 15
 const x = 0
 const y = 0
 const angle = 0
