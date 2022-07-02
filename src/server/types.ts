@@ -9,7 +9,3 @@ export interface Player {
   id: string
   input: Input
 }
-
-export interface Fighter {
-  composite: Matter.Composite
-}

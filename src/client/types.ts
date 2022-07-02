@@ -1,9 +1,8 @@
 import Matter from 'matter-js'
-import { Input } from '../types'
+import { Input, Shape } from '../types'
 
 export interface State {
-  vertices: Matter.Vector[]
-  wall: Matter.Vector[]
+  shapes: Shape[]
   id?: string
 }
 

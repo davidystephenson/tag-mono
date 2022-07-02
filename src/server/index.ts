@@ -3,9 +3,12 @@ import path from 'path'
 import http from 'http'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
-
+import { shapeFactory } from './models/Shape'
+import { compounds } from './models/Actor'
+import { fighterFactory } from './models/Fighter'
 import { Player, State } from './types'
 import { INPUT } from './defaults'
+import { wallFactory } from './models/Wall'
 
 const app = express()
 
@@ -23,11 +26,11 @@ const state: State = {
 
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
+  const shapes = compounds.flatMap(compound => compound.parts.map(body => shapeFactory(body)))
   sockets.forEach(socket => {
     const msg = {
       id: socket.id,
-      vertices: torso.vertices.map(({ x, y }) => ({ x, y })),
-      wall: wall.vertices.map(({ x, y }) => ({ x, y }))
+      shapes
     }
     socket.emit('updateClient', msg)
   })
@@ -85,27 +88,14 @@ const engine = Matter.Engine.create()
 engine.gravity = { x: 0, y: 0, scale: 1 }
 const runner = Matter.Runner.create()
 
-const x = 0
-const y = 0
-const angle = 0
-const torso = Matter.Bodies.rectangle(x, y, 30, 30)
-const composite = Matter.Body.create({ parts: [torso] })
-composite.restitution = 0
-composite.friction = 0
-composite.frictionAir = 0.01
-Matter.Body.setCentre(composite, { x, y }, false)
-Matter.Body.setInertia(composite, 2 * composite.inertia)
-Matter.Body.setAngle(composite, angle)
+const fighter = fighterFactory({ x: 0, y: 0 })
+wallFactory({ x: 40, y: 0, width: 15, height: 40 })
 
-const wall = Matter.Bodies.rectangle(x + 40, y, 15, 15, { isStatic: false })
-
-const composites = [composite, wall]
-
-Matter.Composite.add(engine.world, composites)
+Matter.Composite.add(engine.world, compounds)
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', e => {
-  const force = Matter.Vector.mult(state.direction, 0.00001)
-  Matter.Body.applyForce(composite, composite.position, force)
-  composite.torque = 0.00
+  const force = Matter.Vector.mult(state.direction, 0.00005)
+  Matter.Body.applyForce(fighter.compound, fighter.compound.position, force)
+  fighter.compound.torque = 0.00
 })

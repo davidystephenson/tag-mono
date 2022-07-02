@@ -31,14 +31,17 @@ const input: Input = {
   select: false
 }
 const state: State = {
-  vertices: [],
-  wall: []
+  shapes: []
 }
 const camera: Camera = {
   zoom: 0,
   scale: 1,
   x: 0,
   y: 0
+}
+
+window.onclick = function (e) {
+  console.log('state.shapes:', state.shapes)
 }
 
 window.onkeydown = function (e) {
@@ -58,20 +61,16 @@ const socket = io()
 
 socket.on('updateClient', msg => {
   state.id = msg.id
-  state.vertices = msg.vertices
-  state.wall = msg.wall
+  state.shapes = msg.shapes
   const reply = {
     id: state.id,
     input
   }
-  // @ts-expect-error
-  window.state = state
   socket.emit('updateServer', reply)
 })
 
 const setupCamera = function (): void {
   camera.scale = Math.exp(camera.zoom)
-  console.log('canvas: ', canvas.width, canvas.height)
   const xScale = camera.scale * canvas.height / 100
   const yScale = camera.scale * canvas.height / 100
   const xTranslate = canvas.width / 2
@@ -87,20 +86,14 @@ const draw = function (): void {
   context.clearRect(-w / 2, -h / 2, w, h)
   context.strokeStyle = 'rgba(0,0,0,0.25)'
 
-  context.fillStyle = 'Blue'
-  context.beginPath()
-  state.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
-  context.closePath()
-  context.fill()
-  context.lineWidth = 1
-  context.stroke()
-
-  context.fillStyle = 'Green'
-  context.beginPath()
-  state.wall.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
-  context.closePath()
-  context.fill()
-  context.lineWidth = 1
-  context.stroke()
+  state.shapes.forEach(shape => {
+    context.fillStyle = shape.render.fillStyle ?? 'black'
+    context.beginPath()
+    shape.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
+    context.closePath()
+    context.fill()
+    context.lineWidth = 1
+    context.stroke()
+  })
 }
 draw()
