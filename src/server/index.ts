@@ -35,9 +35,9 @@ function tick (): void {
   void updateClients()
 }
 
-const PORT = 3000
+const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
-  console.log(`Listening on :${PORT} TEST3`)
+  console.log(`Listening on :${PORT}`)
   setInterval(tick, 20)
 })
 io.on('connection', socket => {
