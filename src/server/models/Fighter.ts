@@ -5,13 +5,14 @@ export interface Fighter extends Actor {
   torso: Matter.Body
 }
 
-export function fighterFactory ({ x = 0, y = 0, angle = 0 }: {
+export function fighterFactory ({ x = 0, y = 0, angle = 0, color = 'Orange' }: {
   x: number
   y: number
   angle?: number
+  color?: string
 }): Fighter {
-  const torso = Matter.Bodies.rectangle(x, y, 30, 30)
-  torso.render.fillStyle = 'Orange'
+  const torso = Matter.Bodies.circle(x, y, 15)
+  torso.render.fillStyle = color
   const actor = actorFactory({ parts: [torso] })
   Matter.Body.setAngle(actor.compound, angle)
   actor.compound.restitution = 0

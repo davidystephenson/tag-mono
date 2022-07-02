@@ -16,6 +16,7 @@ export function wallFactory ({ x = 0, y = 0, width = 100, height = 100 }: {
   console.log('height:', height)
   const body = Matter.Bodies.rectangle(x, y, width, height)
   body.render.fillStyle = 'Purple'
+  console.log('body.cirleRadius:', body.circleRadius)
   const actor = actorFactory({ parts: [body] })
   Matter.Body.setStatic(actor.compound, true)
   const wall = { ...actor, width, height }

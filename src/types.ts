@@ -7,6 +7,9 @@ export interface Input {
 }
 
 export interface Shape {
+  circleRadius?: number
+  x: number
+  y: number
   vertices: Matter.Vector[]
   render: Matter.IBodyRenderOptions
 }

@@ -34,14 +34,14 @@ const state: State = {
   shapes: []
 }
 const camera: Camera = {
-  zoom: 0,
+  zoom: -1,
   scale: 1,
   x: 0,
   y: 0
 }
 
 window.onclick = function (e) {
-  console.log('state.shapes:', state.shapes)
+  console.log('camera:', camera)
 }
 
 window.onkeydown = function (e) {
@@ -54,7 +54,7 @@ window.onkeyup = function (e) {
 }
 
 window.onwheel = function (e) {
-  camera.zoom -= 0.001 * e.deltaY
+  camera.zoom += 0.001 * e.deltaY
 }
 
 const socket = io()
@@ -89,8 +89,12 @@ const draw = function (): void {
   state.shapes.forEach(shape => {
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
-    shape.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
-    context.closePath()
+    if (shape.circleRadius == null || shape.circleRadius === 0) {
+      shape.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
+      context.closePath()
+    } else {
+      context.arc(shape.x, shape.y, shape.circleRadius, 0, 2 * Math.PI)
+    }
     context.fill()
     context.lineWidth = 1
     context.stroke()
