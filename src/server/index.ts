@@ -21,26 +21,24 @@ const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
 app.use(staticMiddleware)
 
-const httpServer = new http.Server(app)
-let io: socketIo.Server
-const PORT = 3000
-if (config.secure === true) {
-  const key = fs.readFileSync('./sis-key.pem')
-  const cert = fs.readFileSync('./sis-cert.pem')
-  const credentials = { key, cert }
-  const httpsServer = new https.Server(credentials, app)
-  io = new socketIo.Server(httpsServer)
-  httpsServer.listen(PORT, () => {
-    console.log(`Listening on :${PORT} TEST3`)
-    setInterval(tick, 20)
-  })
-} else {
-  io = new socketIo.Server(httpServer)
-  httpServer.listen(PORT, () => {
-    console.log(`Listening on :${PORT} TEST3`)
-    setInterval(tick, 20)
-  })
+function makeServer (): https.Server | http.Server {
+  if (config.secure === true) {
+    const key = fs.readFileSync('./sis-key.pem')
+    const cert = fs.readFileSync('./sis-cert.pem')
+    const credentials = { key, cert }
+    return new https.Server(credentials, app)
+  } else {
+    return new http.Server(app)
+  }
 }
+
+const server = makeServer()
+const io = new socketIo.Server(server)
+const PORT = 3000
+server.listen(PORT, () => {
+  console.log(`Listening on :${PORT} TEST3`)
+  setInterval(tick, 20)
+})
 
 const players = new Map<string, Player>()
 
