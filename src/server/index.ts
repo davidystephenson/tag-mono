@@ -1,6 +1,8 @@
 import express from 'express'
 import path from 'path'
 import http from 'http'
+import https from 'https'
+import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import { shapeFactory } from './models/Shape'
@@ -10,15 +12,33 @@ import { Player } from './types'
 import { INPUT } from './defaults'
 import { wallFactory } from './models/Wall'
 import { engine, runner } from './engine'
+import config from './config.json'
+
+console.log('config:', config)
 
 const app = express()
-
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
 app.use(staticMiddleware)
 
-const server = new http.Server(app)
+function makeServer (): https.Server | http.Server {
+  if (config.secure === true) {
+    const key = fs.readFileSync('./sis-key.pem')
+    const cert = fs.readFileSync('./sis-cert.pem')
+    const credentials = { key, cert }
+    return new https.Server(credentials, app)
+  } else {
+    return new http.Server(app)
+  }
+}
+
+const server = makeServer()
 const io = new socketIo.Server(server)
+const PORT = 3000
+server.listen(PORT, () => {
+  console.log(`Listening on :${PORT} TEST3`)
+  setInterval(tick, 20)
+})
 
 const players = new Map<string, Player>()
 
@@ -35,11 +55,6 @@ function tick (): void {
   void updateClients()
 }
 
-const PORT = 3000
-server.listen(PORT, () => {
-  console.log(`Listening on :${PORT} TEST3`)
-  setInterval(tick, 20)
-})
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   const player: Player = {
