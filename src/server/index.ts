@@ -32,7 +32,8 @@ function makeServer (): https.Server | http.Server {
 }
 
 interface ServerToClientEvents {
-  updateClient: ({ id, shapes }: {id: string, shapes: Shape[]}) => void
+  socketId: (id: string) => void
+  updateClient: ({ shapes }: { shapes: Shape[] }) => void
 }
 
 interface ClientToServerEvents {
@@ -48,13 +49,10 @@ server.listen(PORT, () => {
 })
 
 async function updateClients (): Promise<void> {
-  const sockets = await io.fetchSockets()
   const compounds = Matter.Composite.allBodies(engine.world)
   const shapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
-  sockets.forEach(socket => {
-    const msg = { id: socket.id, shapes }
-    socket.emit('updateClient', msg)
-  })
+  const msg = { shapes }
+  io.emit('updateClient', msg)
 }
 
 function tick (): void {
@@ -64,6 +62,9 @@ function tick (): void {
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   const player = new Player({ x: 0, y: 0, socketId: socket.id })
+
+  socket.emit('socketId', socket.id)
+
   socket.on('updateServer', msg => {
     player.input = msg.input
     const vector = { x: 0, y: 0 }
@@ -110,7 +111,7 @@ Matter.Events.on(engine, 'collisionStart', event => {
       const labels = bodies.map(body => body.label)
       if (labels[0] === 'torso' && labels[1] === 'torso') {
         pair.isActive = true
-        // state.paused = true
+        state.paused = true
       }
     })
   })

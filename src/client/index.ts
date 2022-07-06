@@ -37,8 +37,11 @@ window.onwheel = function (event: WheelEvent) {
 
 const socket = io()
 
+socket.on('socketId', id => {
+  state.id = id
+})
+
 socket.on('updateClient', msg => {
-  state.id = msg.id
   state.shapes = msg.shapes
   const reply = {
     id: state.id,
