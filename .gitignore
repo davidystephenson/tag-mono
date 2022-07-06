@@ -3,4 +3,4 @@
 /.parcel-cache/
 /build/
 *.pem
-src/server/config.json
+/src/server/config.json
