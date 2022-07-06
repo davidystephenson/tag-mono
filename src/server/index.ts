@@ -22,7 +22,7 @@ const staticMiddleware = express.static(staticPath)
 app.use(staticMiddleware)
 
 function makeServer (): https.Server | http.Server {
-  if (config.secure === true) {
+  if (config.secure) {
     const key = fs.readFileSync('./sis-key.pem')
     const cert = fs.readFileSync('./sis-cert.pem')
     const credentials = { key, cert }
@@ -34,7 +34,7 @@ function makeServer (): https.Server | http.Server {
 
 const server = makeServer()
 const io = new socketIo.Server(server)
-const PORT = 3000
+const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT} TEST3`)
   setInterval(tick, 20)
