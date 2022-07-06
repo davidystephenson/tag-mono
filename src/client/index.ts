@@ -14,17 +14,21 @@ const input = new Input()
 const state = new State()
 const camera = new Camera()
 
-window.onclick = function (e) {
+window.onclick = function () {
   console.log('state:', state)
 }
 
-window.onkeydown = function (e) {
-  controls.forEach(control => { if (e.key === control.key) input[control.input] = true })
+window.onkeydown = function (event: KeyboardEvent) {
+  controls.forEach(control => {
+    if (event.key === control.key) input[control.input] = true
+  })
   console.log(input)
 }
 
-window.onkeyup = function (e) {
-  controls.forEach(c => { if (e.key === c.key) input[c.input] = false })
+window.onkeyup = function (event: KeyboardEvent) {
+  controls.forEach(c => {
+    if (event.key === c.key) input[c.input] = false
+  })
 }
 
 window.onwheel = function (event: WheelEvent) {

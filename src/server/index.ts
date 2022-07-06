@@ -84,11 +84,11 @@ io.on('connection', socket => {
   })
 })
 
-const right = new Wall({ x: 100, y: 0, width: 15, height: 40 })
-state.walls.set(right.compound.id, right)
-
-const left = new Wall({ x: -100, y: 0, width: 15, height: 40 })
-state.walls.set(left.compound.id, left)
+const wallPositions = [
+  { x: 100, y: 0, width: 15, height: 40 },
+  { x: -100, y: 0, width: 15, height: 40 }
+]
+wallPositions.forEach(position => new Wall(position))
 
 Matter.Runner.run(runner, engine)
 
