@@ -1,4 +1,3 @@
-import Matter from 'matter-js'
 import { Input, Shape } from '../types'
 
 export interface State {

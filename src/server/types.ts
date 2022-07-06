@@ -3,7 +3,7 @@ import { Input } from '../types'
 import { Actor } from './models/Actor'
 
 export interface State {
-  direction: Matter.Vector
+  paused: boolean
 }
 
 export interface Player {

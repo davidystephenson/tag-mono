@@ -13,6 +13,7 @@ export function fighterFactory ({ x = 0, y = 0, angle = 0, color = 'Orange' }: {
 }): Fighter {
   const torso = Matter.Bodies.circle(x, y, 15)
   torso.render.fillStyle = color
+  torso.label = 'torso'
   const actor = actorFactory({ parts: [torso] })
   Matter.Body.setAngle(actor.compound, angle)
   actor.compound.restitution = 0

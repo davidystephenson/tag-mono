@@ -8,7 +8,7 @@ import Matter from 'matter-js'
 import { shapeFactory } from './models/Shape'
 import { compounds } from './models/Actor'
 import { fighterFactory } from './models/Fighter'
-import { Player } from './types'
+import { Player, State } from './types'
 import { INPUT } from './defaults'
 import { wallFactory } from './models/Wall'
 import { engine, runner } from './engine'
@@ -40,6 +40,7 @@ server.listen(PORT, () => {
   setInterval(tick, 20)
 })
 
+const state: State = { paused: false }
 const players = new Map<string, Player>()
 
 async function updateClients (): Promise<void> {
@@ -87,10 +88,27 @@ Matter.Composite.add(engine.world, compounds)
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', e => {
+  runner.enabled = !state.paused
   players.forEach(player => {
     if (player.actor != null) {
       const force = Matter.Vector.mult(player.direction, 0.00005)
       Matter.Body.applyForce(player.actor.compound, player.actor.compound.position, force)
     }
+  })
+})
+
+Matter.Events.on(engine, 'collisionStart', event => {
+  event.pairs.forEach(pair => {
+    const orderings = [
+      [pair.bodyA, pair.bodyB],
+      [pair.bodyB, pair.bodyA]
+    ]
+    orderings.forEach(bodies => {
+      const labels = bodies.map(body => body.label)
+      if (labels[0] === 'torso' && labels[1] === 'torso') {
+        pair.isActive = true
+        state.paused = true
+      }
+    })
   })
 })
