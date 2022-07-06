@@ -1,47 +1,21 @@
 import { io } from 'socket.io-client'
-import { State, Control, Camera } from './types'
-import { Input } from '../types'
+import Camera from './model/Camera'
+import State from './model/State'
+import Input from '../shared/Input'
+import Matter from 'matter-js'
+import controls from './lib/controls'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
 if (context == null) throw new Error('No Canvas')
 console.log(context)
 
-const controls: Control[] = [
-  { key: 'w', input: 'up' },
-  { key: 's', input: 'down' },
-  { key: 'a', input: 'left' },
-  { key: 'd', input: 'right' },
-  { key: 'W', input: 'up' },
-  { key: 'S', input: 'down' },
-  { key: 'A', input: 'left' },
-  { key: 'D', input: 'right' },
-  { key: 'ArrowUp', input: 'up' },
-  { key: 'ArrowDown', input: 'down' },
-  { key: 'ArrowLeft', input: 'left' },
-  { key: 'ArrowRight', input: 'right' },
-  { key: 'Enter', input: 'select' },
-  { key: ' ', input: 'select' }
-]
-const input: Input = {
-  up: false,
-  down: false,
-  left: false,
-  right: false,
-  select: false
-}
-const state: State = {
-  shapes: []
-}
-const camera: Camera = {
-  zoom: -1,
-  scale: 1,
-  x: 0,
-  y: 0
-}
+const input = new Input()
+const state = new State()
+const camera = new Camera()
 
 window.onclick = function (e) {
-  console.log('camera:', camera)
+  console.log('state:', state)
 }
 
 window.onkeydown = function (e) {
@@ -53,8 +27,8 @@ window.onkeyup = function (e) {
   controls.forEach(c => { if (e.key === c.key) input[c.input] = false })
 }
 
-window.onwheel = function (e) {
-  camera.zoom += 0.001 * e.deltaY
+window.onwheel = function (event: WheelEvent) {
+  camera.zoom += 0.001 * event.deltaY
 }
 
 const socket = io()
@@ -90,7 +64,7 @@ const draw = function (): void {
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
     if (shape.circleRadius == null || shape.circleRadius === 0) {
-      shape.vertices.forEach(v => context.lineTo(v.x - camera.x, v.y - camera.y))
+      shape.vertices.forEach((v: Matter.Vector) => context.lineTo(v.x - camera.x, v.y - camera.y))
       context.closePath()
     } else {
       context.arc(shape.x, shape.y, shape.circleRadius, 0, 2 * Math.PI)

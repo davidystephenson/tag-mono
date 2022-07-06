@@ -10,8 +10,8 @@
     "build": "npm run build:server && npm run build:client",
     "start": "node build/server/index.js",
     "start:server": "npm run build:server && npm run start",
-    "dev:server": "npx onchange -i -k \"src/*\" \"src/server/**\" -- npm run start:server",
-    "dev:client": "npx onchange -i -k \"src/*\" \"src/client/**\" -- npm run build:client",
+    "dev:server": "npx onchange -i -k \"src/shared/**\" \"src/server/**\" -- npm run start:server",
+    "dev:client": "npx onchange -i -k \"src/shared/**\" \"src/client/**\" -- npm run build:client",
     "dev": "npx concurrently \"npm run dev:server\" \"npm run dev:client\""
   },
   "repository": {

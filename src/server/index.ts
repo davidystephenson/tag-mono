@@ -5,13 +5,12 @@ import https from 'https'
 import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
-import { shapeFactory } from './models/Shape'
-import { compounds } from './models/Actor'
-import { fighterFactory } from './models/Fighter'
-import { Player, State } from './types'
-import { INPUT } from './defaults'
-import { wallFactory } from './models/Wall'
-import { engine, runner } from './engine'
+import Player, { players } from './model/Player'
+import Wall from './model/Wall'
+import Shape from '../shared/Shape'
+import Input from '../shared/Input'
+import { engine, runner } from './lib/engine'
+import state from './lib/state'
 import config from './config.json'
 
 console.log('config:', config)
@@ -32,20 +31,26 @@ function makeServer (): https.Server | http.Server {
   }
 }
 
+interface ServerToClientEvents {
+  updateClient: ({ id, shapes }: {id: string, shapes: Shape[]}) => void
+}
+
+interface ClientToServerEvents {
+  updateServer: ({ id, input }: {id: string, input: Input}) => void
+}
+
 const server = makeServer()
-const io = new socketIo.Server(server)
+const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT} TEST3`)
   setInterval(tick, 20)
 })
 
-const state: State = { paused: false }
-const players = new Map<string, Player>()
-
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
-  const shapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => shapeFactory(body)))
+  const compounds = Matter.Composite.allBodies(engine.world)
+  const shapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
   sockets.forEach(socket => {
     const msg = { id: socket.id, shapes }
     socket.emit('updateClient', msg)
@@ -58,13 +63,7 @@ function tick (): void {
 
 io.on('connection', socket => {
   console.log('connection:', socket.id)
-  const player: Player = {
-    id: socket.id,
-    actor: fighterFactory({ x: 0, y: 0 }),
-    direction: { x: 0, y: 0 },
-    input: INPUT
-  }
-  players.set(socket.id, player)
+  const player = new Player({ x: 0, y: 0, socketId: socket.id })
   socket.on('updateServer', msg => {
     player.input = msg.input
     const vector = { x: 0, y: 0 }
@@ -77,23 +76,27 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
+    const player = players.get(socket.id)
+    if (player != null) {
+      Matter.Composite.remove(engine.world, player.compound)
+    }
     players.delete(socket.id)
   })
 })
 
-wallFactory({ x: 100, y: 0, width: 15, height: 40 })
-wallFactory({ x: -100, y: 0, width: 15, height: 40 })
+const right = new Wall({ x: 100, y: 0, width: 15, height: 40 })
+state.walls.set(right.compound.id, right)
 
-Matter.Composite.add(engine.world, compounds)
+const left = new Wall({ x: -100, y: 0, width: 15, height: 40 })
+state.walls.set(left.compound.id, left)
+
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', e => {
   runner.enabled = !state.paused
   players.forEach(player => {
-    if (player.actor != null) {
-      const force = Matter.Vector.mult(player.direction, 0.00005)
-      Matter.Body.applyForce(player.actor.compound, player.actor.compound.position, force)
-    }
+    const force = Matter.Vector.mult(player.direction, 0.00005)
+    Matter.Body.applyForce(player.compound, player.compound.position, force)
   })
 })
 
@@ -107,7 +110,7 @@ Matter.Events.on(engine, 'collisionStart', event => {
       const labels = bodies.map(body => body.label)
       if (labels[0] === 'torso' && labels[1] === 'torso') {
         pair.isActive = true
-        state.paused = true
+        // state.paused = true
       }
     })
   })
