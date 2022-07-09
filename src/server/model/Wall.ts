@@ -13,6 +13,7 @@ export default class Wall extends Actor {
     height: number
   }) {
     const body = Matter.Bodies.rectangle(x, y, width, height)
+    body.label = 'wall'
     super({ parts: [body] })
     this.x = x
     this.y = y

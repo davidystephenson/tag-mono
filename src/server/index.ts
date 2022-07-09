@@ -49,10 +49,19 @@ server.listen(PORT, () => {
 })
 
 async function updateClients (): Promise<void> {
+  const sockets = await io.fetchSockets()
   const compounds = Matter.Composite.allBodies(engine.world)
-  const shapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
-  const msg = { shapes }
-  io.emit('updateClient', msg)
+  const obstacles = compounds.filter(body =>
+    body.parts.find(part => part.label === 'wall')
+  )
+  sockets.forEach(socket => {
+    const player = players.get(socket.id)
+    if (player == null) return
+    const visibleCompounds = compounds.filter(compound => player.isVisible(compound, obstacles))
+    const shapes = visibleCompounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+    const msg = { shapes }
+    socket.emit('updateClient', msg)
+  })
 }
 
 function tick (): void {
@@ -62,7 +71,6 @@ function tick (): void {
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   const player = new Player({ x: 0, y: 0, socketId: socket.id })
-
   socket.emit('socketId', socket.id)
 
   socket.on('updateServer', msg => {
@@ -86,8 +94,8 @@ io.on('connection', socket => {
 })
 
 const wallPositions = [
-  { x: 100, y: 0, width: 15, height: 40 },
-  { x: -100, y: 0, width: 15, height: 40 }
+  { x: 100, y: 0, width: 15, height: 100 },
+  { x: -100, y: 0, width: 15, height: 100 }
 ]
 wallPositions.forEach(position => new Wall(position))
 
@@ -110,8 +118,9 @@ Matter.Events.on(engine, 'collisionStart', event => {
     orderings.forEach(bodies => {
       const labels = bodies.map(body => body.label)
       if (labels[0] === 'torso' && labels[1] === 'torso') {
-        pair.isActive = true
-        state.paused = true
+        // pair.isActive = false
+        // state.paused = true
+        console.log('collide')
       }
     })
   })

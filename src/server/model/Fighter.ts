@@ -3,15 +3,18 @@ import Actor from './Actor'
 
 export default class Fighter extends Actor {
   readonly torso: Matter.Body
+  readonly radius: number
 
-  constructor ({ x = 0, y = 0, angle = 0, color = 'Orange' }: {
+  constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'Orange' }: {
     x: number
     y: number
     angle?: number
     color?: string
+    radius?: number
   }) {
-    const torso = Matter.Bodies.circle(x, y, 15)
+    const torso = Matter.Bodies.circle(x, y, radius)
     super({ parts: [torso] })
+    this.radius = radius
     this.torso = torso
     this.torso.render.fillStyle = color
     this.torso.label = 'torso'
