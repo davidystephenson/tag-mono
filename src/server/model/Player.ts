@@ -30,7 +30,7 @@ export default class Player extends Fighter {
         const direction = Matter.Vector.normalise(Matter.Vector.sub(end, start))
         const perp = Matter.Vector.perp(direction)
         const startRadius = this.radius
-        const endRadius = 0.5 * Matter.Vector.magnitude(Matter.Vector.sub(part.bounds.max, part.bounds.min))
+        const endRadius = 0.5 * Math.max(part.bounds.max.x - part.bounds.min.x, part.bounds.max.y - part.bounds.min.y)
         const startPerp = Matter.Vector.mult(perp, startRadius)
         const endPerp = Matter.Vector.mult(perp, endRadius)
         const start1 = Matter.Vector.add(start, startPerp)

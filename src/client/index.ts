@@ -43,6 +43,7 @@ socket.on('socketId', id => {
 
 socket.on('updateClient', msg => {
   state.shapes = msg.shapes
+  state.debugLines = msg.debugLines
   const reply = {
     id: state.id,
     input
@@ -78,6 +79,14 @@ const draw = function (): void {
     }
     context.fill()
     context.lineWidth = 1
+    context.stroke()
+  })
+
+  state.debugLines.forEach(line => {
+    context.strokeStyle = line.color
+    context.beginPath()
+    context.moveTo(line.start.x - camera.x, line.start.y - camera.y)
+    context.lineTo(line.end.x - camera.x, line.end.y - camera.y)
     context.stroke()
   })
 }

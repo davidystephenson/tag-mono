@@ -12,6 +12,7 @@ import Input from '../shared/Input'
 import { engine, runner } from './lib/engine'
 import state from './lib/state'
 import config from './config.json'
+import DebugLine from '../shared/DebugLine'
 
 console.log('config:', config)
 
@@ -33,7 +34,7 @@ function makeServer (): https.Server | http.Server {
 
 interface ServerToClientEvents {
   socketId: (id: string) => void
-  updateClient: ({ shapes }: { shapes: Shape[] }) => void
+  updateClient: ({ shapes }: { shapes: Shape[], debugLines: DebugLine[] }) => void
 }
 
 interface ClientToServerEvents {
@@ -54,18 +55,25 @@ async function updateClients (): Promise<void> {
   const obstacles = compounds.filter(body =>
     body.parts.find(part => part.label === 'wall')
   )
-  sockets.forEach(socket => {
+  const renders = sockets.map(socket => {
     const player = players.get(socket.id)
-    if (player == null) return
+    if (player == null) {
+      const allShapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+      return { socket, shapes: allShapes }
+    }
     const visibleCompounds = compounds.filter(compound => player.isVisible(compound, obstacles))
     const shapes = visibleCompounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
-    const msg = { shapes }
-    socket.emit('updateClient', msg)
+    return { socket, shapes }
+  })
+  renders.forEach(render => {
+    const message = { shapes: render.shapes, debugLines: DebugLine.lines }
+    render.socket.emit('updateClient', message)
   })
 }
 
 function tick (): void {
   void updateClients()
+  DebugLine.lines = []
 }
 
 io.on('connection', socket => {
