@@ -17,6 +17,11 @@ import Actor from './model/Actor'
 
 console.log('config:', config)
 
+/* TO DO:
+Camera Follow
+Make an AI Player
+*/
+
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
