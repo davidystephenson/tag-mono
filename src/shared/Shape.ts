@@ -2,13 +2,14 @@ import Matter from 'matter-js'
 
 export default class Shape {
   readonly circleRadius?: number
+  readonly socketid?: string
+  readonly id: number
+  readonly render: Matter.IBodyRenderOptions
   x: number
   y: number
-  readonly id: number
   ix: number
   iy: number
   vertices: Matter.Vector[]
-  readonly render: Matter.IBodyRenderOptions
 
   constructor (body: Matter.Body) {
     this.circleRadius = body.circleRadius

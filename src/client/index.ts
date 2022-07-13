@@ -43,7 +43,7 @@ socket.on('socketId', id => {
 })
 
 socket.on('updateClient', msg => {
-  // state.shapes = msg.shapes
+  state.torsoId = msg.torsoId
   Object.values(msg.shapes).forEach(shape => {
     if (state.shapes[shape.id] == null) {
       state.shapes[shape.id] = shape
@@ -87,7 +87,7 @@ const draw = function (): void {
       shape.vertices.forEach((v: Matter.Vector) => context.lineTo(v.x - camera.x, v.y - camera.y))
       context.closePath()
     } else {
-      context.arc(shape.ix, shape.iy, shape.circleRadius, 0, 2 * Math.PI)
+      context.arc(shape.ix - camera.x, shape.iy - camera.y, shape.circleRadius, 0, 2 * Math.PI)
     }
     context.fill()
     context.lineWidth = 1
@@ -110,6 +110,10 @@ function tick (): void {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
       shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
       shape.iy = lerp * shape.y + (1 - lerp) * shape.iy
+    }
+    if (shape.id === state.torsoId) {
+      camera.x = shape.ix
+      camera.y = shape.iy
     }
   })
 }

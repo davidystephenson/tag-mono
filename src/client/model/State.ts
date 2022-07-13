@@ -5,4 +5,5 @@ export default class State {
   shapes: Record<number, Shape> = {}
   debugLines: DebugLine[] = []
   id?: string
+  torsoId?: number
 }

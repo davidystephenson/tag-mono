@@ -65,10 +65,10 @@ async function updateClients (): Promise<void> {
       shapes[shape.id] = shape
       return shapes
     }, {})
-    return { socket, shapes }
+    return { socket, shapes, torsoId: player.torso.id }
   })
   renders.forEach(render => {
-    const message = { shapes: render.shapes, debugLines: DebugLine.lines }
+    const message = { shapes: render.shapes, debugLines: DebugLine.lines, torsoId: render.torsoId }
     render.socket.emit('updateClient', message)
   })
 }
