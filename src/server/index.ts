@@ -18,6 +18,7 @@ import Actor from './model/Actor'
 console.log('config:', config)
 
 /* TO DO:
+Vision Box
 Camera Follow
 Make an AI Player
 */

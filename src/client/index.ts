@@ -16,6 +16,7 @@ const camera = new Camera()
 
 window.onclick = function () {
   console.log('state:', state)
+  console.log('camera:', camera)
 }
 
 window.onkeydown = function (event: KeyboardEvent) {
@@ -32,7 +33,7 @@ window.onkeyup = function (event: KeyboardEvent) {
 }
 
 window.onwheel = function (event: WheelEvent) {
-  camera.zoom += 0.001 * event.deltaY
+  camera.zoom -= 0.001 * event.deltaY
 }
 
 const socket = io()

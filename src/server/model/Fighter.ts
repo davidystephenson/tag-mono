@@ -32,6 +32,8 @@ export default class Fighter extends Actor {
     const part = body.parts.find(part => {
       if (part.label === 'wall') return true
       if (part.label === 'torso') {
+        console.log(this.isInRange(part))
+        if (!this.isInRange(part)) return false
         const start = this.compound.position
         const end = part.position
         const direction = Matter.Vector.normalise(Matter.Vector.sub(end, start))
@@ -51,6 +53,27 @@ export default class Fighter extends Actor {
     })
     if (part == null) return false
     else return true
+  }
+
+  isInRange (part: Matter.Body): boolean {
+    const xMax = 50 * 15
+    const yMax = 9 / 16 * xMax
+    switch (part.label) {
+      case 'wall': {
+        return true
+      }
+      case 'torso': {
+        const start = this.compound.position
+        const end = part.position
+        const inRangeX = Math.abs(start.x - end.x) < xMax
+        const inRangeY = Math.abs(start.y - end.y) < yMax
+        return inRangeX && inRangeY
+      }
+      default: {
+        console.warn('Unmatched label:', part.label)
+        return true
+      }
+    }
   }
 
   makeIt (): void {
