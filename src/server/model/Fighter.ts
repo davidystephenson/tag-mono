@@ -32,7 +32,6 @@ export default class Fighter extends Actor {
     const part = body.parts.find(part => {
       if (part.label === 'wall') return true
       if (part.label === 'torso') {
-        console.log(this.isInRange(part))
         if (!this.isInRange(part)) return false
         const start = this.compound.position
         const end = part.position

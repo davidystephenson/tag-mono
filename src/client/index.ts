@@ -1,9 +1,10 @@
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import Camera from './model/Camera'
 import State from './model/State'
 import Input from '../shared/Input'
 import Matter from 'matter-js'
 import controls from './lib/controls'
+import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
@@ -23,7 +24,6 @@ window.onkeydown = function (event: KeyboardEvent) {
   controls.forEach(control => {
     if (event.key === control.key) input[control.input] = true
   })
-  console.log(input)
 }
 
 window.onkeyup = function (event: KeyboardEvent) {
@@ -36,15 +36,26 @@ window.onwheel = function (event: WheelEvent) {
   camera.zoom -= 0.001 * event.deltaY
 }
 
-const socket = io()
+const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io()
 
 socket.on('socketId', id => {
   state.id = id
 })
 
 socket.on('updateClient', msg => {
-  state.shapes = msg.shapes
+  // state.shapes = msg.shapes
+  Object.values(msg.shapes).forEach(shape => {
+    if (state.shapes[shape.id] == null) {
+      state.shapes[shape.id] = shape
+    } else {
+      state.shapes[shape.id].x = shape.x
+      state.shapes[shape.id].y = shape.y
+      state.shapes[shape.id].vertices = shape.vertices
+    }
+  })
+
   state.debugLines = msg.debugLines
+  console.log(msg)
   const reply = {
     id: state.id,
     input
@@ -69,14 +80,14 @@ const draw = function (): void {
   context.clearRect(-w / 2, -h / 2, w, h)
   context.strokeStyle = 'rgba(0,0,0,0.25)'
 
-  state.shapes.forEach(shape => {
+  Object.values(state.shapes).forEach(shape => {
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
     if (shape.circleRadius == null || shape.circleRadius === 0) {
       shape.vertices.forEach((v: Matter.Vector) => context.lineTo(v.x - camera.x, v.y - camera.y))
       context.closePath()
     } else {
-      context.arc(shape.x, shape.y, shape.circleRadius, 0, 2 * Math.PI)
+      context.arc(shape.ix, shape.iy, shape.circleRadius, 0, 2 * Math.PI)
     }
     context.fill()
     context.lineWidth = 1
@@ -92,3 +103,15 @@ const draw = function (): void {
   })
 }
 draw()
+
+function tick (): void {
+  const lerp = 0.1
+  Object.values(state.shapes).forEach(shape => {
+    if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
+      shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
+      shape.iy = lerp * shape.y + (1 - lerp) * shape.iy
+    }
+  })
+}
+
+setInterval(tick, 10)
