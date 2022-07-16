@@ -4,13 +4,13 @@
 }
 
 body {
-  background: black;
+  background: #252525;
 }
 
 canvas {
   width: 100vw;
   height: 56.25vw;
-  background: white;
+  background: black;
   max-height: 100vh;
   max-width: 177.78vh;
   margin: auto;

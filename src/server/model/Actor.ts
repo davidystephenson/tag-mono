@@ -11,6 +11,8 @@ export default class Actor {
   }) {
     this.parts = parts
     this.compound = Matter.Body.create({ parts })
+    this.compound.label = 'compound'
+
     Matter.Composite.add(engine.world, this.compound)
     Actor.actors.set(this.compound.id, this)
     this.parts.forEach(part => Actor.actors.set(part.id, this))

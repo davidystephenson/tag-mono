@@ -1,9 +1,12 @@
 import Matter from 'matter-js'
 import Actor from './Actor'
 import raycast from '../lib/raycast'
+import VISION from '../../shared/VISION'
 
 export default class Fighter extends Actor {
   static it?: Fighter
+  static xMax = VISION.width
+  static yMax = VISION.height
   readonly torso: Matter.Body
   readonly radius: number
 
@@ -28,10 +31,12 @@ export default class Fighter extends Actor {
     Matter.Body.setInertia(this.compound, 2 * this.compound.inertia)
   }
 
-  isVisible (body: Matter.Body, obstacles: Matter.Body[]): boolean {
-    const part = body.parts.find(part => {
-      if (part.label === 'wall') return true
-      if (part.label === 'torso') {
+  isPartVisible (part: Matter.Body, obstacles: Matter.Body[]): boolean {
+    switch (part.label) {
+      case 'wall': {
+        return true
+      }
+      case 'torso': {
         if (!this.isInRange(part)) return false
         const start = this.compound.position
         const end = part.position
@@ -48,15 +53,21 @@ export default class Fighter extends Actor {
         return raycast({ start, end, obstacles }) ||
           raycast({ start: start1, end: end1, obstacles }) ||
           raycast({ start: start2, end: end2, obstacles })
-      } else return false
-    })
-    if (part == null) return false
-    else return true
+      }
+      default: {
+        return true
+      }
+    }
+  }
+
+  isVisible (body: Matter.Body, obstacles: Matter.Body[]): boolean {
+    const part = body.parts.slice(1).find(part => this.isPartVisible(part, obstacles))
+    const isVisible = part != null
+
+    return isVisible
   }
 
   isInRange (part: Matter.Body): boolean {
-    const xMax = 50 * 15
-    const yMax = 9 / 16 * xMax
     switch (part.label) {
       case 'wall': {
         return true
@@ -64,8 +75,9 @@ export default class Fighter extends Actor {
       case 'torso': {
         const start = this.compound.position
         const end = part.position
-        const inRangeX = Math.abs(start.x - end.x) < xMax
-        const inRangeY = Math.abs(start.y - end.y) < yMax
+        if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
+        const inRangeX = Math.abs(start.x - end.x) < Fighter.xMax + part.circleRadius
+        const inRangeY = Math.abs(start.y - end.y) < Fighter.yMax + part.circleRadius
         return inRangeX && inRangeY
       }
       default: {

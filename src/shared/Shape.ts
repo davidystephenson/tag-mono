@@ -10,6 +10,7 @@ export default class Shape {
   ix: number
   iy: number
   vertices: Matter.Vector[]
+  deleted = false
 
   constructor (body: Matter.Body) {
     this.circleRadius = body.circleRadius

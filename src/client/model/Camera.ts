@@ -1,6 +1,6 @@
 
 export default class Camera {
-  zoom = -1
+  zoom = -2
   scale = 1
   x = 0
   y = 0

@@ -18,8 +18,7 @@ import Actor from './model/Actor'
 console.log('config:', config)
 
 /* TO DO:
-Vision Box
-Camera Follow
+Make Dynamic Crate
 Make an AI Player
 */
 
@@ -55,16 +54,24 @@ async function updateClients (): Promise<void> {
   )
   const renders = sockets.map(socket => {
     const player = Player.players.get(socket.id)
+
     if (player == null) {
-      const allShapes = compounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+      const allShapes = compounds
+        .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+
       return { socket, shapes: allShapes }
     }
-    const visibleCompounds = compounds.filter(compound => player.isVisible(compound, obstacles))
-    const shapeList = visibleCompounds.flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+
+    const visibleCompounds = compounds
+      .filter(compound => player.isVisible(compound, obstacles))
+    const shapeList = visibleCompounds
+      .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
     const shapes = shapeList.reduce<Record<string, Shape>>((shapes, shape) => {
       shapes[shape.id] = shape
+
       return shapes
     }, {})
+
     return { socket, shapes, torsoId: player.torso.id }
   })
   renders.forEach(render => {
