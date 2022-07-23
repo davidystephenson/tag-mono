@@ -14,6 +14,7 @@ import config from './config.json'
 import DebugLine from '../shared/DebugLine'
 import Fighter from './model/Fighter'
 import Actor from './model/Actor'
+import Crate from './model/Crate'
 
 console.log('config:', config)
 
@@ -63,7 +64,7 @@ async function updateClients (): Promise<void> {
     }
 
     const visibleCompounds = compounds
-      .filter(compound => player.isVisible(compound, obstacles))
+      .filter(compound => player.isVisible({ compound: compound, obstacles }))
     const shapeList = visibleCompounds
       .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
     const shapes = shapeList.reduce<Record<string, Shape>>((shapes, shape) => {
@@ -112,6 +113,8 @@ const wallPositions = [
   { x: -100, y: 0, width: 15, height: 100 }
 ]
 wallPositions.forEach(position => new Wall(position))
+
+void new Crate({ x: 200, y: 0, radius: 10 })
 
 Matter.Runner.run(runner, engine)
 

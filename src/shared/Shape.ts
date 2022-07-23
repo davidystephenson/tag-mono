@@ -10,6 +10,7 @@ export default class Shape {
   ix: number
   iy: number
   vertices: Matter.Vector[]
+  ivertices: Matter.Vector[]
   deleted = false
 
   constructor (body: Matter.Body) {
@@ -20,6 +21,7 @@ export default class Shape {
     this.iy = body.position.y
     this.id = body.id
     this.vertices = body.vertices.map(({ x, y }) => ({ x, y }))
+    this.ivertices = body.vertices.map(({ x, y }) => ({ x, y }))
     this.render = body.render
   }
 }

@@ -31,13 +31,26 @@ export default class Fighter extends Actor {
     Matter.Body.setInertia(this.compound, 2 * this.compound.inertia)
   }
 
-  isPartVisible (part: Matter.Body, obstacles: Matter.Body[]): boolean {
+  isVertexVisible ({ vertex, obstacles }: {vertex: Matter.Vector, obstacles: Matter.Body[]}): boolean {
+    const start = this.compound.position
+    const direction = Matter.Vector.normalise(Matter.Vector.sub(vertex, start))
+    const perp = Matter.Vector.perp(direction)
+    const startRadius = this.radius
+    const startPerp = Matter.Vector.mult(perp, startRadius)
+    const start1 = Matter.Vector.add(start, startPerp)
+    const start2 = Matter.Vector.sub(start, startPerp)
+    return raycast({ start, end: vertex, obstacles }) ||
+      raycast({ start: start1, end: vertex, obstacles }) ||
+      raycast({ start: start2, end: vertex, obstacles })
+  }
+
+  isPartVisible ({ part, obstacles }: {part: Matter.Body, obstacles: Matter.Body[]}): boolean {
     switch (part.label) {
       case 'wall': {
         return true
       }
       case 'torso': {
-        if (!this.isInRange(part)) return false
+        if (!this.isPartInRange(part)) return false
         const start = this.compound.position
         const end = part.position
         const direction = Matter.Vector.normalise(Matter.Vector.sub(end, start))
@@ -54,20 +67,23 @@ export default class Fighter extends Actor {
           raycast({ start: start1, end: end1, obstacles }) ||
           raycast({ start: start2, end: end2, obstacles })
       }
+      case 'frame': {
+        return part.vertices.some(vertex => this.isVertexVisible({ vertex, obstacles }))
+      }
       default: {
         return true
       }
     }
   }
 
-  isVisible (body: Matter.Body, obstacles: Matter.Body[]): boolean {
-    const part = body.parts.slice(1).find(part => this.isPartVisible(part, obstacles))
+  isVisible ({ compound, obstacles }: {compound: Matter.Body, obstacles: Matter.Body[]}): boolean {
+    const part = compound.parts.slice(1).find(part => this.isPartVisible({ part, obstacles }))
     const isVisible = part != null
 
     return isVisible
   }
 
-  isInRange (part: Matter.Body): boolean {
+  isPartInRange (part: Matter.Body): boolean {
     switch (part.label) {
       case 'wall': {
         return true

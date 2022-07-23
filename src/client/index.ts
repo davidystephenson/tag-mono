@@ -97,7 +97,7 @@ const draw = function (): void {
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
     if (shape.circleRadius == null || shape.circleRadius === 0) {
-      shape.vertices.forEach((v: Matter.Vector) => context.lineTo(v.x - camera.x, v.y - camera.y))
+      shape.ivertices.forEach((v: Matter.Vector) => context.lineTo(v.x - camera.x, v.y - camera.y))
       context.closePath()
     } else {
       context.arc(shape.ix - camera.x, shape.iy - camera.y, shape.circleRadius, 0, 2 * Math.PI)
@@ -123,6 +123,11 @@ function tick (): void {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
       shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
       shape.iy = lerp * shape.y + (1 - lerp) * shape.iy
+    } else {
+      shape.vertices.forEach((vertex, i) => {
+        shape.ivertices[i].x = lerp * vertex.x + (1 - lerp) * shape.ivertices[i].x
+        shape.ivertices[i].y = lerp * vertex.y + (1 - lerp) * shape.ivertices[i].y
+      })
     }
     if (shape.id === state.torsoId) {
       camera.x = shape.ix

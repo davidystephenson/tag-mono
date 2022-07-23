@@ -2,7 +2,7 @@ import Matter from 'matter-js'
 
 export default class DebugLine {
   static lines: DebugLine[] = []
-  static raycast = false
+  static raycast = true
   readonly start: Matter.Vector
   readonly end: Matter.Vector
   readonly color: string
@@ -12,8 +12,8 @@ export default class DebugLine {
     end: Matter.Vector
     color: string
   }) {
-    this.start = start
-    this.end = end
+    this.start = { x: start.x, y: start.y }
+    this.end = { x: end.x, y: end.y }
     this.color = color
     DebugLine.lines.push(this)
   }
