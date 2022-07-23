@@ -15,11 +15,12 @@ import DebugLine from '../shared/DebugLine'
 import Fighter from './model/Fighter'
 import Actor from './model/Actor'
 import Crate from './model/Crate'
+import Boulder from './model/Boulder'
 
 console.log('config:', config)
 
 /* TO DO:
-Make Dynamic Crate
+Make Irregular Polygon
 Make an AI Player
 */
 
@@ -115,6 +116,15 @@ const wallPositions = [
 wallPositions.forEach(position => new Wall(position))
 
 void new Crate({ x: 200, y: 0, radius: 10 })
+void new Boulder({
+  x: -200,
+  y: 0,
+  vertices: [
+    { x: 0, y: 50 },
+    { x: -50, y: -50 },
+    { x: 50, y: -50 }
+  ]
+})
 
 Matter.Runner.run(runner, engine)
 

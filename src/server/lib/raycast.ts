@@ -16,3 +16,16 @@ export default function raycast ({ start, end, obstacles }: {
   }
   return !collide
 }
+
+export function someRaycast ({ casts, obstacles }: {
+  casts: Matter.Vector[][]
+  obstacles: Matter.Body[]
+}): boolean {
+  const open = casts.some(cast => raycast({
+    start: cast[0],
+    end: cast[1],
+    obstacles
+  }))
+
+  return open
+}
