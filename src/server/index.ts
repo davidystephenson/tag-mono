@@ -20,7 +20,6 @@ import Boulder from './model/Boulder'
 console.log('config:', config)
 
 /* TO DO:
-Make Irregular Polygon
 Make an AI Player
 */
 
