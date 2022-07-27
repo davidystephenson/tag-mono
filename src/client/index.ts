@@ -55,6 +55,7 @@ socket.on('updateClient', msg => {
       if (stateShape != null) {
         stateShape.x = shape.x
         stateShape.y = shape.y
+        stateShape.render = shape.render
         stateShape.vertices = shape.vertices
         stateShape.deleted = false
       }

@@ -5,22 +5,23 @@ import https from 'https'
 import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
-import Player from './model/Player'
 import Wall from './model/Wall'
 import Shape from '../shared/Shape'
 import { engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
-import Fighter from './model/Fighter'
+import Character from './model/Character'
 import Actor from './model/Actor'
 import Crate from './model/Crate'
 import Boulder from './model/Boulder'
+import Bot from './model/Bot'
 
 console.log('config:', config)
 
 /* TO DO:
 Make an AI Player
+Initialize Direction
 */
 
 const app = express()
@@ -54,7 +55,7 @@ async function updateClients (): Promise<void> {
     body.parts.find(part => part.label === 'wall')
   )
   const renders = sockets.map(socket => {
-    const player = Player.players.get(socket.id)
+    const player = Character.characters.get(socket.id)
 
     if (player == null) {
       const allShapes = compounds
@@ -88,22 +89,15 @@ function tick (): void {
 
 io.on('connection', socket => {
   console.log('connection:', socket.id)
-  const player = new Player({ x: 0, y: 0, socketId: socket.id })
-  if (Player.players.size === 1) player.makeIt()
+  const player = new Character({ x: 0, y: 0, id: socket.id })
   socket.emit('socketId', socket.id)
   socket.on('updateServer', msg => {
     player.input = msg.input
-    const vector = { x: 0, y: 0 }
-    if (player.input.up) vector.y += -1
-    if (player.input.down) vector.y += 1
-    if (player.input.left) vector.x += -1
-    if (player.input.right) vector.x += 1
-    player.direction = Matter.Vector.normalise(vector)
   })
 
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
-    const player = Player.players.get(socket.id)
+    const player = Character.characters.get(socket.id)
     player?.destroy()
   })
 })
@@ -124,15 +118,13 @@ void new Boulder({
     { x: 50, y: -50 }
   ]
 })
+void new Bot({ x: 0, y: 100 })
 
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', e => {
-  runner.enabled = !Player.paused
-  Player.players.forEach(player => {
-    const force = Matter.Vector.mult(player.direction, 0.00005)
-    Matter.Body.applyForce(player.compound, player.compound.position, force)
-  })
+  runner.enabled = !Character.paused
+  Character.characters.forEach(character => character.update())
 })
 
 Matter.Events.on(engine, 'collisionStart', event => {
@@ -141,11 +133,11 @@ Matter.Events.on(engine, 'collisionStart', event => {
       // pair.isActive = false
       // state.paused = true
       console.log('collide')
-      const fighterA = Actor.actors.get(pair.bodyA.id) as Fighter
-      const fighterB = Actor.actors.get(pair.bodyB.id) as Fighter
-      if (Fighter.it === fighterA) {
+      const fighterA = Actor.actors.get(pair.bodyA.id) as Character
+      const fighterB = Actor.actors.get(pair.bodyB.id) as Character
+      if (Character.it === fighterA) {
         fighterB.makeIt()
-      } else if (Fighter.it === fighterB) {
+      } else if (Character.it === fighterB) {
         fighterA.makeIt()
       }
     }

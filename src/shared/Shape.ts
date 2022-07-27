@@ -4,7 +4,7 @@ export default class Shape {
   readonly circleRadius?: number
   readonly socketid?: string
   readonly id: number
-  readonly render: Matter.IBodyRenderOptions
+  render: Matter.IBodyRenderOptions
   x: number
   y: number
   ix: number

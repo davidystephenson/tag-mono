@@ -2,26 +2,34 @@ import Matter from 'matter-js'
 import Actor from './Actor'
 import { someRaycast } from '../lib/raycast'
 import VISION from '../../shared/VISION'
+import Input from '../../shared/Input'
 
-export default class Fighter extends Actor {
+export default class Character extends Actor {
+  static paused = false
+  static characters = new Map<string, Character>()
   static polygons = ['frame', 'rock']
-  static it?: Fighter
+  static it?: Character
   static xMax = VISION.width
   static yMax = VISION.height
   readonly torso: Matter.Body
   readonly radius: number
+  readonly id: string
+  input = new Input()
   leftSide?: Matter.Vector
   rightSide?: Matter.Vector
+  direction: Matter.Vector = { x: 0, y: 0 }
 
-  constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
+  constructor ({ x = 0, y = 0, id, radius = 15, angle = 0, color = 'green' }: {
     x: number
     y: number
+    id: string
     angle?: number
     color?: string
     radius?: number
   }) {
     const torso = Matter.Bodies.circle(x, y, radius)
     super({ parts: [torso] })
+    this.id = id
     this.radius = radius
     this.torso = torso
     this.torso.render.fillStyle = color
@@ -32,11 +40,28 @@ export default class Fighter extends Actor {
     this.compound.frictionAir = 0.01
     Matter.Body.setCentre(this.compound, { x, y }, false)
     Matter.Body.setInertia(this.compound, 2 * this.compound.inertia)
+    Character.characters.set(this.id, this)
+    if (Character.characters.size === 1) this.makeIt()
+  }
+
+  update (): void {
+    const vector = { x: 0, y: 0 }
+    if (this.input.up) vector.y += -1
+    if (this.input.down) vector.y += 1
+    if (this.input.left) vector.x += -1
+    if (this.input.right) vector.x += 1
+    this.direction = Matter.Vector.normalise(vector)
+    const force = Matter.Vector.mult(this.direction, 0.00005)
+    Matter.Body.applyForce(this.compound, this.compound.position, force)
+  }
+
+  destroy (): void {
+    super.destroy()
+    Character.characters.delete(this.id)
   }
 
   findSides (perp: Matter.Vector): void {
     const startPerp = Matter.Vector.mult(perp, this.radius)
-
     this.leftSide = Matter.Vector.add(this.compound.position, startPerp)
     this.rightSide = Matter.Vector.sub(this.compound.position, startPerp)
   }
@@ -90,7 +115,7 @@ export default class Fighter extends Actor {
         return someRaycast({ casts, obstacles })
       }
       default: {
-        if (Fighter.polygons.includes(part.label)) {
+        if (Character.polygons.includes(part.label)) {
           return this.isPolygonVisible({ part, obstacles })
         }
 
@@ -108,8 +133,8 @@ export default class Fighter extends Actor {
 
   isPolygonInRange (part: Matter.Body): boolean {
     return part.vertices.some(vertex => {
-      const inRangeX = Math.abs(this.compound.position.x - vertex.x) < Fighter.xMax
-      const inRangeY = Math.abs(this.compound.position.y - vertex.y) < Fighter.yMax
+      const inRangeX = Math.abs(this.compound.position.x - vertex.x) < Character.xMax
+      const inRangeY = Math.abs(this.compound.position.y - vertex.y) < Character.yMax
 
       return inRangeX && inRangeY
     })
@@ -124,12 +149,12 @@ export default class Fighter extends Actor {
         const start = this.compound.position
         const end = part.position
         if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
-        const inRangeX = Math.abs(start.x - end.x) < Fighter.xMax + part.circleRadius
-        const inRangeY = Math.abs(start.y - end.y) < Fighter.yMax + part.circleRadius
+        const inRangeX = Math.abs(start.x - end.x) < Character.xMax + part.circleRadius
+        const inRangeY = Math.abs(start.y - end.y) < Character.yMax + part.circleRadius
         return inRangeX && inRangeY
       }
       default: {
-        if (Fighter.polygons.includes(part.label)) {
+        if (Character.polygons.includes(part.label)) {
           return this.isPolygonInRange(part)
         }
 
@@ -140,8 +165,9 @@ export default class Fighter extends Actor {
   }
 
   makeIt (): void {
+    console.log('makeIt', this.id)
     this.torso.render.fillStyle = 'red'
-    if (Fighter.it != null) Fighter.it.torso.render.fillStyle = 'green'
-    Fighter.it = this
+    if (Character.it != null) Character.it.torso.render.fillStyle = 'green'
+    Character.it = this
   }
 }
