@@ -22,11 +22,14 @@ console.log('config:', config)
 /* TO DO:
 Circle vs Rectangle vs Polygon stack overflow
 Add boundary walls
+endRadius function (Character:78)
 Make an AI Player
 Pathfinding
 Random boundary size
 Random starting internal obstacles
 Generate AI players
+MAP_SIZE
+VIEW_SIZE
 */
 
 const app = express()

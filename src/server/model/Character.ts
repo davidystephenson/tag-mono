@@ -3,6 +3,7 @@ import Actor from './Actor'
 import { someRaycast, someToPoint } from '../lib/raycast'
 import VISION from '../../shared/VISION'
 import Input from '../../shared/Input'
+import inRange from '../lib/inRange'
 
 export default class Character extends Actor {
   static paused = false
@@ -102,10 +103,20 @@ export default class Character extends Actor {
     return isVisible
   }
 
+  isCircleInRange ({ part, maximum }: {
+    part: Matter.Body
+    maximum: number
+  }): boolean {
+    if (part.circleRadius == null) throw new Error('Circle must have a circleRadius')
+
+    const range = maximum + part.circleRadius
+    return inRange({ start: this.compound.position.x, end: part.position.x, range })
+  }
+
   isPolygonInRange (part: Matter.Body): boolean {
     return part.vertices.some(vertex => {
-      const inRangeX = Math.abs(this.compound.position.x - vertex.x) < Character.xMax
-      const inRangeY = Math.abs(this.compound.position.y - vertex.y) < Character.yMax
+      const inRangeX = inRange({ start: this.compound.position.x, end: vertex.x, range: Character.xMax })
+      const inRangeY = inRange({ start: this.compound.position.y, end: vertex.y, range: Character.yMax })
 
       return inRangeX && inRangeY
     })
@@ -117,11 +128,14 @@ export default class Character extends Actor {
         return true
       }
       case 'torso': {
-        const start = this.compound.position
-        const end = part.position
         if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
-        const inRangeX = Math.abs(start.x - end.x) < Character.xMax + part.circleRadius
-        const inRangeY = Math.abs(start.y - end.y) < Character.yMax + part.circleRadius
+
+        const rangeX = Character.xMax + part.circleRadius
+        const inRangeX = inRange({ start: this.compound.position.x, end: part.position.x, range: rangeX })
+
+        const rangeY = Character.yMax + part.circleRadius
+        const inRangeY = inRange({ start: this.compound.position.y, end: part.position.y, range: rangeY })
+
         return inRangeX && inRangeY
       }
       default: {
