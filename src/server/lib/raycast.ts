@@ -29,3 +29,13 @@ export function someRaycast ({ casts, obstacles }: {
 
   return open
 }
+
+export function someToPoint ({ starts, end, obstacles }: {
+  starts: Matter.Vector[]
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+}): boolean {
+  const casts = starts.map(start => [start, end])
+
+  return someRaycast({ casts, obstacles })
+}

@@ -20,8 +20,13 @@ import Bot from './model/Bot'
 console.log('config:', config)
 
 /* TO DO:
+Circle vs Rectangle vs Polygon stack overflow
+Add boundary walls
 Make an AI Player
-Initialize Direction
+Pathfinding
+Random boundary size
+Random starting internal obstacles
+Generate AI players
 */
 
 const app = express()

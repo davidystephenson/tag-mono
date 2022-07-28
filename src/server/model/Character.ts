@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import Actor from './Actor'
-import { someRaycast } from '../lib/raycast'
+import { someRaycast, someToPoint } from '../lib/raycast'
 import VISION from '../../shared/VISION'
 import Input from '../../shared/Input'
 
@@ -15,9 +15,6 @@ export default class Character extends Actor {
   readonly radius: number
   readonly id: string
   input = new Input()
-  leftSide?: Matter.Vector
-  rightSide?: Matter.Vector
-  direction: Matter.Vector = { x: 0, y: 0 }
 
   constructor ({ x = 0, y = 0, id, radius = 15, angle = 0, color = 'green' }: {
     x: number
@@ -50,8 +47,8 @@ export default class Character extends Actor {
     if (this.input.down) vector.y += 1
     if (this.input.left) vector.x += -1
     if (this.input.right) vector.x += 1
-    this.direction = Matter.Vector.normalise(vector)
-    const force = Matter.Vector.mult(this.direction, 0.00005)
+    const direction = Matter.Vector.normalise(vector)
+    const force = Matter.Vector.mult(direction, 0.00005)
     Matter.Body.applyForce(this.compound, this.compound.position, force)
   }
 
@@ -60,44 +57,15 @@ export default class Character extends Actor {
     Character.characters.delete(this.id)
   }
 
-  findSides (perp: Matter.Vector): void {
-    const startPerp = Matter.Vector.mult(perp, this.radius)
-    this.leftSide = Matter.Vector.add(this.compound.position, startPerp)
-    this.rightSide = Matter.Vector.sub(this.compound.position, startPerp)
-  }
-
-  isPointVisible ({ point, obstacles, center }: {
-    point: Matter.Vector
-    obstacles: Matter.Body[]
-    center: Matter.Vector
-  }): boolean {
-    if (this.leftSide == null || this.rightSide == null) throw new Error('Sides not found')
-
-    const casts = [[this.compound.position, point], [this.leftSide, point], [this.rightSide, point]]
-
-    return someRaycast({ casts, obstacles })
-  }
-
-  isPolygonVisible ({ part, obstacles }: {
-    part: Matter.Body
-    obstacles: Matter.Body[]
-  }): boolean {
-    if (!this.isPartInRange(part)) return false
-
-    return part.vertices.some(vertex => this.isPointVisible({
-      point: vertex, obstacles, center: this.compound.position
-    }))
-  }
-
   isPartVisible ({ part, obstacles }: {
     part: Matter.Body
     obstacles: Matter.Body[]
   }): boolean {
     const direction = Matter.Vector.normalise(Matter.Vector.sub(part.position, this.compound.position))
     const perp = Matter.Vector.perp(direction)
-    this.findSides(direction)
-
-    if (this.leftSide == null || this.rightSide == null) throw new Error('Sides not found')
+    const startPerp = Matter.Vector.mult(perp, this.radius)
+    const leftSide = Matter.Vector.add(this.compound.position, startPerp)
+    const rightSide = Matter.Vector.sub(this.compound.position, startPerp)
 
     switch (part.label) {
       case 'wall': {
@@ -111,12 +79,15 @@ export default class Character extends Actor {
         const leftEnd = Matter.Vector.add(part.position, endPerp)
         const rightEnd = Matter.Vector.sub(part.position, endPerp)
 
-        const casts = [[this.compound.position, part.position], [this.leftSide, leftEnd], [this.rightSide, rightEnd]]
+        const casts = [[this.compound.position, part.position], [leftSide, leftEnd], [rightSide, rightEnd]]
         return someRaycast({ casts, obstacles })
       }
       default: {
         if (Character.polygons.includes(part.label)) {
-          return this.isPolygonVisible({ part, obstacles })
+          if (!this.isPartInRange(part)) return false
+
+          const starts = [this.compound.position, leftSide, rightSide]
+          return part.vertices.some(vertex => someToPoint({ starts, end: vertex, obstacles }))
         }
 
         return true
