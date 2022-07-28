@@ -1,10 +1,7 @@
 import Matter from 'matter-js'
 import Actor from './Actor'
-import VISION from '../../shared/VISION'
 
 export default class Boulder extends Actor {
-  static xMax = VISION.width
-  static yMax = VISION.height
   readonly rock: Matter.Body
 
   constructor ({ x, y, vertices, color = 'green' }: {
@@ -13,8 +10,6 @@ export default class Boulder extends Actor {
     vertices: Matter.Vector[]
     color?: string
   }) {
-    // const rock = Matter.Bodies.rectangle(x, y, 20, 20)
-    console.log(vertices)
     const rock = Matter.Bodies.fromVertices(x, y, [vertices])
     super({ parts: [rock] })
     this.rock = rock

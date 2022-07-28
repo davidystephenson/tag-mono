@@ -10,8 +10,6 @@ export default class Character extends Actor {
   static characters = new Map<string, Character>()
   static polygons = ['frame', 'rock']
   static it?: Character
-  static xMax = VISION.width
-  static yMax = VISION.height
   readonly torso: Matter.Body
   readonly radius: number
   readonly id: string
@@ -103,25 +101,6 @@ export default class Character extends Actor {
     return isVisible
   }
 
-  isCircleInRange ({ part, maximum }: {
-    part: Matter.Body
-    maximum: number
-  }): boolean {
-    if (part.circleRadius == null) throw new Error('Circle must have a circleRadius')
-
-    const range = maximum + part.circleRadius
-    return inRange({ start: this.compound.position.x, end: part.position.x, range })
-  }
-
-  isPolygonInRange (part: Matter.Body): boolean {
-    return part.vertices.some(vertex => {
-      const inRangeX = inRange({ start: this.compound.position.x, end: vertex.x, range: Character.xMax })
-      const inRangeY = inRange({ start: this.compound.position.y, end: vertex.y, range: Character.yMax })
-
-      return inRangeX && inRangeY
-    })
-  }
-
   isPartInRange (part: Matter.Body): boolean {
     switch (part.label) {
       case 'wall': {
@@ -130,17 +109,22 @@ export default class Character extends Actor {
       case 'torso': {
         if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
 
-        const rangeX = Character.xMax + part.circleRadius
+        const rangeX = VISION.width + part.circleRadius
         const inRangeX = inRange({ start: this.compound.position.x, end: part.position.x, range: rangeX })
 
-        const rangeY = Character.yMax + part.circleRadius
+        const rangeY = VISION.height + part.circleRadius
         const inRangeY = inRange({ start: this.compound.position.y, end: part.position.y, range: rangeY })
 
         return inRangeX && inRangeY
       }
       default: {
         if (Character.polygons.includes(part.label)) {
-          return this.isPolygonInRange(part)
+          return part.vertices.some(vertex => {
+            const inRangeX = inRange({ start: this.compound.position.x, end: vertex.x, range: VISION.width })
+            const inRangeY = inRange({ start: this.compound.position.y, end: vertex.y, range: VISION.height })
+
+            return inRangeX && inRangeY
+          })
         }
 
         console.warn('Unmatched label:', part.label)

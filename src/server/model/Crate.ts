@@ -1,10 +1,7 @@
 import Matter from 'matter-js'
 import Actor from './Actor'
-import VISION from '../../shared/VISION'
 
 export default class Crate extends Actor {
-  static xMax = VISION.width
-  static yMax = VISION.height
   readonly frame: Matter.Body
   readonly radius: number
 
