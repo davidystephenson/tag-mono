@@ -26,6 +26,7 @@ Change Boulder to Puppet (extends Actor)
 Player and Bot extend Character
 Animate puppets
 Lighten puppets
+Actor.getVisibleCompounds
 brecht versus avicenna
 Label colors
 Add boundary walls
