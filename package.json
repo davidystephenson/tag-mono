@@ -37,6 +37,7 @@
     "@types/matter-js": "^0.17.7",
     "@types/yeast": "^0.1.1",
     "buffer": "^6.0.3",
+    "parcel": "^2.6.2",
     "ts-standard": "^11.0.0"
   }
 }

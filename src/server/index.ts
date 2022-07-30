@@ -17,11 +17,26 @@ import Crate from './model/Crate'
 import Boulder from './model/Boulder'
 import Bot from './model/Bot'
 
-console.log('config:', config)
-
 /* TO DO:
+Circle vs Rectangle vs Polygon stack overflow
+endRadius function (Character:78)
+Change Actor to Feature
+Change Character to Actor
+Change Boulder to Puppet (extends Actor)
+Player and Bot extend Character
+Animate puppets
+Lighten puppets
+Actor.getVisibleCompounds
+brecht versus avicenna
+Label colors
+Add boundary walls
+MAP_SIZE
+Sanitize client input
 Make an AI Player
-Initialize Direction
+Pathfinding
+Random boundary size
+Random starting internal obstacles
+Generate AI players
 */
 
 const app = express()
@@ -40,11 +55,13 @@ function makeServer (): https.Server | http.Server {
   }
 }
 
+type Empty = Record<string, never>
+
 const server = makeServer()
-const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
+const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents, Empty, Empty>(server)
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
-  console.log(`Listening on :${PORT} TEST3`)
+  console.log(`Listening on :${PORT}`)
   setInterval(tick, 100)
 })
 
@@ -58,8 +75,13 @@ async function updateClients (): Promise<void> {
     const player = Character.characters.get(socket.id)
 
     if (player == null) {
-      const allShapes = compounds
-        .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
+      const allShapes = compounds.reduce<Record<string, Shape>>((allShapes, compound) => {
+        return compound.parts.slice(1).reduce((allShapes, body) => {
+          allShapes[body.id] = new Shape(body)
+
+          return allShapes
+        }, allShapes)
+      }, {})
 
       return { socket, shapes: allShapes }
     }
@@ -118,7 +140,7 @@ void new Boulder({
     { x: 50, y: -50 }
   ]
 })
-void new Bot({ x: 0, y: 100 })
+void new Bot({ x: 0, y: 500 })
 
 Matter.Runner.run(runner, engine)
 
