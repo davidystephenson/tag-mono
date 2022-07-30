@@ -3,5 +3,8 @@ export default function inRange ({ start, end, range }: {
   end: number
   range: number
 }): boolean {
-  return Math.abs(start - end) < range
+  const difference = end - start
+  const absolute = Math.abs(difference)
+
+  return absolute < range
 }
