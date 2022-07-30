@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
-import Actor from './Actor'
+import Feature from './Feature'
 
-export default class Crate extends Actor {
+export default class Crate extends Feature {
   readonly frame: Matter.Body
   readonly radius: number
 

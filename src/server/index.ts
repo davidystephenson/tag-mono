@@ -11,23 +11,13 @@ import { engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
-import Character from './model/Character'
 import Actor from './model/Actor'
 import Crate from './model/Crate'
-import Boulder from './model/Boulder'
+import Puppet from './model/Puppet'
 import Bot from './model/Bot'
+import Character from './model/Character'
 
 /* TO DO:
-Circle vs Rectangle vs Polygon stack overflow
-endRadius function (Character:78)
-Change Actor to Feature
-Change Character to Actor
-Change Boulder to Puppet (extends Actor)
-Player and Bot extend Character
-Animate puppets
-Lighten puppets
-Actor.getVisibleCompounds
-brecht versus avicenna
 Label colors
 Add boundary walls
 MAP_SIZE
@@ -69,7 +59,7 @@ async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
   const compounds = Matter.Composite.allBodies(engine.world)
   const obstacles = compounds.filter(body =>
-    body.parts.find(part => part.label === 'wall')
+    body.parts.find(part => part.label !== 'torso')
   )
   const renders = sockets.map(socket => {
     const player = Character.characters.get(socket.id)
@@ -86,8 +76,7 @@ async function updateClients (): Promise<void> {
       return { socket, shapes: allShapes }
     }
 
-    const visibleCompounds = compounds
-      .filter(compound => player.isVisible({ compound: compound, obstacles }))
+    const visibleCompounds = player.getVisibleCompounds({ compounds, obstacles })
     const shapeList = visibleCompounds
       .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
     const shapes = shapeList.reduce<Record<string, Shape>>((shapes, shape) => {
@@ -111,7 +100,7 @@ function tick (): void {
 
 io.on('connection', socket => {
   console.log('connection:', socket.id)
-  const player = new Character({ x: 0, y: 0, id: socket.id })
+  const player = new Character({ x: 0, y: 0, socketId: socket.id })
   socket.emit('socketId', socket.id)
   socket.on('updateServer', msg => {
     player.input = msg.input
@@ -130,10 +119,12 @@ const wallPositions = [
 ]
 wallPositions.forEach(position => new Wall(position))
 
-void new Crate({ x: 200, y: 0, radius: 10 })
-void new Boulder({
+void new Crate({ x: 1000, y: 0, radius: 10 })
+void new Puppet({
   x: -200,
   y: 0,
+  direction: { x: 1, y: 0 },
+  targetSpeed: 0.5,
   vertices: [
     { x: 0, y: 50 },
     { x: -50, y: -50 },
@@ -145,8 +136,8 @@ void new Bot({ x: 0, y: 500 })
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', e => {
-  runner.enabled = !Character.paused
-  Character.characters.forEach(character => character.update())
+  runner.enabled = !Actor.paused
+  Actor.actors.forEach(character => character.act())
 })
 
 Matter.Events.on(engine, 'collisionStart', event => {
@@ -155,12 +146,12 @@ Matter.Events.on(engine, 'collisionStart', event => {
       // pair.isActive = false
       // state.paused = true
       console.log('collide')
-      const fighterA = Actor.actors.get(pair.bodyA.id) as Character
-      const fighterB = Actor.actors.get(pair.bodyB.id) as Character
-      if (Character.it === fighterA) {
-        fighterB.makeIt()
-      } else if (Character.it === fighterB) {
-        fighterA.makeIt()
+      const actorA = Actor.actors.get(pair.bodyA.id) as Character
+      const actorB = Actor.actors.get(pair.bodyB.id) as Character
+      if (Character.it === actorA) {
+        actorB.makeIt()
+      } else if (Character.it === actorB) {
+        actorA.makeIt()
       }
     }
   })

@@ -1,7 +1,7 @@
-import Character from './Character'
 import yeast from 'yeast'
 import Matter from 'matter-js'
 import Input, { DOWN_INPUT, DOWN_LEFT_INPUT, DOWN_RIGHT_INPUT, LEFT_INPUT, RIGHT_INPUT, STILL_INPUT, UP_INPUT, UP_LEFT_INPUT, UP_RIGHT_INPUT } from '../../shared/Input'
+import Character from './Character'
 
 export default class Bot extends Character {
   constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
@@ -11,16 +11,15 @@ export default class Bot extends Character {
     color?: string
     radius?: number
   }) {
-    const id = yeast()
-
-    super({ x, y, id, angle, color, radius })
+    const socketId = yeast()
+    super({ x, y, socketId, angle, color, radius })
   }
 
   takeInput (input: Input): void {
     this.input = { ...this.input, ...input }
   }
 
-  update (): void {
+  act (): void {
     if (Character.it === this) {
       const { enemy } = Array.from(Character.characters.values()).reduce<{ enemy?: Character, minDist: number}>((closest, character) => {
         if (character === this) return closest
@@ -60,6 +59,6 @@ export default class Bot extends Character {
       this.takeInput(STILL_INPUT)
     }
 
-    super.update()
+    super.act()
   }
 }

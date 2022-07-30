@@ -1,26 +1,36 @@
 import Matter from 'matter-js'
-import { engine } from '../lib/engine'
+import Feature from './Feature'
 
-export default class Actor {
+export default class Actor extends Feature {
+  static paused = false
   static actors = new Map<number, Actor>()
-  readonly compound: Matter.Body
-  readonly parts: Matter.Body[]
+  static polygons = ['frame', 'rock']
+  readonly id: number
 
-  constructor ({ parts }: {
+  constructor ({ x = 0, y = 0, parts = [], id, angle = 0, color = 'green' }: {
+    x: number
+    y: number
     parts: Matter.Body[]
+    id: number
+    angle?: number
+    color?: string
+    radius?: number
   }) {
-    this.parts = parts
-    this.compound = Matter.Body.create({ parts })
-    this.compound.label = 'compound'
-
-    Matter.Composite.add(engine.world, this.compound)
-    Actor.actors.set(this.compound.id, this)
-    this.parts.forEach(part => Actor.actors.set(part.id, this))
+    super({ parts })
+    this.id = id
+    Matter.Body.setAngle(this.compound, angle)
+    this.compound.restitution = 0
+    this.compound.friction = 0
+    this.compound.frictionAir = 0.01
+    Matter.Body.setCentre(this.compound, { x, y }, false)
+    Matter.Body.setInertia(this.compound, 2 * this.compound.inertia)
+    Actor.actors.set(this.id, this)
   }
 
+  act (): void {}
+
   destroy (): void {
-    Matter.Composite.remove(engine.world, this.compound)
-    this.parts.forEach(part => Actor.actors.delete(part.id))
-    Actor.actors.delete(this.compound.id)
+    super.destroy()
+    Actor.actors.delete(this.id)
   }
 }

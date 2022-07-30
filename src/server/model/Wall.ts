@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
-import Actor from './Actor'
+import Feature from './Feature'
 
-export default class Wall extends Actor {
+export default class Wall extends Feature {
   readonly x: number
   readonly y: number
   readonly width: number

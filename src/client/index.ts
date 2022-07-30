@@ -106,6 +106,14 @@ const draw = function (): void {
     context.fill()
     context.lineWidth = 1
     context.stroke()
+    if (shape.circleRadius != null && shape.circleRadius > 0) {
+      const label = context.fillStyle
+      context.fillStyle = 'white'
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      context.font = '20px sans'
+      context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
+    }
   })
 
   state.debugLines.forEach(line => {
