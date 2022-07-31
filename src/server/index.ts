@@ -63,26 +63,13 @@ async function updateClients (): Promise<void> {
     const player = Character.characters.get(socket.id)
 
     if (player == null) {
-      const allShapes = compounds.reduce<Record<string, Shape>>((allShapes, compound) => {
-        compound.parts.slice(1).forEach((part) => {
-          allShapes[part.id] = new Shape(part)
-        })
+      const shapes = Shape.fromCompounds(compounds)
 
-        return allShapes
-      }, {})
-
-      return { socket, shapes: allShapes }
+      return { socket, shapes }
     }
 
     const visibleCompounds = player.getVisibleCompounds({ compounds, obstacles })
-
-    const shapes = visibleCompounds.reduce<Record<string, Shape>>((shapes, compound) => {
-      compound.parts.slice(1).forEach((part) => {
-        shapes[part.id] = new Shape(part)
-      })
-
-      return shapes
-    }, {})
+    const shapes = Shape.fromCompounds(visibleCompounds)
 
     return { socket, shapes, torsoId: player.torso.id }
   })
