@@ -20,29 +20,35 @@ export default class Bot extends Character {
     this.input = { ...this.input, ...input }
   }
 
-  act (): void {
+  choose (): Partial<Input> {
     if (Character.it === this) {
-      const { enemy } = Array.from(Character.characters.values()).reduce<{ enemy?: Character, minDist: number}>((closest, character) => {
+      const { enemy } = Array.from(Character.characters.values()).reduce<{ enemy?: Character, distance: number}>((closest, character) => {
         if (character === this) return closest
 
         const distance = Matter.Vector.sub(character.compound.position, this.compound.position)
         const magnitude = Matter.Vector.magnitude(distance)
-        if (magnitude < closest.minDist) {
+        if (magnitude < closest.distance) {
           closest.enemy = character
-          closest.minDist = magnitude
+          closest.distance = magnitude
         }
 
         return closest
-      }, { minDist: Infinity })
+      }, { distance: Infinity })
 
       if (enemy != null) {
         const radians = Matter.Vector.angle(this.compound.position, enemy.compound.position)
         const input = getRadiansInput(radians)
-        this.takeInput(input)
+
+        return input
       }
-    } else {
-      this.takeInput(STILL)
     }
+
+    return STILL
+  }
+
+  act (): void {
+    const choice = this.choose()
+    this.takeInput(choice)
 
     super.act()
   }
