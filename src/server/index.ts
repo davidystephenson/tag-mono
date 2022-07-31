@@ -135,9 +135,9 @@ void new Bot({ x: 0, y: 500 })
 
 Matter.Runner.run(runner, engine)
 
-Matter.Events.on(engine, 'afterUpdate', e => {
+Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
-  Actor.actors.forEach(character => character.act())
+  Actor.actors.forEach(actor => actor.act())
 })
 
 Matter.Events.on(engine, 'collisionStart', event => {

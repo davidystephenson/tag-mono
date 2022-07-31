@@ -1,7 +1,8 @@
 import yeast from 'yeast'
 import Matter from 'matter-js'
-import Input, { DOWN_INPUT, DOWN_LEFT_INPUT, DOWN_RIGHT_INPUT, LEFT_INPUT, RIGHT_INPUT, STILL_INPUT, UP_INPUT, UP_LEFT_INPUT, UP_RIGHT_INPUT } from '../../shared/Input'
+import Input, { STILL } from '../../shared/Input'
 import Character from './Character'
+import { getRadiansInput } from '../lib/angles'
 
 export default class Bot extends Character {
   constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
@@ -15,7 +16,7 @@ export default class Bot extends Character {
     super({ x, y, socketId, angle, color, radius })
   }
 
-  takeInput (input: Input): void {
+  takeInput (input: Partial<Input>): void {
     this.input = { ...this.input, ...input }
   }
 
@@ -35,28 +36,12 @@ export default class Bot extends Character {
       }, { minDist: Infinity })
 
       if (enemy != null) {
-        const angle = Matter.Vector.angle(this.compound.position, enemy.compound.position) / Math.PI
-        // console.log(angle)
-        if (-1 / 8 <= angle && angle < 1 / 8) {
-          this.takeInput(RIGHT_INPUT)
-        } else if (-3 / 8 <= angle && angle < -1 / 8) {
-          this.takeInput(UP_RIGHT_INPUT)
-        } else if (-5 / 8 <= angle && angle < -3 / 8) {
-          this.takeInput(UP_INPUT)
-        } else if (-7 / 8 <= angle && angle < -5 / 8) {
-          this.takeInput(UP_LEFT_INPUT)
-        } else if (1 / 8 <= angle && angle < 3 / 8) {
-          this.takeInput(DOWN_RIGHT_INPUT)
-        } else if (3 / 8 <= angle && angle < 5 / 8) {
-          this.takeInput(DOWN_INPUT)
-        } else if (5 / 8 <= angle && angle < 7 / 8) {
-          this.takeInput(DOWN_LEFT_INPUT)
-        } else {
-          this.takeInput(LEFT_INPUT)
-        }
+        const radians = Matter.Vector.angle(this.compound.position, enemy.compound.position)
+        const input = getRadiansInput(radians)
+        this.takeInput(input)
       }
     } else {
-      this.takeInput(STILL_INPUT)
+      this.takeInput(STILL)
     }
 
     super.act()
