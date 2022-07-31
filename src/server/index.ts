@@ -83,7 +83,6 @@ async function updateClients (): Promise<void> {
 
       return shapes
     }, {})
-    console.log('shapes test:', Object.keys(shapes))
 
     return { socket, shapes, torsoId: player.torso.id }
   })

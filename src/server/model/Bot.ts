@@ -22,21 +22,21 @@ export default class Bot extends Character {
 
   choose (): Partial<Input> {
     if (Character.it === this) {
-      const { enemy } = Array.from(Character.characters.values()).reduce<{ enemy?: Character, distance: number}>((closest, character) => {
-        if (character === this) return closest
+      const closest: { distance: number, enemy?: Character } = { distance: Infinity }
+      for (const [, character] of Character.characters) {
+        if (character !== this) {
+          const distance = Matter.Vector.sub(character.compound.position, this.compound.position)
+          const magnitude = Matter.Vector.magnitude(distance)
 
-        const distance = Matter.Vector.sub(character.compound.position, this.compound.position)
-        const magnitude = Matter.Vector.magnitude(distance)
-        if (magnitude < closest.distance) {
-          closest.enemy = character
-          closest.distance = magnitude
+          if (magnitude < closest.distance) {
+            closest.enemy = character
+            closest.distance = magnitude
+          }
         }
+      }
 
-        return closest
-      }, { distance: Infinity })
-
-      if (enemy != null) {
-        const radians = Matter.Vector.angle(this.compound.position, enemy.compound.position)
+      if (closest.enemy != null) {
+        const radians = Matter.Vector.angle(this.compound.position, closest.enemy.compound.position)
         const input = getRadiansInput(radians)
 
         return input
