@@ -2,7 +2,7 @@ import yeast from 'yeast'
 import Matter from 'matter-js'
 import Input, { STILL } from '../../shared/Input'
 import Character from './Character'
-import { getRadiansInput } from '../lib/angles'
+import { getRadiansInput } from '../lib/radians'
 
 export default class Bot extends Character {
   constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {

@@ -45,10 +45,8 @@ function makeServer (): https.Server | http.Server {
   }
 }
 
-type Empty = Record<string, never>
-
 const server = makeServer()
-const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents, Empty, Empty>(server)
+const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
@@ -66,29 +64,33 @@ async function updateClients (): Promise<void> {
 
     if (player == null) {
       const allShapes = compounds.reduce<Record<string, Shape>>((allShapes, compound) => {
-        return compound.parts.slice(1).reduce((allShapes, body) => {
-          allShapes[body.id] = new Shape(body)
+        compound.parts.slice(1).forEach((part) => {
+          allShapes[part.id] = new Shape(part)
+        })
 
-          return allShapes
-        }, allShapes)
+        return allShapes
       }, {})
 
       return { socket, shapes: allShapes }
     }
 
     const visibleCompounds = player.getVisibleCompounds({ compounds, obstacles })
-    const shapeList = visibleCompounds
-      .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
-    const shapes = shapeList.reduce<Record<string, Shape>>((shapes, shape) => {
-      shapes[shape.id] = shape
+
+    const shapes = visibleCompounds.reduce<Record<string, Shape>>((shapes, compound) => {
+      compound.parts.slice(1).forEach((part) => {
+        shapes[part.id] = new Shape(part)
+      })
 
       return shapes
     }, {})
+    console.log('shapes test:', Object.keys(shapes))
 
     return { socket, shapes, torsoId: player.torso.id }
   })
+
   renders.forEach(render => {
     const message = { shapes: render.shapes, debugLines: DebugLine.lines, torsoId: render.torsoId }
+
     render.socket.emit('updateClient', message)
   })
 }
@@ -131,7 +133,7 @@ void new Puppet({
     { x: 50, y: -50 }
   ]
 })
-void new Bot({ x: 0, y: 500 })
+void new Bot({ x: 0, y: 50 })
 
 Matter.Runner.run(runner, engine)
 
