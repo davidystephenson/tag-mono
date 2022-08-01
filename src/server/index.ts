@@ -106,8 +106,6 @@ void new Crate({ x: 1000, y: 0, radius: 10 })
 void new Puppet({
   x: -200,
   y: 0,
-  direction: { x: 1, y: 0 },
-  targetSpeed: 0.5,
   vertices: [
     { x: 0, y: 50 },
     { x: -50, y: -50 },

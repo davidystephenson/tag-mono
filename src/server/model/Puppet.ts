@@ -1,4 +1,5 @@
 import Matter from 'matter-js'
+import { EAST } from '../lib/directions'
 import Actor from './Actor'
 
 export default class Puppet extends Actor {
@@ -6,12 +7,19 @@ export default class Puppet extends Actor {
   readonly direction: Matter.Vector
   readonly targetSpeed: number
 
-  constructor ({ x, y, vertices, targetSpeed, direction, color = 'green' }: {
+  constructor ({
+    x,
+    y,
+    vertices,
+    targetSpeed = 0.5,
+    direction = EAST,
+    color = 'green'
+  }: {
     x: number
     y: number
     vertices: Matter.Vector[]
-    targetSpeed: number
-    direction: Matter.Vector
+    targetSpeed?: number
+    direction?: Matter.Vector
     color?: string
   }) {
     const figure = Matter.Bodies.fromVertices(x, y, [vertices])
