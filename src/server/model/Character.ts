@@ -2,7 +2,7 @@ import Matter from 'matter-js'
 import { someRaycast, someToPoint } from '../lib/raycast'
 import VISION from '../../shared/VISION'
 import Input from '../../shared/Input'
-import inRange from '../lib/inRange'
+import { isPointInRange } from '../lib/inRange'
 import Actor from './Actor'
 
 export default class Character extends Actor {
@@ -22,6 +22,7 @@ export default class Character extends Actor {
   }) {
     const torso = Matter.Bodies.circle(x, y, radius)
     super({ x, y, id: torso.id, angle, color, parts: [torso] })
+
     this.radius = radius
     this.torso = torso
     this.torso.render.fillStyle = color
@@ -32,6 +33,7 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
+
     const vector = { x: 0, y: 0 }
     if (this.input.up) vector.y += -1
     if (this.input.down) vector.y += 1
@@ -96,22 +98,16 @@ export default class Character extends Actor {
       case 'torso': {
         if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
 
-        const rangeX = VISION.width + part.circleRadius
-        const inRangeX = inRange({ start: this.compound.position.x, end: part.position.x, range: rangeX })
+        const xRange = VISION.width + part.circleRadius
+        const yRange = VISION.height + part.circleRadius
 
-        const rangeY = VISION.height + part.circleRadius
-        const inRangeY = inRange({ start: this.compound.position.y, end: part.position.y, range: rangeY })
-
-        return inRangeX && inRangeY
+        return isPointInRange({ start: this.compound.position, end: part.position, xRange, yRange })
       }
       default: {
         if (Actor.polygons.includes(part.label)) {
-          return part.vertices.some(vertex => {
-            const inRangeX = inRange({ start: this.compound.position.x, end: vertex.x, range: VISION.width })
-            const inRangeY = inRange({ start: this.compound.position.y, end: vertex.y, range: VISION.height })
-
-            return inRangeX && inRangeY
-          })
+          return part.vertices.some(vertex => isPointInRange({
+            start: this.compound.position, end: vertex, xRange: VISION.width, yRange: VISION.height
+          }))
         }
 
         console.warn('Unmatched label:', part.label)
