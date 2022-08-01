@@ -1,4 +1,3 @@
-import yeast from 'yeast'
 import Matter from 'matter-js'
 import Input, { STILL } from '../../shared/Input'
 import Character from './Character'
@@ -12,8 +11,7 @@ export default class Bot extends Character {
     color?: string
     radius?: number
   }) {
-    const socketId = yeast()
-    super({ x, y, socketId, angle, color, radius })
+    super({ x, y, angle, color, radius })
   }
 
   takeInput (input: Partial<Input>): void {

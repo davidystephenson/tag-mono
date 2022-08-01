@@ -8,28 +8,25 @@ import Actor from './Actor'
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
-  static characters = new Map<string, Character>()
+  static characters = new Map<number, Character>()
   readonly torso: Matter.Body
-  readonly socketId: string
   readonly radius: number
   input = new Input()
 
-  constructor ({ x = 0, y = 0, socketId, radius = 15, angle = 0, color = 'green' }: {
+  constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
     x: number
     y: number
-    socketId: string
     angle?: number
     color?: string
     radius?: number
   }) {
     const torso = Matter.Bodies.circle(x, y, radius)
     super({ x, y, id: torso.id, angle, color, parts: [torso] })
-    this.socketId = socketId
     this.radius = radius
     this.torso = torso
     this.torso.render.fillStyle = color
     this.torso.label = 'torso'
-    Character.characters.set(this.socketId, this)
+    Character.characters.set(this.id, this)
     if (Character.characters.size === 1) this.makeIt()
   }
 

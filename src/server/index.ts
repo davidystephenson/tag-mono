@@ -16,6 +16,7 @@ import Crate from './model/Crate'
 import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
+import Player from './model/Player'
 
 /* TO DO:
 Label colors
@@ -59,25 +60,17 @@ async function updateClients (): Promise<void> {
   const obstacles = compounds.filter(body =>
     body.parts.find(part => part.label !== 'torso')
   )
-  const renders = sockets.map(socket => {
-    const player = Character.characters.get(socket.id)
+  sockets.forEach(socket => {
+    const player = Player.players.get(socket.id)
 
     if (player == null) {
       const shapes = Shape.fromCompounds(compounds)
+      const message = { shapes, debugLines: DebugLine.lines }
 
-      return { socket, shapes }
+      socket.emit('updateClient', message)
+    } else {
+      player.updateClient({ compounds, obstacles })
     }
-
-    const visibleCompounds = player.getVisibleCompounds({ compounds, obstacles })
-    const shapes = Shape.fromCompounds(visibleCompounds)
-
-    return { socket, shapes, torsoId: player.torso.id }
-  })
-
-  renders.forEach(render => {
-    const message = { shapes: render.shapes, debugLines: DebugLine.lines, torsoId: render.torsoId }
-
-    render.socket.emit('updateClient', message)
   })
 }
 
@@ -88,15 +81,17 @@ function tick (): void {
 
 io.on('connection', socket => {
   console.log('connection:', socket.id)
-  const player = new Character({ x: 0, y: 0, socketId: socket.id })
   socket.emit('socketId', socket.id)
-  socket.on('updateServer', msg => {
-    player.input = msg.input
+  const player = new Player({ x: 0, y: 0, socket })
+
+  socket.on('updateServer', message => {
+    player.input = message.input
   })
 
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
-    const player = Character.characters.get(socket.id)
+    const player = Player.players.get(socket.id)
+
     player?.destroy()
   })
 })
@@ -119,12 +114,13 @@ void new Puppet({
     { x: 50, y: -50 }
   ]
 })
-void new Bot({ x: 0, y: 50 })
+void new Bot({ x: 0, y: 500 })
 
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
+
   Actor.actors.forEach(actor => actor.act())
 })
 

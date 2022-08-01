@@ -43,10 +43,10 @@ socket.on('socketId', id => {
   state.id = id
 })
 
-socket.on('updateClient', ({ shapes, debugLines, torsoId }) => {
-  state.torsoId = torsoId
+socket.on('updateClient', message => {
+  state.torsoId = message.torsoId
   state.shapes.forEach(shape => { shape.deleted = true })
-  Object.values(shapes).forEach(shape => {
+  Object.values(message.shapes).forEach(shape => {
     if (!state.shapes.has(shape.id)) {
       state.shapes.set(shape.id, shape)
       shape.deleted = false
@@ -68,7 +68,7 @@ socket.on('updateClient', ({ shapes, debugLines, torsoId }) => {
     }
   })
 
-  state.debugLines = debugLines
+  state.debugLines = message.debugLines
   const reply = {
     id: state.id,
     input

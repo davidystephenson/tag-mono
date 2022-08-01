@@ -1,4 +1,5 @@
 import Matter from 'matter-js'
+import { vectorToPoint } from '../server/lib/engine'
 
 export default class Shape {
   readonly circleRadius?: number
@@ -20,8 +21,9 @@ export default class Shape {
     this.ix = body.position.x
     this.iy = body.position.y
     this.id = body.id
-    this.vertices = body.vertices.map(({ x, y }) => ({ x, y }))
-    this.ivertices = body.vertices.map(({ x, y }) => ({ x, y }))
+    const points = body.vertices.map(vectorToPoint)
+    this.vertices = points
+    this.ivertices = points
     this.render = body.render
   }
 
