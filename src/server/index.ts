@@ -17,6 +17,7 @@ import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
+import { SOUTH_EAST } from './lib/directions'
 
 /* TO DO:
 Label colors
@@ -104,8 +105,9 @@ wallPositions.forEach(position => new Wall(position))
 
 void new Crate({ x: 1000, y: 0, radius: 10 })
 void new Puppet({
-  x: -200,
+  x: -100,
   y: 0,
+  direction: SOUTH_EAST,
   vertices: [
     { x: 0, y: 50 },
     { x: -50, y: -50 },

@@ -6,19 +6,24 @@ export default class Puppet extends Actor {
   readonly figure: Matter.Body
   readonly direction: Matter.Vector
   readonly targetSpeed: number
+  readonly force: number
 
   constructor ({
     x,
     y,
     vertices,
+    density = 0.0001,
     targetSpeed = 0.5,
+    force = 0.00001,
     direction = EAST,
     color = 'green'
   }: {
     x: number
     y: number
     vertices: Matter.Vector[]
+    density?: number
     targetSpeed?: number
+    force?: number
     direction?: Matter.Vector
     color?: string
   }) {
@@ -27,16 +32,17 @@ export default class Puppet extends Actor {
     this.figure = figure
     this.figure.render.fillStyle = color
     this.figure.label = 'rock'
-    Matter.Body.setDensity(this.compound, 0.00001)
+    Matter.Body.setDensity(this.compound, density)
     this.direction = direction
     this.targetSpeed = targetSpeed
+    this.force = force
   }
 
   act (): void {
     super.act()
     if (this.compound.speed < this.targetSpeed) {
-      const force = Matter.Vector.mult(this.direction, 0.00001)
-      Matter.Body.applyForce(this.compound, this.compound.position, force)
+      const magnified = Matter.Vector.mult(this.direction, this.force)
+      Matter.Body.applyForce(this.compound, this.compound.position, magnified)
     }
   }
 }
