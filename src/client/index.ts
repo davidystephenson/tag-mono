@@ -9,7 +9,6 @@ import VISION from '../shared/VISION'
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
 if (context == null) throw new Error('No Canvas')
-console.log(context)
 
 const input = new Input()
 const state = new State()

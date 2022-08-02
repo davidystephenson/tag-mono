@@ -1,4 +1,4 @@
-export const controlKeys = {
+export const keyToControl = {
   w: 'up',
   s: 'down',
   a: 'left',
@@ -15,10 +15,14 @@ export const controlKeys = {
   ' ': 'select'
 } as const
 
-export type ControlKey = keyof typeof controlKeys
-export type Control = typeof controlKeys[ControlKey]
+export type ControlKey = keyof typeof keyToControl
+export function isControlKey (key: string): key is ControlKey {
+  return key in keyToControl
+}
 
+export type Control = typeof keyToControl[ControlKey]
 type Controls = Record<Control, boolean>
+
 export default Controls
 
 export const UP: Partial<Controls> = {

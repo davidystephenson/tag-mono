@@ -1,4 +1,4 @@
-import Controls, { controlKeys, ControlKey, Control } from './controls'
+import Controls, { keyToControl, isControlKey } from './controls'
 
 export default class Input {
   controls: Controls = {
@@ -13,8 +13,9 @@ export default class Input {
     key: string
     value: boolean
   }): void {
-    const control = controlKeys[key as ControlKey] as Control | undefined
-    if (control != null) {
+    if (isControlKey(key)) {
+      const control = keyToControl[key]
+
       this.controls[control] = value
     }
   }
