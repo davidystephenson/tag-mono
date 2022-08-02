@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
-import Input, { STILL } from '../../shared/Input'
 import Character from './Character'
-import { getRadiansInput } from '../lib/radians'
+import { getRadiansInput as getRadiansControls } from '../lib/radians'
+import Controls, { STILL } from '../../shared/controls'
 
 export default class Bot extends Character {
   constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
@@ -14,11 +14,11 @@ export default class Bot extends Character {
     super({ x, y, angle, color, radius })
   }
 
-  takeInput (input: Partial<Input>): void {
-    this.input = { ...this.input, ...input }
+  takeInput (controls: Partial<Controls>): void {
+    this.controls = { ...this.controls, ...controls }
   }
 
-  choose (): Partial<Input> {
+  choose (): Partial<Controls> {
     if (Character.it === this) {
       const closest: { distance: number, enemy?: Character } = { distance: Infinity }
       for (const [, character] of Character.characters) {
@@ -35,9 +35,9 @@ export default class Bot extends Character {
 
       if (closest.enemy != null) {
         const radians = Matter.Vector.angle(this.compound.position, closest.enemy.compound.position)
-        const input = getRadiansInput(radians)
+        const controls = getRadiansControls(radians)
 
-        return input
+        return controls
       }
     }
 

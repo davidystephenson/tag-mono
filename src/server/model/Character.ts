@@ -11,7 +11,7 @@ export default class Character extends Actor {
   static characters = new Map<number, Character>()
   readonly torso: Matter.Body
   readonly radius: number
-  input = new Input()
+  controls = new Input().controls
 
   constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
     x: number
@@ -35,10 +35,10 @@ export default class Character extends Actor {
     super.act()
 
     const vector = { x: 0, y: 0 }
-    if (this.input.up) vector.y += -1
-    if (this.input.down) vector.y += 1
-    if (this.input.left) vector.x += -1
-    if (this.input.right) vector.x += 1
+    if (this.controls.up) vector.y += -1
+    if (this.controls.down) vector.y += 1
+    if (this.controls.left) vector.x += -1
+    if (this.controls.right) vector.x += 1
     const direction = Matter.Vector.normalise(vector)
     const force = Matter.Vector.mult(direction, 0.00005)
     Matter.Body.applyForce(this.compound, this.compound.position, force)

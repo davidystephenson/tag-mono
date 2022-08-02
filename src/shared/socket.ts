@@ -1,5 +1,5 @@
+import Controls from './controls'
 import DebugLine from './DebugLine'
-import Input from './Input'
 import Shape from './Shape'
 
 export interface ServerToClientEvents {
@@ -8,5 +8,5 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  updateServer: ({ id, input }: {id?: string, input: Input}) => void
+  updateServer: ({ id, controls }: {id?: string, controls: Controls}) => void
 }

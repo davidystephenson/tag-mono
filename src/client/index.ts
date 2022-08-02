@@ -3,7 +3,6 @@ import Camera from './model/Camera'
 import State from './model/State'
 import Input from '../shared/Input'
 import Matter from 'matter-js'
-import controls from './lib/controls'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import VISION from '../shared/VISION'
 
@@ -22,15 +21,11 @@ window.onclick = function () {
 }
 
 window.onkeydown = function (event: KeyboardEvent) {
-  controls.forEach(control => {
-    if (event.key === control.key) input[control.input] = true
-  })
+  input.take({ key: event.key, value: true })
 }
 
 window.onkeyup = function (event: KeyboardEvent) {
-  controls.forEach(c => {
-    if (event.key === c.key) input[c.input] = false
-  })
+  input.take({ key: event.key, value: false })
 }
 
 window.onwheel = function (event: WheelEvent) {
@@ -71,7 +66,7 @@ socket.on('updateClient', message => {
   state.debugLines = message.debugLines
   const reply = {
     id: state.id,
-    input
+    controls: input.controls
   }
   socket.emit('updateServer', reply)
 })
