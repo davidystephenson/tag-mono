@@ -58,7 +58,6 @@ socket.on('updateClient', message => {
   state.shapes.forEach(shape => {
     if (shape.deleted) {
       state.shapes.delete(shape.id)
-      console.log('delete')
     }
   })
 

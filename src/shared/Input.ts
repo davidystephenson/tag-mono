@@ -17,6 +17,8 @@ export default class Input {
       const control = keyToControl[key]
 
       this.controls[control] = value
+    } else {
+      console.warn('Uncontrolled key:', key)
     }
   }
 }
