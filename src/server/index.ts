@@ -19,13 +19,13 @@ import Character from './model/Character'
 import Player from './model/Player'
 
 /* TO DO:
-Label colors
 Add boundary walls
 MAP_SIZE
-Sanitize client input
-Make an AI Player
-Pathfinding
 Random boundary size
+Sanitize client input
+Make the AI flee
+AI Reconnection
+Pathfinding
 Random starting internal obstacles
 Generate AI players
 */
@@ -96,11 +96,16 @@ io.on('connection', socket => {
   })
 })
 
+const MAP_SIZE = 1500
 const wallPositions = [
-  { x: 100, y: 0, width: 15, height: 100 },
-  { x: -100, y: 0, width: 15, height: 100 }
+  { x: 0, y: MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
+  { x: 0, y: -MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
+  { x: MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE },
+  { x: -MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE }
 ]
 wallPositions.forEach(position => new Wall(position))
+
+void new Wall({ x: 0, y: 0, width: 15, height: 0.5 * MAP_SIZE })
 
 void new Crate({ x: 1000, y: 0, radius: 10 })
 void new Puppet({
