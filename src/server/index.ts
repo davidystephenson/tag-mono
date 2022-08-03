@@ -16,6 +16,7 @@ import Crate from './model/Crate'
 import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
+import Player from './model/Player'
 
 /* TO DO:
 Label colors
@@ -45,10 +46,8 @@ function makeServer (): https.Server | http.Server {
   }
 }
 
-type Empty = Record<string, never>
-
 const server = makeServer()
-const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents, Empty, Empty>(server)
+const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
@@ -61,35 +60,17 @@ async function updateClients (): Promise<void> {
   const obstacles = compounds.filter(body =>
     body.parts.find(part => part.label !== 'torso')
   )
-  const renders = sockets.map(socket => {
-    const player = Character.characters.get(socket.id)
+  sockets.forEach(socket => {
+    const player = Player.players.get(socket.id)
 
     if (player == null) {
-      const allShapes = compounds.reduce<Record<string, Shape>>((allShapes, compound) => {
-        return compound.parts.slice(1).reduce((allShapes, body) => {
-          allShapes[body.id] = new Shape(body)
+      const shapes = Shape.fromCompounds(compounds)
+      const message = { shapes, debugLines: DebugLine.lines }
 
-          return allShapes
-        }, allShapes)
-      }, {})
-
-      return { socket, shapes: allShapes }
+      socket.emit('updateClient', message)
+    } else {
+      player.updateClient({ compounds, obstacles })
     }
-
-    const visibleCompounds = player.getVisibleCompounds({ compounds, obstacles })
-    const shapeList = visibleCompounds
-      .flatMap(compound => compound.parts.slice(1).map(body => new Shape(body)))
-    const shapes = shapeList.reduce<Record<string, Shape>>((shapes, shape) => {
-      shapes[shape.id] = shape
-
-      return shapes
-    }, {})
-
-    return { socket, shapes, torsoId: player.torso.id }
-  })
-  renders.forEach(render => {
-    const message = { shapes: render.shapes, debugLines: DebugLine.lines, torsoId: render.torsoId }
-    render.socket.emit('updateClient', message)
   })
 }
 
@@ -100,15 +81,17 @@ function tick (): void {
 
 io.on('connection', socket => {
   console.log('connection:', socket.id)
-  const player = new Character({ x: 0, y: 0, socketId: socket.id })
   socket.emit('socketId', socket.id)
-  socket.on('updateServer', msg => {
-    player.input = msg.input
+  const player = new Player({ x: 0, y: 0, socket })
+
+  socket.on('updateServer', message => {
+    player.controls = message.controls
   })
 
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
-    const player = Character.characters.get(socket.id)
+    const player = Player.players.get(socket.id)
+
     player?.destroy()
   })
 })
@@ -121,10 +104,8 @@ wallPositions.forEach(position => new Wall(position))
 
 void new Crate({ x: 1000, y: 0, radius: 10 })
 void new Puppet({
-  x: -200,
+  x: -100,
   y: 0,
-  direction: { x: 1, y: 0 },
-  targetSpeed: 0.5,
   vertices: [
     { x: 0, y: 50 },
     { x: -50, y: -50 },
@@ -135,9 +116,10 @@ void new Bot({ x: 0, y: 500 })
 
 Matter.Runner.run(runner, engine)
 
-Matter.Events.on(engine, 'afterUpdate', e => {
+Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
-  Actor.actors.forEach(character => character.act())
+
+  Actor.actors.forEach(actor => actor.act())
 })
 
 Matter.Events.on(engine, 'collisionStart', event => {

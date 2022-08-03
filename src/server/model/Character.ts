@@ -2,44 +2,43 @@ import Matter from 'matter-js'
 import { someRaycast, someToPoint } from '../lib/raycast'
 import VISION from '../../shared/VISION'
 import Input from '../../shared/Input'
-import inRange from '../lib/inRange'
+import { isPointInRange } from '../lib/inRange'
 import Actor from './Actor'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
-  static characters = new Map<string, Character>()
+  static characters = new Map<number, Character>()
   readonly torso: Matter.Body
-  readonly socketId: string
   readonly radius: number
-  input = new Input()
+  controls = new Input().controls
 
-  constructor ({ x = 0, y = 0, socketId, radius = 15, angle = 0, color = 'green' }: {
+  constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
     x: number
     y: number
-    socketId: string
     angle?: number
     color?: string
     radius?: number
   }) {
     const torso = Matter.Bodies.circle(x, y, radius)
     super({ x, y, id: torso.id, angle, color, parts: [torso] })
-    this.socketId = socketId
+
     this.radius = radius
     this.torso = torso
     this.torso.render.fillStyle = color
     this.torso.label = 'torso'
-    Character.characters.set(this.socketId, this)
+    Character.characters.set(this.id, this)
     if (Character.characters.size === 1) this.makeIt()
   }
 
   act (): void {
     super.act()
+
     const vector = { x: 0, y: 0 }
-    if (this.input.up) vector.y += -1
-    if (this.input.down) vector.y += 1
-    if (this.input.left) vector.x += -1
-    if (this.input.right) vector.x += 1
+    if (this.controls.up) vector.y += -1
+    if (this.controls.down) vector.y += 1
+    if (this.controls.left) vector.x += -1
+    if (this.controls.right) vector.x += 1
     const direction = Matter.Vector.normalise(vector)
     const force = Matter.Vector.mult(direction, 0.00005)
     Matter.Body.applyForce(this.compound, this.compound.position, force)
@@ -99,22 +98,16 @@ export default class Character extends Actor {
       case 'torso': {
         if (part.circleRadius == null) throw new Error('Torso must have a circleRadius')
 
-        const rangeX = VISION.width + part.circleRadius
-        const inRangeX = inRange({ start: this.compound.position.x, end: part.position.x, range: rangeX })
+        const xRange = VISION.width + part.circleRadius
+        const yRange = VISION.height + part.circleRadius
 
-        const rangeY = VISION.height + part.circleRadius
-        const inRangeY = inRange({ start: this.compound.position.y, end: part.position.y, range: rangeY })
-
-        return inRangeX && inRangeY
+        return isPointInRange({ start: this.compound.position, end: part.position, xRange, yRange })
       }
       default: {
         if (Actor.polygons.includes(part.label)) {
-          return part.vertices.some(vertex => {
-            const inRangeX = inRange({ start: this.compound.position.x, end: vertex.x, range: VISION.width })
-            const inRangeY = inRange({ start: this.compound.position.y, end: vertex.y, range: VISION.height })
-
-            return inRangeX && inRangeY
-          })
+          return part.vertices.some(vertex => isPointInRange({
+            start: this.compound.position, end: vertex, xRange: VISION.width, yRange: VISION.height
+          }))
         }
 
         console.warn('Unmatched label:', part.label)

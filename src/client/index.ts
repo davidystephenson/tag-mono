@@ -3,14 +3,12 @@ import Camera from './model/Camera'
 import State from './model/State'
 import Input from '../shared/Input'
 import Matter from 'matter-js'
-import controls from './lib/controls'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import VISION from '../shared/VISION'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
 if (context == null) throw new Error('No Canvas')
-console.log(context)
 
 const input = new Input()
 const state = new State()
@@ -22,15 +20,11 @@ window.onclick = function () {
 }
 
 window.onkeydown = function (event: KeyboardEvent) {
-  controls.forEach(control => {
-    if (event.key === control.key) input[control.input] = true
-  })
+  input.take({ key: event.key, value: true })
 }
 
 window.onkeyup = function (event: KeyboardEvent) {
-  controls.forEach(c => {
-    if (event.key === c.key) input[c.input] = false
-  })
+  input.take({ key: event.key, value: false })
 }
 
 window.onwheel = function (event: WheelEvent) {
@@ -43,10 +37,10 @@ socket.on('socketId', id => {
   state.id = id
 })
 
-socket.on('updateClient', msg => {
-  state.torsoId = msg.torsoId
+socket.on('updateClient', message => {
+  state.torsoId = message.torsoId
   state.shapes.forEach(shape => { shape.deleted = true })
-  Object.values(msg.shapes).forEach(shape => {
+  Object.values(message.shapes).forEach(shape => {
     if (!state.shapes.has(shape.id)) {
       state.shapes.set(shape.id, shape)
       shape.deleted = false
@@ -64,14 +58,13 @@ socket.on('updateClient', msg => {
   state.shapes.forEach(shape => {
     if (shape.deleted) {
       state.shapes.delete(shape.id)
-      console.log('delete')
     }
   })
 
-  state.debugLines = msg.debugLines
+  state.debugLines = message.debugLines
   const reply = {
     id: state.id,
-    input
+    controls: input.controls
   }
   socket.emit('updateServer', reply)
 })
