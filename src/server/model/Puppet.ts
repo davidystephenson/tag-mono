@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { EAST } from '../lib/directions'
+import { EAST_VECTOR } from '../lib/directions'
 import Actor from './Actor'
 
 export default class Puppet extends Actor {
@@ -15,7 +15,7 @@ export default class Puppet extends Actor {
     density = 0.0001,
     targetSpeed = 0.5,
     force = 0.00001,
-    direction = EAST,
+    direction = EAST_VECTOR,
     color = 'green'
   }: {
     x: number
