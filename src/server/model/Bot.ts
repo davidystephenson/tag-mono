@@ -4,14 +4,13 @@ import { getRadiansInput as getRadiansControls } from '../lib/radians'
 import Controls, { STILL } from '../../shared/controls'
 
 export default class Bot extends Character {
-  constructor ({ x = 0, y = 0, radius = 15, angle = 0, color = 'green' }: {
+  constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
     y: number
-    angle?: number
     color?: string
     radius?: number
   }) {
-    super({ x, y, angle, color, radius })
+    super({ x, y, color, radius })
   }
 
   takeInput (controls: Partial<Controls>): void {
@@ -23,7 +22,7 @@ export default class Bot extends Character {
       const closest: { distance: number, enemy?: Character } = { distance: Infinity }
       for (const [, character] of Character.characters) {
         if (character !== this) {
-          const distance = Matter.Vector.sub(character.compound.position, this.compound.position)
+          const distance = Matter.Vector.sub(character.feature.body.position, this.feature.body.position)
           const magnitude = Matter.Vector.magnitude(distance)
 
           if (magnitude < closest.distance) {
@@ -34,7 +33,7 @@ export default class Bot extends Character {
       }
 
       if (closest.enemy != null) {
-        const radians = Matter.Vector.angle(this.compound.position, closest.enemy.compound.position)
+        const radians = Matter.Vector.angle(this.feature.body.position, closest.enemy.feature.body.position)
         const controls = getRadiansControls(radians)
 
         return controls

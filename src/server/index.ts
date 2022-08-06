@@ -17,6 +17,7 @@ import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
+import Feature from './model/Feature'
 
 /* TO DO:
 Add boundary walls
@@ -56,20 +57,17 @@ server.listen(PORT, () => {
 
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
-  const compounds = Matter.Composite.allBodies(engine.world)
-  const obstacles = compounds.filter(body =>
-    !body.parts.some(part => part.label === 'torso')
-  )
   sockets.forEach(socket => {
     const player = Player.players.get(socket.id)
 
     if (player == null) {
-      const shapes = Shape.fromCompounds(compounds)
+      const shapes: Shape[] = []
+      Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
       const message = { shapes, debugLines: DebugLine.lines }
 
       socket.emit('updateClient', message)
     } else {
-      player.updateClient({ compounds, obstacles })
+      player.updateClient()
     }
   })
 }
@@ -107,7 +105,7 @@ wallPositions.forEach(position => new Wall(position))
 
 void new Wall({ x: 0, y: 0, width: 15, height: 0.5 * MAP_SIZE })
 
-void new Crate({ x: 1000, y: 0, radius: 10 })
+void new Crate({ x: 1000, y: 0, height: 10, width: 10 })
 void new Puppet({
   x: -100,
   y: 0,
@@ -129,12 +127,16 @@ Matter.Events.on(engine, 'afterUpdate', () => {
 
 Matter.Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(pair => {
-    if (pair.bodyA.label === 'torso' && pair.bodyB.label === 'torso') {
+    console.log('collide', pair.bodyA.label, pair.bodyB.label)
+    if (pair.bodyA.label === 'character' && pair.bodyB.label === 'character') {
       // pair.isActive = false
       // state.paused = true
       console.log('collide')
       const actorA = Actor.actors.get(pair.bodyA.id) as Character
       const actorB = Actor.actors.get(pair.bodyB.id) as Character
+      const bodyA = actorA.feature.body
+      const bodyB = actorB.feature.body
+      console.log('actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
       if (Character.it === actorA) {
         actorB.makeIt()
       } else if (Character.it === actorB) {

@@ -7,7 +7,7 @@ export default class Player extends Character {
   static players = new Map<string, Player>()
   readonly socket: Socket
 
-  constructor ({ x = 0, y = 0, socket, radius = 15, angle = 0, color = 'green' }: {
+  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
     x: number
     y: number
     socket: Socket
@@ -15,20 +15,16 @@ export default class Player extends Character {
     color?: string
     radius?: number
   }) {
-    super({ x, y, angle, color })
+    super({ x, y, color })
 
     this.socket = socket
     Player.players.set(this.socket.id, this)
   }
 
-  updateClient ({ compounds, obstacles }: {
-    compounds: Matter.Body[]
-    obstacles: Matter.Body[]
-  }): void {
-    const visibleCompounds = this.getVisibleCompounds({ compounds, obstacles })
-    const shapes = Shape.fromCompounds(visibleCompounds)
-    const message = { shapes, debugLines: DebugLine.lines, torsoId: this.torso.id }
-
+  updateClient (): void {
+    const visibleFeatures = this.getVisibleFeatures()
+    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
+    const message = { shapes, debugLines: DebugLine.lines, torsoId: this.feature.body.id }
     this.socket.emit('updateClient', message)
   }
 }

@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
-import Feature from './Feature'
+import RectangleFeature from './RectangleFeature'
 
-export default class Wall extends Feature {
+export default class Wall extends RectangleFeature {
   readonly x: number
   readonly y: number
   readonly width: number
@@ -12,14 +12,21 @@ export default class Wall extends Feature {
     width: number
     height: number
   }) {
-    const body = Matter.Bodies.rectangle(x, y, width, height)
-    body.label = 'wall'
-    super({ parts: [body] })
+    super({ x, y, width, height })
+    this.body.label = 'wall'
     this.x = x
     this.y = y
     this.width = width
     this.height = height
-    body.render.fillStyle = 'Purple'
-    Matter.Body.setStatic(this.compound, true)
+    this.body.render.fillStyle = 'Purple'
+    Matter.Body.setStatic(this.body, true)
+  }
+
+  isVisible ({ center, viewpoints, obstacles }: {
+    center: Matter.Vector
+    viewpoints: Matter.Vector[]
+    obstacles: Matter.Body[]
+  }): boolean {
+    return true
   }
 }

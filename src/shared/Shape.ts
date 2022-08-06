@@ -26,16 +26,4 @@ export default class Shape {
     this.ivertices = points
     this.render = body.render
   }
-
-  static fromCompounds (compounds: Matter.Body[]): Record<string, Shape> {
-    const shapes = compounds.reduce<Record<string, Shape>>((shapes, compound) => {
-      compound.parts.slice(1).forEach((part) => {
-        shapes[part.id] = new Shape(part)
-      })
-
-      return shapes
-    }, {})
-
-    return shapes
-  }
 }

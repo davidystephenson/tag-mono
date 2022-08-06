@@ -3,24 +3,35 @@ import { engine } from '../lib/engine'
 
 export default class Feature {
   static features = new Map<number, Feature>()
-  readonly compound: Matter.Body
-  readonly parts: Matter.Body[]
+  static obstacles = new Map<number, Matter.Body>()
+  readonly body: Matter.Body
+  readonly isObstacle: boolean
 
-  constructor ({ parts }: {
-    parts: Matter.Body[]
+  constructor ({ body, isObstacle = true }: {
+    body: Matter.Body
+    isObstacle?: boolean
   }) {
-    this.parts = parts
-    this.compound = Matter.Body.create({ parts })
-    this.compound.label = 'compound'
+    this.body = body
+    this.isObstacle = isObstacle
+    Matter.Composite.add(engine.world, this.body)
+    this.body.restitution = 0
+    this.body.friction = 0
+    this.body.frictionAir = 0.01
+    Feature.features.set(this.body.id, this)
+    if (this.isObstacle) Feature.obstacles.set(this.body.id, this.body)
+  }
 
-    Matter.Composite.add(engine.world, this.compound)
-    Feature.features.set(this.compound.id, this)
-    this.parts.forEach(part => Feature.features.set(part.id, this))
+  isVisible ({ center, viewpoints, obstacles }: {
+    center: Matter.Vector
+    viewpoints: Matter.Vector[]
+    obstacles: Matter.Body[]
+  }): boolean {
+    return true
   }
 
   destroy (): void {
-    Matter.Composite.remove(engine.world, this.compound)
-    this.parts.forEach(part => Feature.features.delete(part.id))
-    Feature.features.delete(this.compound.id)
+    Matter.Composite.remove(engine.world, this.body)
+    Feature.features.delete(this.body.id)
+    if (this.isObstacle) Feature.obstacles.delete(this.body.id)
   }
 }
