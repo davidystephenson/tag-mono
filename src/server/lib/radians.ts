@@ -9,51 +9,51 @@ export const FIVE_8_PI = FIVE_8 * Math.PI
 export const THREE_4_PI = THREE_4 * Math.PI
 export const SEVEN_8_PI = SEVEN_8 * Math.PI
 
-export const ONE_O_CLOCK = -THREE_8_PI
-export const TWO_O_CLOCK = -ONE_8_PI
-export const THREE_O_CLOCK = 0
-export const FOUR_O_CLOCK = ONE_8_PI
-export const FIVE_O_CLOCK = THREE_8_PI
-export const SIX_O_CLOCK = ONE_2_PI
-export const SEVEN_O_CLOCK = FIVE_8_PI
-export const EIGHT_O_CLOCK = SEVEN_8_PI
-export const NINE_O_CLOCK = Math.PI // -Math.PI
-export const TEN_O_CLOCK = -SEVEN_8_PI
-export const ELEVEN_O_CLOCK = -FIVE_8_PI
-export const TWELVE_O_CLOCK = -ONE_2_PI
+export const NORTH_NE_RADIANS = -THREE_8_PI
+export const EAST_NE_RADIANS = -ONE_8_PI
+export const EAST_RADIANS = 0
+export const EAST_SE_RADIANS = ONE_8_PI
+export const SOUTH_SE_RADIANS = THREE_8_PI
+export const SOUTH_RADIANS = ONE_2_PI
+export const SOUTH_SW_RADIANS = FIVE_8_PI
+export const WEST_SW_RADIANS = SEVEN_8_PI
+export const WEST_RADIANS = Math.PI // -Math.PI
+export const WEST_NW_RADIANS = -SEVEN_8_PI
+export const NORTH_NW_RADIANS = -FIVE_8_PI
+export const NORTH_RADIANS = -ONE_2_PI
 
 export function areRadiansUp (radians: number): boolean {
-  return ELEVEN_O_CLOCK <= radians && radians < ONE_O_CLOCK
+  return NORTH_NW_RADIANS <= radians && radians < NORTH_NE_RADIANS
 }
 
 export function areRadiansUpRight (radians: number): boolean {
-  return ONE_O_CLOCK <= radians && radians < TWO_O_CLOCK
+  return NORTH_NE_RADIANS <= radians && radians < EAST_NE_RADIANS
 }
 
 export function areRadiansRight (radians: number): boolean {
-  return TWO_O_CLOCK <= radians && radians < FOUR_O_CLOCK
+  return EAST_NE_RADIANS <= radians && radians < EAST_SE_RADIANS
 }
 
 export function areRadiansDownRight (radians: number): boolean {
-  return FOUR_O_CLOCK <= radians && radians < FIVE_O_CLOCK
+  return EAST_SE_RADIANS <= radians && radians < SOUTH_SE_RADIANS
 }
 
 export function areRadiansDown (radians: number): boolean {
-  return FIVE_O_CLOCK <= radians && radians < SEVEN_O_CLOCK
+  return SOUTH_SE_RADIANS <= radians && radians < SOUTH_SW_RADIANS
 }
 
 export function areRadiansDownLeft (radians: number): boolean {
-  return SEVEN_O_CLOCK <= radians && radians < EIGHT_O_CLOCK
+  return SOUTH_SW_RADIANS <= radians && radians < WEST_SW_RADIANS
 }
 
 export function areRadiansLeft (radians: number): boolean {
-  const positive = EIGHT_O_CLOCK <= radians && radians < NINE_O_CLOCK
+  const positive = WEST_SW_RADIANS <= radians && radians < WEST_RADIANS
 
-  return positive || (-NINE_O_CLOCK <= radians && radians < TEN_O_CLOCK)
+  return positive || (-WEST_RADIANS <= radians && radians < WEST_NW_RADIANS)
 }
 
 export function areRadiansUpLeft (radians: number): boolean {
-  return TEN_O_CLOCK <= radians && radians < ELEVEN_O_CLOCK
+  return WEST_NW_RADIANS <= radians && radians < NORTH_NW_RADIANS
 }
 
 export function getRadiansInput (radians: number): Partial<Controls> {

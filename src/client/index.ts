@@ -5,6 +5,7 @@ import Input from '../shared/Input'
 import Matter from 'matter-js'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import VISION from '../shared/VISION'
+import Shape from '../shared/Shape'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
@@ -39,27 +40,22 @@ socket.on('socketId', id => {
 
 socket.on('updateClient', message => {
   state.torsoId = message.torsoId
-  state.shapes.forEach(shape => { shape.deleted = true })
-  Object.values(message.shapes).forEach(shape => {
-    if (!state.shapes.has(shape.id)) {
-      state.shapes.set(shape.id, shape)
-      shape.deleted = false
+
+  const newShapes = new Map<number, Shape>()
+  Object.values(message.shapes).forEach(messageShape => {
+    const stateShape = state.shapes.get(messageShape.id)
+    if (stateShape == null) {
+      newShapes.set(messageShape.id, messageShape)
     } else {
-      const stateShape = state.shapes.get(shape.id)
-      if (stateShape != null) {
-        stateShape.x = shape.x
-        stateShape.y = shape.y
-        stateShape.render = shape.render
-        stateShape.vertices = shape.vertices
-        stateShape.deleted = false
-      }
+      stateShape.x = messageShape.x
+      stateShape.y = messageShape.y
+      stateShape.render = messageShape.render
+      stateShape.vertices = messageShape.vertices
+      stateShape.deleted = false
+      newShapes.set(stateShape.id, stateShape)
     }
   })
-  state.shapes.forEach(shape => {
-    if (shape.deleted) {
-      state.shapes.delete(shape.id)
-    }
-  })
+  state.shapes = newShapes
 
   state.debugLines = message.debugLines
   const reply = {
