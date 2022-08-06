@@ -58,7 +58,7 @@ async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
   const compounds = Matter.Composite.allBodies(engine.world)
   const obstacles = compounds.filter(body =>
-    body.parts.find(part => part.label !== 'torso')
+    !body.parts.some(part => part.label === 'torso')
   )
   sockets.forEach(socket => {
     const player = Player.players.get(socket.id)
