@@ -9,6 +9,7 @@ export default class Actor {
     feature: Feature
   }) {
     this.feature = feature
+    this.feature.actor = this
     Actor.actors.set(this.feature.body.id, this)
   }
 

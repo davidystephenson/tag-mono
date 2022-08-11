@@ -1,11 +1,13 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
+import Actor from './Actor'
 
 export default class Feature {
   static features = new Map<number, Feature>()
   static obstacles = new Map<number, Matter.Body>()
   readonly body: Matter.Body
   readonly isObstacle: boolean
+  actor?: Actor
 
   constructor ({ body, isObstacle = true }: {
     body: Matter.Body

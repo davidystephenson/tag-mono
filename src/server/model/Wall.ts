@@ -2,6 +2,8 @@ import Matter from 'matter-js'
 import RectangleFeature from './RectangleFeature'
 
 export default class Wall extends RectangleFeature {
+  static walls = new Map<number, Wall>()
+  static wallObstacles: Matter.Body[] = []
   readonly x: number
   readonly y: number
   readonly width: number
@@ -20,6 +22,8 @@ export default class Wall extends RectangleFeature {
     this.height = height
     this.body.render.fillStyle = 'Purple'
     Matter.Body.setStatic(this.body, true)
+    Wall.walls.set(this.body.id, this)
+    Wall.wallObstacles.push(this.body)
   }
 
   isVisible ({ center, viewpoints, obstacles }: {

@@ -20,15 +20,12 @@ import Player from './model/Player'
 import Feature from './model/Feature'
 
 /* TO DO:
-Add boundary walls
-MAP_SIZE
-Random boundary size
-Sanitize client input
-Make the AI flee
-AI Reconnection
+AI Reconnection (Bot Creation if Necessary)
 Pathfinding
+Search and Hide
 Random starting internal obstacles
 Generate AI players
+Random boundary size
 */
 
 const app = express()
@@ -74,7 +71,6 @@ async function updateClients (): Promise<void> {
 
 function tick (): void {
   void updateClients()
-  DebugLine.lines = []
 }
 
 io.on('connection', socket => {
@@ -89,7 +85,7 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
     const player = Player.players.get(socket.id)
-
+    if (Character.it === player) Bot.oldest.makeIt()
     player?.destroy()
   })
 })
@@ -103,7 +99,7 @@ const wallPositions = [
 ]
 wallPositions.forEach(position => new Wall(position))
 
-void new Wall({ x: 0, y: 0, width: 15, height: 0.5 * MAP_SIZE })
+void new Wall({ x: 0, y: 0, width: 200, height: 200 })
 
 void new Crate({ x: 1000, y: 0, height: 10, width: 10 })
 void new Puppet({
@@ -115,13 +111,13 @@ void new Puppet({
     { x: 50, y: -50 }
   ]
 })
-void new Bot({ x: 0, y: 500 })
+void new Bot({ x: -10, y: 500 })
 
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
-
+  DebugLine.lines = []
   Actor.actors.forEach(actor => actor.act())
 })
 
