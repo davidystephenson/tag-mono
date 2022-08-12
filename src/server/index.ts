@@ -6,7 +6,6 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import Shape from '../shared/Shape'
 import { engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
@@ -17,11 +16,11 @@ import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
-import Feature from './model/Feature'
+import DebugCircle from '../shared/DebugCircle'
+import Waypoint from './model/Waypoint'
 
 /* TO DO:
-AI Reconnection (Bot Creation if Necessary)
-Pathfinding
+Pathfinding (Ignore Offscreen Walls, Calculate the Full Path)
 Search and Hide
 Random starting internal obstacles
 Generate AI players
@@ -58,11 +57,13 @@ async function updateClients (): Promise<void> {
     const player = Player.players.get(socket.id)
 
     if (player == null) {
+      throw new Error('player = null')
+      /*
       const shapes: Shape[] = []
       Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
-      const message = { shapes, debugLines: DebugLine.lines }
-
+      const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
       socket.emit('updateClient', message)
+      */
     } else {
       player.updateClient()
     }
@@ -76,7 +77,7 @@ function tick (): void {
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   socket.emit('socketId', socket.id)
-  const player = new Player({ x: 0, y: 0, socket })
+  const player = new Player({ x: 0, y: -1050, socket })
 
   socket.on('updateServer', message => {
     player.controls = message.controls
@@ -90,6 +91,7 @@ io.on('connection', socket => {
   })
 })
 
+/*
 const MAP_SIZE = 1500
 const wallPositions = [
   { x: 0, y: MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
@@ -98,8 +100,13 @@ const wallPositions = [
   { x: -MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE }
 ]
 wallPositions.forEach(position => new Wall(position))
+*/
 
-void new Wall({ x: 0, y: 0, width: 200, height: 200 })
+void new Wall({ x: 300, y: -1000, width: 700, height: 20 })
+void new Wall({ x: 0, y: -900, width: 300, height: 20 })
+void new Wall({ x: 0, y: -800, width: 300, height: 20 })
+void new Wall({ x: 400, y: 0, width: 200, height: 20 })
+void new Wall({ x: -400, y: 0, width: 200, height: 20 })
 
 void new Crate({ x: 1000, y: 0, height: 10, width: 10 })
 void new Puppet({
@@ -111,13 +118,41 @@ void new Puppet({
     { x: 50, y: -50 }
   ]
 })
-void new Bot({ x: -10, y: 500 })
+void new Bot({ x: 0, y: 0 })
+
+Wall.wallObstacles.forEach(wallBody => {
+  wallBody.vertices.forEach(corner => {
+    const direction = Matter.Vector.normalise({
+      x: Math.sign(corner.x - wallBody.position.x),
+      y: Math.sign(corner.y - wallBody.position.y)
+    })
+    const away = Matter.Vector.mult(direction, 16)
+    const location = Matter.Vector.add(corner, away)
+    void new Waypoint({ x: location.x, y: location.y })
+  })
+})
+Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
+Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
+Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
 
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
-  DebugLine.lines = []
+  DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'yellow' }))
+  const startPoint = Waypoint.waypoints[0]
+  const endPoint = Waypoint.waypoints[14]
+  DebugCircle.circles.push(new DebugCircle({ x: startPoint.x, y: startPoint.y, radius: 7, color: 'green' }))
+  DebugCircle.circles.push(new DebugCircle({ x: endPoint.x, y: endPoint.y, radius: 7, color: 'red' }))
+  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[5].x, y: Waypoint.waypoints[5].y, radius: 7, color: 'purple' }))
+  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[1].x, y: Waypoint.waypoints[1].y, radius: 7, color: 'white' }))
+  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[13].x, y: Waypoint.waypoints[13].y, radius: 7, color: 'black' }))
+  const path = startPoint.getPath(endPoint)
+  DebugLine.lines = path.slice(0, path.length - 1).map((waypoint, index) => {
+    const next = path[index + 1]
+    return new DebugLine({ start: waypoint.position, end: next.position, color: 'orange' })
+  })
+
   Actor.actors.forEach(actor => actor.act())
 })
 

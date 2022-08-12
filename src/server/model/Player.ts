@@ -2,6 +2,7 @@ import Character from './Character'
 import { Socket } from 'socket.io'
 import Shape from '../../shared/Shape'
 import DebugLine from '../../shared/DebugLine'
+import DebugCircle from '../../shared/DebugCircle'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
@@ -24,7 +25,12 @@ export default class Player extends Character {
   updateClient (): void {
     const visibleFeatures = this.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => new Shape(feature.body))
-    const message = { shapes, debugLines: DebugLine.lines, torsoId: this.feature.body.id }
+    const message = {
+      shapes,
+      debugLines: DebugLine.lines,
+      debugCircles: DebugCircle.circles,
+      torsoId: this.feature.body.id
+    }
     this.socket.emit('updateClient', message)
   }
 }

@@ -55,8 +55,9 @@ socket.on('updateClient', message => {
       newShapes.set(stateShape.id, stateShape)
     }
   })
+  console.log(message)
   state.shapes = newShapes
-
+  state.debugCircles = message.debugCircles
   state.debugLines = message.debugLines
   const reply = {
     id: state.id,
@@ -104,9 +105,15 @@ const draw = function (): void {
       context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
     }
   })
-
+  state.debugCircles.forEach(circle => {
+    context.fillStyle = circle.color
+    context.beginPath()
+    context.arc(circle.x - camera.x, circle.y - camera.y, circle.radius, 0, 2 * Math.PI)
+    context.fill()
+  })
   state.debugLines.forEach(line => {
     context.strokeStyle = line.color
+    context.lineWidth = 4
     context.beginPath()
     context.moveTo(line.start.x - camera.x, line.start.y - camera.y)
     context.lineTo(line.end.x - camera.x, line.end.y - camera.y)

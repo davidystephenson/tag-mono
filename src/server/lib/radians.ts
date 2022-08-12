@@ -57,7 +57,9 @@ export function areRadiansUpLeft (radians: number): boolean {
 }
 
 export function getRadiansInput (radians: number): Partial<Controls> {
-  if (areRadiansUp(radians)) return UP
+  if (areRadiansUp(radians)) {
+    return UP
+  }
   if (areRadiansUpRight(radians)) return UP_RIGHT
   if (areRadiansRight(radians)) return RIGHT
   if (areRadiansDownRight(radians)) return DOWN_RIGHT
