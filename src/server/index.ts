@@ -102,11 +102,11 @@ const wallPositions = [
 wallPositions.forEach(position => new Wall(position))
 */
 
-void new Wall({ x: 300, y: -1000, width: 700, height: 20 })
-void new Wall({ x: 0, y: -900, width: 300, height: 20 })
-void new Wall({ x: 0, y: -800, width: 300, height: 20 })
-void new Wall({ x: 400, y: 0, width: 200, height: 20 })
-void new Wall({ x: -400, y: 0, width: 200, height: 20 })
+void new Wall({ x: 300, y: -1000, width: 700, height: 40 })
+void new Wall({ x: 0, y: -900, width: 300, height: 40 })
+void new Wall({ x: 0, y: -800, width: 300, height: 40 })
+void new Wall({ x: 400, y: 0, width: 200, height: 40 })
+void new Wall({ x: -400, y: 0, width: 200, height: 40 })
 
 void new Crate({ x: 1000, y: 0, height: 10, width: 10 })
 void new Puppet({
@@ -139,14 +139,16 @@ Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
-  DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'yellow' }))
+  DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({
+    x: waypoint.x,
+    y: waypoint.y,
+    radius: 5,
+    color: 'purple'
+  }))
   const startPoint = Waypoint.waypoints[0]
   const endPoint = Waypoint.waypoints[14]
   DebugCircle.circles.push(new DebugCircle({ x: startPoint.x, y: startPoint.y, radius: 7, color: 'green' }))
   DebugCircle.circles.push(new DebugCircle({ x: endPoint.x, y: endPoint.y, radius: 7, color: 'red' }))
-  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[5].x, y: Waypoint.waypoints[5].y, radius: 7, color: 'purple' }))
-  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[1].x, y: Waypoint.waypoints[1].y, radius: 7, color: 'white' }))
-  DebugCircle.circles.push(new DebugCircle({ x: Waypoint.waypoints[13].x, y: Waypoint.waypoints[13].y, radius: 7, color: 'black' }))
   const path = startPoint.getPath(endPoint)
   DebugLine.lines = path.slice(0, path.length - 1).map((waypoint, index) => {
     const next = path[index + 1]
@@ -162,12 +164,11 @@ Matter.Events.on(engine, 'collisionStart', event => {
     if (pair.bodyA.label === 'character' && pair.bodyB.label === 'character') {
       // pair.isActive = false
       // state.paused = true
-      console.log('collide')
       const actorA = Actor.actors.get(pair.bodyA.id) as Character
       const actorB = Actor.actors.get(pair.bodyB.id) as Character
       const bodyA = actorA.feature.body
       const bodyB = actorB.feature.body
-      console.log('actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
+      console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
       if (Character.it === actorA) {
         actorB.makeIt()
       } else if (Character.it === actorB) {
