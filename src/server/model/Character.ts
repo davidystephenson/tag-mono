@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
+import { engine } from '../lib/engine'
 import Actor from './Actor'
 import CircleFeature from './CircleFeature'
 import Feature from './Feature'
@@ -56,6 +57,7 @@ export default class Character extends Actor {
   }
 
   makeIt (): void {
+    console.log('How many bodies?', Matter.Composite.allBodies(engine.world).length)
     console.log('makeIt', this.feature.body.id)
     this.feature.body.render.fillStyle = 'red'
     if (Character.it != null) Character.it.feature.body.render.fillStyle = 'green'

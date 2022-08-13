@@ -19,7 +19,9 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = Waypoint.waypoints.length
-    Waypoint.waypoints.push(this)
+    if (Matter.Query.point(Wall.wallObstacles, this.position).length === 0) {
+      Waypoint.waypoints.push(this)
+    }
   }
 
   setNeighbors (): void {

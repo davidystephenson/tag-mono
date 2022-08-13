@@ -20,8 +20,7 @@ import DebugCircle from '../shared/DebugCircle'
 import Waypoint from './model/Waypoint'
 
 /* TO DO:
-Pathfinding (Ignore Offscreen Walls)
-Search and Hide
+Crates and Puppets Block Navigation Vision
 Random starting internal obstacles
 Generate AI players
 Random boundary size
@@ -91,16 +90,14 @@ io.on('connection', socket => {
   })
 })
 
-/*
 const MAP_SIZE = 1500
-const wallPositions = [
+const wallProps = [
   { x: 0, y: MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
   { x: 0, y: -MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
   { x: MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE },
   { x: -MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE }
 ]
-wallPositions.forEach(position => new Wall(position))
-*/
+wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
 void new Wall({ x: -100, y: -1000, width: 1000, height: 40 })
 void new Wall({ x: 0, y: -900, width: 200, height: 40 })
@@ -108,32 +105,41 @@ void new Wall({ x: 100, y: -800, width: 200, height: 40 })
 void new Wall({ x: 400, y: 0, width: 200, height: 40 })
 void new Wall({ x: -400, y: 0, width: 200, height: 40 })
 
-void new Crate({ x: 1000, y: 0, height: 10, width: 10 })
+const edgePadding = 30
+const size = MAP_SIZE - edgePadding
+const stepSize = size / 3
+const gridSteps = Math.ceil(2 * size / stepSize)
+for (const i of Array(gridSteps + 1).keys()) {
+  for (const j of Array(gridSteps + 1).keys()) {
+    const x = edgePadding - MAP_SIZE + i * stepSize
+    const y = edgePadding - MAP_SIZE + j * stepSize
+    void new Waypoint({ x, y })
+  }
+}
+
+Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
+Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
+Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
+
+console.log('navigation complete')
+
+void new Crate({ x: 1000, y: 0, height: 200, width: 200 })
+void new Crate({ x: 0, y: 0, height: 200, width: 200 })
 void new Puppet({
   x: -100,
   y: 0,
   vertices: [
-    { x: 0, y: 50 },
-    { x: -50, y: -50 },
-    { x: 50, y: -50 }
+    { x: 0, y: 200 },
+    { x: -200, y: -200 },
+    { x: 200, y: -200 }
   ]
 })
+
+console.log('Start Bot')
+
 void new Bot({ x: 0, y: 0 })
 
-Wall.wallObstacles.forEach(wallBody => {
-  wallBody.vertices.forEach(corner => {
-    const direction = Matter.Vector.normalise({
-      x: Math.sign(corner.x - wallBody.position.x),
-      y: Math.sign(corner.y - wallBody.position.y)
-    })
-    const away = Matter.Vector.mult(direction, 16)
-    const location = Matter.Vector.add(corner, away)
-    void new Waypoint({ x: location.x, y: location.y })
-  })
-})
-Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
-Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
-Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
+console.log('Bot complete')
 
 Matter.Runner.run(runner, engine)
 
