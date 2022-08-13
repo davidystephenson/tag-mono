@@ -6,7 +6,6 @@ import isClear, { raycast } from '../lib/raycast'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
-import VISION from '../../shared/VISION'
 
 export default class Bot extends Character {
   static oldest: Bot
@@ -71,7 +70,8 @@ export default class Bot extends Character {
         const targetWaypoint = visibleFromStart[distances.indexOf(Math.min(...distances))]
         const path = targetWaypoint.getVectorPath(goal)
         const target = path.reduce((a, b) => {
-          return isClear({ start, end: b, obstacles: Wall.wallObstacles }) ? b : a
+          const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
+          return hit === false ? b : a
         })
         path.slice(0, path.length - 1).forEach((point, index) => {
           const next = path[index + 1]
