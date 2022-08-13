@@ -16,6 +16,7 @@ export default class Bot extends Character {
   static bots = new Map<number, Bot>()
   alertPoint: Matter.Vector
   onAlert: boolean = false
+  escaping: boolean = true
   searchArray: Matter.Vector[] = []
   searchIndex = 1
   searchPos: Matter.Vector
@@ -137,15 +138,25 @@ export default class Bot extends Character {
       const clearSearchPos = isClear({ start, end: itPos, obstacles: Wall.wallObstacles })
       if (visibleX && visibleY && clearSearchPos) {
         const vector = Matter.Vector.sub(start, itPos)
+        const distance = Matter.Vector.magnitude(vector)
         const direction = Matter.Vector.normalise(vector)
         const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 16))
         const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
-        if (!blocked) {
+        if (distance < 150) {
+          this.escaping = false
           this.searchPos = this.searchArray[this.searchIndex]
           this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+        }
+        if (blocked || this.escaping) {
+          this.escaping = true
+        } else {
           const radians = Matter.Vector.angle(itPos, start)
+          this.searchPos = this.searchArray[this.searchIndex]
+          this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
           return getRadiansControls(radians)
         }
+      } else {
+        this.escaping = false
       }
       const target = this.getGoalTarget(this.searchPos)
       const radians = Matter.Vector.angle(start, target)
