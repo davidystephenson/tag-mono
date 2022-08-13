@@ -48,7 +48,7 @@ export default class Waypoint {
     })
   }
 
-  getPath (goal: Waypoint): Waypoint[] {
+  getWaypointPath (goal: Waypoint): Waypoint[] {
     const path: Waypoint[] = [this]
     let pathComplete = false
     let step = 0
@@ -72,5 +72,35 @@ export default class Waypoint {
     }
     path.push(goal)
     return path
+  }
+
+  getDistance (goal: Matter.Vector): number {
+    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
+      start: goal,
+      end: waypoint.position,
+      obstacles: Wall.wallObstacles
+    }))
+    const distances = visibleFromGoal.map(visbleWaypoint => {
+      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
+    })
+    return Math.min(...distances)
+  }
+
+  getVectorPath (goal: Matter.Vector): Matter.Vector[] {
+    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
+      start: goal,
+      end: waypoint.position,
+      obstacles: Wall.wallObstacles
+    }))
+    const distances = visibleFromGoal.map(visbleWaypoint => {
+      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
+    })
+    const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
+    const waypointPath = this.getWaypointPath(finalWaypoint)
+    const vectorPath = waypointPath.map(waypoint => waypoint.position)
+    vectorPath.push(goal)
+    return vectorPath
   }
 }

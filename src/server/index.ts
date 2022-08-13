@@ -20,7 +20,7 @@ import DebugCircle from '../shared/DebugCircle'
 import Waypoint from './model/Waypoint'
 
 /* TO DO:
-Pathfinding (Ignore Offscreen Walls, Calculate the Full Path)
+Pathfinding (Ignore Offscreen Walls)
 Search and Hide
 Random starting internal obstacles
 Generate AI players
@@ -103,8 +103,8 @@ wallPositions.forEach(position => new Wall(position))
 */
 
 void new Wall({ x: 300, y: -1000, width: 700, height: 40 })
-void new Wall({ x: 0, y: -900, width: 300, height: 40 })
-void new Wall({ x: 0, y: -800, width: 300, height: 40 })
+void new Wall({ x: -300, y: -900, width: 700, height: 40 })
+void new Wall({ x: 300, y: -800, width: 700, height: 40 })
 void new Wall({ x: 400, y: 0, width: 200, height: 40 })
 void new Wall({ x: -400, y: 0, width: 200, height: 40 })
 
@@ -145,16 +145,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
     radius: 5,
     color: 'purple'
   }))
-  const startPoint = Waypoint.waypoints[0]
-  const endPoint = Waypoint.waypoints[14]
-  DebugCircle.circles.push(new DebugCircle({ x: startPoint.x, y: startPoint.y, radius: 7, color: 'green' }))
-  DebugCircle.circles.push(new DebugCircle({ x: endPoint.x, y: endPoint.y, radius: 7, color: 'red' }))
-  const path = startPoint.getPath(endPoint)
-  DebugLine.lines = path.slice(0, path.length - 1).map((waypoint, index) => {
-    const next = path[index + 1]
-    return new DebugLine({ start: waypoint.position, end: next.position, color: 'orange' })
-  })
-
+  DebugLine.lines = []
   Actor.actors.forEach(actor => actor.act())
 })
 
