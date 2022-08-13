@@ -35,7 +35,7 @@ export default class Character extends Actor {
     if (this.controls.left) vector.x += -1
     if (this.controls.right) vector.x += 1
     const direction = Matter.Vector.normalise(vector)
-    const force = Matter.Vector.mult(direction, 0.00005)
+    const force = Matter.Vector.mult(direction, 0.0001)
     Matter.Body.applyForce(this.feature.body, this.feature.body.position, force)
   }
 

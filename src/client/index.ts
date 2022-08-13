@@ -97,11 +97,11 @@ const draw = function (): void {
     context.lineWidth = 1
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const label = context.fillStyle
+      const label = context.fillStyle.slice(1)
       context.fillStyle = 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = '20px sans'
+      context.font = '10px sans'
       context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
     }
   })
