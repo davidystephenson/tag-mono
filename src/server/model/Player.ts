@@ -3,6 +3,7 @@ import { Socket } from 'socket.io'
 import Shape from '../../shared/Shape'
 import DebugLine from '../../shared/DebugLine'
 import DebugCircle from '../../shared/DebugCircle'
+import DebugLabel from '../../shared/DebugLabel'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
@@ -29,6 +30,7 @@ export default class Player extends Character {
       shapes,
       debugLines: DebugLine.lines,
       debugCircles: DebugCircle.circles,
+      debugLabels: DebugLabel.labels,
       torsoId: this.feature.body.id
     }
     this.socket.emit('updateClient', message)

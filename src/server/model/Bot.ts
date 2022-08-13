@@ -5,6 +5,7 @@ import Controls, { STILL } from '../../shared/controls'
 import isClear, { raycast } from '../lib/raycast'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
+import Waypoint from './Waypoint'
 
 export default class Bot extends Character {
   static oldest: Bot
@@ -17,7 +18,7 @@ export default class Bot extends Character {
     radius?: number
   }) {
     super({ x, y, color, radius })
-    if (Bot.bots.size === 1) Bot.oldest = this
+    if (typeof (Bot.oldest) === 'undefined') Bot.oldest = this
   }
 
   takeInput (controls: Partial<Controls>): void {
@@ -55,56 +56,26 @@ export default class Bot extends Character {
       }
       if (closest.enemy != null) {
         const goal = closest.enemy.feature.body.position
-        const path: Matter.Vector[] = []
-        let pathComplete = false
-        let endNode = start
-        while (!pathComplete) {
-          const hit = raycast({
-            start: endNode,
-            end: goal,
-            obstacles: Wall.wallObstacles
-          })
-          if (hit !== false) {
-            path.push(hit.entryPoint)
-            const nodes = hit.hitBody.vertices.map(corner => {
-              const direction = Matter.Vector.normalise({
-                x: Math.sign(corner.x - hit.hitBody.position.x),
-                y: Math.sign(corner.y - hit.hitBody.position.y)
-              })
-              const away = Matter.Vector.mult(direction, 16)
-              return Matter.Vector.add(corner, away)
-            })
-            const visibleNodes = nodes.filter(node => isClear({
-              start: hit.entryPoint,
-              end: node,
-              obstacles: Wall.wallObstacles
-            }))
-            const nearNode = visibleNodes.reduce((previous, current) => {
-              const vector1 = Matter.Vector.sub(previous, goal)
-              const dist1 = Matter.Vector.magnitude(vector1)
-              const vector2 = Matter.Vector.sub(current, goal)
-              const dist2 = Matter.Vector.magnitude(vector2)
-              return dist2 < dist1 ? current : previous
-            })
-            path.push(nearNode)
-            endNode = nearNode
-            const endHit = raycast({
-              start: endNode,
-              end: goal,
-              obstacles: Wall.wallObstacles
-            })
-            if (endHit === false) pathComplete = true
-          } else {
-            pathComplete = true
-          }
-        }
-        path.push(goal)
-        const target = path.reduce((target, node, index) => {
-          void new DebugLine({ start: path[index - 1], end: path[index], color: 'blue' })
-          if (isClear({ start, end: node, obstacles: Wall.wallObstacles })) {
-            return node
-          }
-          return target
+        const visibleFromStart = Waypoint.waypoints.filter(waypoint => isClear({
+          start: this.feature.body.position,
+          end: waypoint.position,
+          obstacles: Wall.wallObstacles
+        }))
+        const distances = visibleFromStart.map(visibleWaypoint => {
+          const vector = Matter.Vector.sub(visibleWaypoint.position, start)
+          const startToWaypoint = Matter.Vector.magnitude(vector)
+          const waypointToGoal = visibleWaypoint.getDistance(goal)
+          return startToWaypoint + waypointToGoal
+        })
+        const targetWaypoint = visibleFromStart[distances.indexOf(Math.min(...distances))]
+        const path = targetWaypoint.getVectorPath(goal)
+        const target = path.reduce((a, b) => {
+          const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
+          return hit === false ? b : a
+        })
+        path.slice(0, path.length - 1).forEach((point, index) => {
+          const next = path[index + 1]
+          return new DebugLine({ start: point, end: next, color: 'blue' })
         })
         void new DebugLine({ start, end: target, color: 'red' })
         const radians = Matter.Vector.angle(start, target)

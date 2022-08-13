@@ -55,10 +55,10 @@ socket.on('updateClient', message => {
       newShapes.set(stateShape.id, stateShape)
     }
   })
-  console.log(message)
   state.shapes = newShapes
   state.debugCircles = message.debugCircles
   state.debugLines = message.debugLines
+  state.debugLabels = message.debugLabels
   const reply = {
     id: state.id,
     controls: input.controls
@@ -118,6 +118,12 @@ const draw = function (): void {
     context.moveTo(line.start.x - camera.x, line.start.y - camera.y)
     context.lineTo(line.end.x - camera.x, line.end.y - camera.y)
     context.stroke()
+  })
+  state.debugLabels.forEach(label => {
+    context.fillStyle = label.color
+    context.lineWidth = 4
+    context.font = '40px sans'
+    context.fillText(label.text, label.x - camera.x, label.y - camera.y)
   })
 }
 draw()

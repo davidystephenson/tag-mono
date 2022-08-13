@@ -35,34 +35,23 @@ export default class Waypoint {
       const vector = Matter.Vector.sub(neighbor.position, this.position)
       this.distances[neighbor.id] = Matter.Vector.magnitude(vector)
     })
-    console.log(this.id, 'neighbors', this.neighbors.map(neighbor => neighbor.id))
-    console.log(this.id, 'neighbor distances', this.neighbors.map(neighbor => this.distances[neighbor.id]))
   }
 
   updateDistances (): void {
     this.distances[this.id] = 0
-    this.neighbors.forEach(neighbor => {
-      neighbor.neighbors.forEach(next => {
-        const oldDistance = this.distances[next.id]
-        const newDistance = this.distances[neighbor.id] + neighbor.distances[next.id]
-        this.distances[next.id] = Math.min(oldDistance, newDistance)
+    Waypoint.waypoints.forEach(goal => {
+      this.neighbors.forEach(neighbor => {
+        const oldDistance = this.distances[goal.id]
+        const newDistance = this.distances[neighbor.id] + neighbor.distances[goal.id]
+        this.distances[goal.id] = Math.min(oldDistance, newDistance)
       })
     })
   }
 
-  // 0 -> 3 -> 5 -> 13 - 14
-  // 0 -> 3 : 42
-  // 3 -> 5 : 230
-  // 5 -> 13 : 965
-  // 13 -> 14 : 42
-
-  getPath (goal: Waypoint): Waypoint[] {
+  getWaypointPath (goal: Waypoint): Waypoint[] {
     const path: Waypoint[] = [this]
     let pathComplete = false
-    let step = 0
     while (!pathComplete) {
-      step = step + 1
-      if (step > 3) pathComplete = true
       const currentPoint = path[path.length - 1]
       const clear = isClear({
         start: currentPoint.position,
@@ -75,30 +64,40 @@ export default class Waypoint {
         const currentToNeighbor = currentPoint.neighbors.map(neighbor => currentPoint.distances[neighbor.id])
         const totalDistances = neighborToGoal.map((d, i) => neighborToGoal[i] + currentToNeighbor[i])
         const closest = currentPoint.neighbors[totalDistances.indexOf(Math.min(...totalDistances))]
-        /*
-        console.log('myDistance', currentPoint.distances[goal.id])
-        console.log('neighborToGoal', neighborToGoal)
-        console.log('currentToNeighbor', currentToNeighbor)
-        console.log('totalDistances', totalDistances)
-        console.log('neighborIds', currentPoint.neighbors.map(neighbor => neighbor.id))
-        */
         path.push(closest)
       }
     }
     path.push(goal)
-    /*
-    console.log('0 -> 3', Waypoint.waypoints[0].distances[3])
-    console.log('3 -> 5', Waypoint.waypoints[3].distances[5])
-    console.log('5 -> 13', Waypoint.waypoints[5].distances[13])
-    console.log('13 -> 14', Waypoint.waypoints[5].distances[14])
-    console.log('0 -> 1', Waypoint.waypoints[0].distances[1])
-    console.log('1 -> 14', Waypoint.waypoints[1].distances[14])
-    console.log('13 neighbors', Waypoint.waypoints[13].neighbors.map(neighbor => neighbor.id))
-    */
-    // console.log('neighbor to 5', Waypoint.waypoints[5].neighbors.map(neighbor => neighbor.distances[5]))
-    // console.log('neighbor to goal', Waypoint.waypoints[5].neighbors.map(neighbor => neighbor.distances[goal.id]))
-    // Waypoint.waypoints.forEach(waypoint => console.log(waypoint.id, waypoint.distances[goal.id]))
-    // console.log(path.map(waypoint => waypoint.position))
     return path
+  }
+
+  getDistance (goal: Matter.Vector): number {
+    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
+      start: goal,
+      end: waypoint.position,
+      obstacles: Wall.wallObstacles
+    }))
+    const distances = visibleFromGoal.map(visbleWaypoint => {
+      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
+    })
+    return Math.min(...distances)
+  }
+
+  getVectorPath (goal: Matter.Vector): Matter.Vector[] {
+    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
+      start: goal,
+      end: waypoint.position,
+      obstacles: Wall.wallObstacles
+    }))
+    const distances = visibleFromGoal.map(visbleWaypoint => {
+      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
+    })
+    const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
+    const waypointPath = this.getWaypointPath(finalWaypoint)
+    const vectorPath = waypointPath.map(waypoint => waypoint.position)
+    vectorPath.push(goal)
+    return vectorPath
   }
 }
