@@ -51,10 +51,7 @@ export default class Waypoint {
   getWaypointPath (goal: Waypoint): Waypoint[] {
     const path: Waypoint[] = [this]
     let pathComplete = false
-    let step = 0
     while (!pathComplete) {
-      step = step + 1
-      if (step > 3) pathComplete = true
       const currentPoint = path[path.length - 1]
       const clear = isClear({
         start: currentPoint.position,

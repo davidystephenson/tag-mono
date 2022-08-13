@@ -102,9 +102,9 @@ const wallPositions = [
 wallPositions.forEach(position => new Wall(position))
 */
 
-void new Wall({ x: 300, y: -1000, width: 700, height: 40 })
-void new Wall({ x: -300, y: -900, width: 700, height: 40 })
-void new Wall({ x: 300, y: -800, width: 700, height: 40 })
+void new Wall({ x: -100, y: -1000, width: 1000, height: 40 })
+void new Wall({ x: 0, y: -900, width: 200, height: 40 })
+void new Wall({ x: 100, y: -800, width: 200, height: 40 })
 void new Wall({ x: 400, y: 0, width: 200, height: 40 })
 void new Wall({ x: -400, y: 0, width: 200, height: 40 })
 
