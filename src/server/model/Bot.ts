@@ -8,15 +8,14 @@ import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
 import DebugCircle from '../../shared/DebugCircle'
 import VISION from '../../shared/VISION'
-import Feature from './Feature'
-import { vectorToPoint } from '../lib/engine'
+import { getDist, vectorToPoint } from '../lib/engine'
 
 export default class Bot extends Character {
   static oldest: Bot
   static bots = new Map<number, Bot>()
   alertPoint: Matter.Vector
   onAlert: boolean = false
-  escaping: boolean = true
+  unblocking: boolean = true
   searchArray: Matter.Vector[] = []
   searchIndex = 1
   searchPos: Matter.Vector
@@ -52,21 +51,41 @@ export default class Bot extends Character {
     this.controls = { ...this.controls, ...controls }
   }
 
-  getGoalTarget (goal: Matter.Vector): Matter.Vector {
-    const start = this.feature.body.position
-    const visibleFromStart = Waypoint.waypoints.filter(waypoint => isClear({
+  isPointClear (point: Matter.Vector): boolean {
+    return isClear({
       start: this.feature.body.position,
-      end: waypoint.position,
+      end: point,
       obstacles: Wall.wallObstacles
-    }))
+    })
+  }
+
+  isPointVisible (point: Matter.Vector): boolean {
+    const start = this.feature.body.position
+    const visibleX = start.x - VISION.width < point.x && point.x < start.x + VISION.width
+    if (!visibleX) return false
+    const visibleY = start.y - VISION.height < point.y && point.y < start.y + VISION.height
+    if (!visibleY) return false
+    const clearSearchPos = this.isPointClear(point)
+    return clearSearchPos
+  }
+
+  getGoalWaypoint (goal: Matter.Vector): Waypoint {
+    const start = this.feature.body.position
+    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointVisible(waypoint.position)
+    })
     const distances = visibleFromStart.map(visibleWaypoint => {
-      const vector = Matter.Vector.sub(visibleWaypoint.position, start)
-      const startToWaypoint = Matter.Vector.magnitude(vector)
+      const startToWaypoint = getDist(visibleWaypoint.position, start)
       const waypointToGoal = visibleWaypoint.getDistance(goal)
       return startToWaypoint + waypointToGoal
     })
-    const targetWaypoint = visibleFromStart[distances.indexOf(Math.min(...distances))]
-    const path = targetWaypoint.getVectorPath(goal)
+    return visibleFromStart[distances.indexOf(Math.min(...distances))]
+  }
+
+  getGoalTarget (goal: Matter.Vector): Matter.Vector {
+    const start = this.feature.body.position
+    const goalWaypoint = this.getGoalWaypoint(goal)
+    const path = goalWaypoint.getVectorPath(goal)
     path.slice(0, path.length - 1).forEach((point, index) => {
       const next = path[index + 1]
       return new DebugLine({ start: point, end: next, color: 'blue' })
@@ -79,51 +98,41 @@ export default class Bot extends Character {
     return target
   }
 
+  getVisibleCharacers (): Character[] {
+    const characters = Character.characters.values()
+    const visibleCharacters = []
+    for (const character of characters) {
+      const isVisible = this.isPointVisible(character.feature.body.position)
+      if (isVisible) visibleCharacters.push(character)
+    }
+    return visibleCharacters
+  }
+
+  updateSearchPos (): void {
+    this.searchPos = this.searchArray[this.searchIndex]
+    this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+  }
+
   choose (): Partial<Controls> {
-    const characterFeatures: Feature[] = []
-    for (const [,feature] of Feature.features) {
-      if (feature.body.label === 'character') characterFeatures.push(feature)
-    }
-    const obstacles = Array.from(Feature.obstacles.values())
-    const visibleCharacterFeatures: Feature[] = []
-    characterFeatures.forEach(feature => {
-      const arrow = Matter.Vector.sub(feature.body.position, this.feature.body.position)
-      const direction = Matter.Vector.normalise(arrow)
-      const perp = Matter.Vector.perp(direction)
-      const startPerp = Matter.Vector.mult(perp, this.radius)
-      const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
-      const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-      const viewpoints = [this.feature.body.position, leftSide, rightSide]
-      const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles })
-      if (isVisible) visibleCharacterFeatures.push(feature)
-    })
-    const visibleCharacters = visibleCharacterFeatures.map(feature => {
-      return feature.actor as Character
-    })
     const start = this.feature.body.position
-    const visibleX = start.x - VISION.width < this.searchPos.x && this.searchPos.x < start.x + VISION.width
-    const visibleY = start.y - VISION.height < this.searchPos.y && this.searchPos.y < start.y + VISION.height
-    const clearSearchPos = isClear({ start, end: this.searchPos, obstacles: Wall.wallObstacles })
-    if (visibleX && visibleY && clearSearchPos) {
-      this.searchPos = this.searchArray[this.searchIndex]
-      this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
-    }
+    const debugColor = Character.it === this ? 'red' : 'white'
+    void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugColor })
+    const visibleCharacters = this.getVisibleCharacers()
+    if (this.isPointVisible(this.searchPos)) this.updateSearchPos()
     if (Character.it === this) {
       const closest: { distance: number, enemy?: Character } = { distance: Infinity }
       for (const character of visibleCharacters) {
         if (character !== this) {
-          const distance = Matter.Vector.sub(character.feature.body.position, this.feature.body.position)
-          const magnitude = Matter.Vector.magnitude(distance)
-          if (magnitude < closest.distance) {
+          const distance = getDist(start, character.feature.body.position)
+          if (distance < closest.distance) {
             this.alertPoint = vectorToPoint(character.feature.body.position)
             this.onAlert = true
             closest.enemy = character
-            closest.distance = magnitude
+            closest.distance = distance
           }
         }
       }
-      const alertVector = Matter.Vector.sub(this.alertPoint, start)
-      const alertDistance = Matter.Vector.magnitude(alertVector)
+      const alertDistance = getDist(this.alertPoint, start)
       if (alertDistance < 45) this.onAlert = false
       if (this.onAlert) this.searchPos = this.alertPoint
       const goal = closest.enemy != null ? closest.enemy.feature.body.position : this.searchPos
@@ -133,22 +142,20 @@ export default class Bot extends Character {
       return controls
     } else if (Character.it != null) {
       const itPos = Character.it.feature.body.position
-      const visibleX = start.x - VISION.width < itPos.x && itPos.x < start.x + VISION.width
-      const visibleY = start.y - VISION.height < itPos.y && itPos.y < start.y + VISION.height
-      const clearSearchPos = isClear({ start, end: itPos, obstacles: Wall.wallObstacles })
-      if (visibleX && visibleY && clearSearchPos) {
+      const itVisible = this.isPointVisible(itPos)
+      if (itVisible) {
         const vector = Matter.Vector.sub(start, itPos)
         const distance = Matter.Vector.magnitude(vector)
         const direction = Matter.Vector.normalise(vector)
         const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 16))
         const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
         if (distance < 150) {
-          this.escaping = false
+          this.unblocking = false
           this.searchPos = this.searchArray[this.searchIndex]
           this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
         }
-        if (blocked || this.escaping) {
-          this.escaping = true
+        if (blocked || this.unblocking) {
+          this.unblocking = true
         } else {
           const radians = Matter.Vector.angle(itPos, start)
           this.searchPos = this.searchArray[this.searchIndex]
@@ -156,15 +163,14 @@ export default class Bot extends Character {
           return getRadiansControls(radians)
         }
       } else {
-        this.escaping = false
+        this.unblocking = false
       }
-      const target = this.getGoalTarget(this.searchPos)
-      const radians = Matter.Vector.angle(start, target)
+      if (!this.isPointClear(this.searchPos)) this.updateSearchPos()
+      void new DebugLine({ start, end: this.searchPos, color: 'orange' })
+      const radians = Matter.Vector.angle(start, this.searchPos)
       const controls = getRadiansControls(radians)
       return controls
     }
-
-    void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: 'white' })
     return STILL
   }
 

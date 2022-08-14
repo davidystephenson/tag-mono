@@ -1,4 +1,4 @@
-import Matter from 'matter-js'
+import Matter, { Vector } from 'matter-js'
 import isClear from '../lib/raycast'
 import Wall from './Wall'
 
@@ -10,6 +10,7 @@ export default class Waypoint {
   readonly id: number
   neighbors: Waypoint[] = []
   distances: number[] = []
+  paths: Vector[][] = []
 
   constructor ({ x, y }: {
     x: number
@@ -47,6 +48,17 @@ export default class Waypoint {
         const newDistance = this.distances[neighbor.id] + neighbor.distances[goal.id]
         this.distances[goal.id] = Math.min(oldDistance, newDistance)
       })
+    })
+  }
+
+  setPaths (): void {
+    this.paths[this.id] = [this.position]
+    Waypoint.waypoints.forEach(other => {
+      if (other.id !== this.id) {
+        const waypointPath = this.getWaypointPath(other)
+        const vectorPath = waypointPath.map(waypoint => waypoint.position)
+        this.paths[other.id] = vectorPath
+      }
     })
   }
 
@@ -97,9 +109,8 @@ export default class Waypoint {
       return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
     })
     const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
-    const waypointPath = this.getWaypointPath(finalWaypoint)
-    const vectorPath = waypointPath.map(waypoint => waypoint.position)
-    vectorPath.push(goal)
-    return vectorPath
+    const path = this.paths[finalWaypoint.id]
+    path.push(goal)
+    return path
   }
 }

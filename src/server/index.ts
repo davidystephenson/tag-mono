@@ -29,6 +29,7 @@ Random boundary size
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
+let oldTime = Date.now()
 app.use(staticMiddleware)
 
 function makeServer (): https.Server | http.Server {
@@ -76,7 +77,7 @@ function tick (): void {
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   socket.emit('socketId', socket.id)
-  const player = new Player({ x: 0, y: -1050, socket })
+  const player = new Player({ x: 0, y: -100, socket })
 
   socket.on('updateServer', message => {
     player.controls = message.controls
@@ -120,23 +121,31 @@ for (const i of Array(gridSteps + 1).keys()) {
 Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
+Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
 
 console.log('navigation complete')
 
-void new Crate({ x: 1000, y: 0, height: 200, width: 200 })
-void new Crate({ x: 0, y: 0, height: 200, width: 200 })
+void new Crate({ x: 0, y: -30, height: 20, width: 20 })
+void new Crate({ x: 0, y: -30, height: 20, width: 20 })
 void new Puppet({
-  x: -100,
-  y: 0,
+  x: 0,
+  y: -30,
   vertices: [
-    { x: 0, y: 200 },
-    { x: -200, y: -200 },
-    { x: 200, y: -200 }
+    { x: 0, y: 20 },
+    { x: -20, y: -20 },
+    { x: 20, y: -20 }
   ]
 })
 
 console.log('Start Bot')
 
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 0, y: 0 })
 void new Bot({ x: 0, y: 0 })
 
 console.log('Bot complete')
@@ -144,6 +153,9 @@ console.log('Bot complete')
 Matter.Runner.run(runner, engine)
 
 Matter.Events.on(engine, 'afterUpdate', () => {
+  const newTime = Date.now()
+  console.log('stepTime', newTime - oldTime)
+  oldTime = newTime
   runner.enabled = !Actor.paused
   DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({
     x: waypoint.x,
@@ -157,15 +169,15 @@ Matter.Events.on(engine, 'afterUpdate', () => {
 
 Matter.Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(pair => {
-    console.log('collide', pair.bodyA.label, pair.bodyB.label)
+    // console.log('collide', pair.bodyA.label, pair.bodyB.label)
     if (pair.bodyA.label === 'character' && pair.bodyB.label === 'character') {
       // pair.isActive = false
       // state.paused = true
       const actorA = Actor.actors.get(pair.bodyA.id) as Character
       const actorB = Actor.actors.get(pair.bodyB.id) as Character
-      const bodyA = actorA.feature.body
-      const bodyB = actorB.feature.body
-      console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
+      // const bodyA = actorA.feature.body
+      // const bodyB = actorB.feature.body
+      // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
       if (Character.it === actorA) {
         actorB.makeIt()
       } else if (Character.it === actorB) {
