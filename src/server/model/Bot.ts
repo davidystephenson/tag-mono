@@ -94,7 +94,6 @@ export default class Bot extends Character {
       const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
       return hit === false ? b : a
     })
-    void new DebugLine({ start, end: target, color: 'red' })
     return target
   }
 
@@ -136,7 +135,8 @@ export default class Bot extends Character {
       if (alertDistance < 45) this.onAlert = false
       if (this.onAlert) this.searchPos = this.alertPoint
       const goal = closest.enemy != null ? closest.enemy.feature.body.position : this.searchPos
-      const target = this.getGoalTarget(goal)
+      const target = this.isPointVisible(goal) ? goal : this.getGoalTarget(goal)
+      void new DebugLine({ start, end: target, color: 'red' })
       const radians = Matter.Vector.angle(start, target)
       const controls = getRadiansControls(radians)
       return controls
@@ -158,8 +158,7 @@ export default class Bot extends Character {
           this.unblocking = true
         } else {
           const radians = Matter.Vector.angle(itPos, start)
-          this.searchPos = this.searchArray[this.searchIndex]
-          this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+          this.updateSearchPos()
           return getRadiansControls(radians)
         }
       } else {
