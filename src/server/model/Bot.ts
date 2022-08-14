@@ -14,10 +14,9 @@ import { vectorToPoint } from '../lib/engine'
 export default class Bot extends Character {
   static oldest: Bot
   static bots = new Map<number, Bot>()
-  alertPosition: Matter.Vector
-  alerted: boolean = false
+  alertPoint: Matter.Vector
+  onAlert: boolean = false
   escaping: boolean = true
-  caught: boolean = false
   searchArray: Matter.Vector[] = []
   searchIndex = 1
   searchPos: Matter.Vector
@@ -29,7 +28,7 @@ export default class Bot extends Character {
     radius?: number
   }) {
     super({ x, y, color, radius })
-    this.alertPosition = { x, y }
+    this.alertPoint = { x, y }
     this.searchPos = Waypoint.waypoints[0].position
     const searchWaypointArray = [Waypoint.waypoints[0]]
     const waypoints = [...Waypoint.waypoints]
@@ -116,17 +115,17 @@ export default class Bot extends Character {
           const distance = Matter.Vector.sub(character.feature.body.position, this.feature.body.position)
           const magnitude = Matter.Vector.magnitude(distance)
           if (magnitude < closest.distance) {
-            this.alertPosition = vectorToPoint(character.feature.body.position)
-            this.alerted = true
+            this.alertPoint = vectorToPoint(character.feature.body.position)
+            this.onAlert = true
             closest.enemy = character
             closest.distance = magnitude
           }
         }
       }
-      const alertVector = Matter.Vector.sub(this.alertPosition, start)
+      const alertVector = Matter.Vector.sub(this.alertPoint, start)
       const alertDistance = Matter.Vector.magnitude(alertVector)
-      if (alertDistance < 45) this.alerted = false
-      if (this.alerted) this.searchPos = this.alertPosition
+      if (alertDistance < 45) this.onAlert = false
+      if (this.onAlert) this.searchPos = this.alertPoint
       const goal = closest.enemy != null ? closest.enemy.feature.body.position : this.searchPos
       const target = this.getGoalTarget(goal)
       const radians = Matter.Vector.angle(start, target)
@@ -137,24 +136,17 @@ export default class Bot extends Character {
       const visibleX = start.x - VISION.width < itPos.x && itPos.x < start.x + VISION.width
       const visibleY = start.y - VISION.height < itPos.y && itPos.y < start.y + VISION.height
       const clearSearchPos = isClear({ start, end: itPos, obstacles: Wall.wallObstacles })
-      const itVisible = visibleX && visibleY && clearSearchPos
-      if (itVisible) {
+      if (visibleX && visibleY && clearSearchPos) {
         const vector = Matter.Vector.sub(start, itPos)
         const distance = Matter.Vector.magnitude(vector)
-        const itClose = distance < 100
-        if (itClose) {
-          if (!this.caught) {
-            this.escaping = false
-            this.searchPos = this.searchArray[this.searchIndex]
-            this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
-          }
-          this.caught = true
-        } else {
-          this.caught = false
-        }
         const direction = Matter.Vector.normalise(vector)
-        const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
+        const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 16))
         const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
+        if (distance < 150) {
+          this.escaping = false
+          this.searchPos = this.searchArray[this.searchIndex]
+          this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+        }
         if (blocked || this.escaping) {
           this.escaping = true
         } else {
