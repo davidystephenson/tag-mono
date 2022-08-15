@@ -3,6 +3,7 @@ import Matter from 'matter-js'
 export default class DebugLine {
   static lines: DebugLine[] = []
   static raycast = false
+  static collision = false
   readonly start: Matter.Vector
   readonly end: Matter.Vector
   readonly color: string

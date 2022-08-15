@@ -6,7 +6,7 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import { engine, runner } from './lib/engine'
+import { DEBUG_STEP_TIME, engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
@@ -18,6 +18,7 @@ import Character from './model/Character'
 import Player from './model/Player'
 import DebugCircle from '../shared/DebugCircle'
 import Waypoint from './model/Waypoint'
+import { NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from './lib/directions'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -29,7 +30,6 @@ Random boundary size
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
-let oldTime = Date.now()
 app.use(staticMiddleware)
 
 function makeServer (): https.Server | http.Server {
@@ -100,11 +100,15 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
+void new Wall({ x: 1000, y: -1100, width: 800, height: 500 })
 void new Wall({ x: -100, y: -1000, width: 1000, height: 40 })
 void new Wall({ x: 0, y: -900, width: 200, height: 40 })
 void new Wall({ x: 100, y: -800, width: 200, height: 40 })
+void new Wall({ x: 400, y: -500, width: 200, height: 500 })
 void new Wall({ x: 400, y: 0, width: 200, height: 40 })
 void new Wall({ x: -400, y: 0, width: 200, height: 40 })
+void new Wall({ x: 1000, y: 200, width: 100, height: 1500 })
+void new Wall({ x: -400, y: 600, width: 1000, height: 1000 })
 
 const edgePadding = 30
 const size = MAP_SIZE - edgePadding
@@ -125,37 +129,95 @@ Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
 
 console.log('navigation complete')
 
+void new Crate({ x: 0, y: 30, height: 20, width: 20 })
+void new Crate({ x: 30, y: 30, height: 20, width: 20 })
+void new Crate({ x: -30, y: 30, height: 20, width: 20 })
+void new Crate({ x: -30, y: -30, height: 20, width: 20 })
+void new Crate({ x: 30, y: -30, height: 20, width: 20 })
 void new Crate({ x: 0, y: -30, height: 20, width: 20 })
-void new Crate({ x: 0, y: -30, height: 20, width: 20 })
+void new Crate({ x: 30, y: 0, height: 30, width: 50 })
+void new Crate({ x: -30, y: 0, height: 50, width: 30 })
+void new Crate({ x: 0, y: -30, height: 20, width: 100 })
+void new Crate({ x: 800, y: 200, height: 200, width: 100 })
+void new Crate({ x: -800, y: -200, height: 300, width: 200 })
+void new Crate({ x: -800, y: -800, height: 300, width: 200 })
+void new Puppet({
+  x: -300,
+  y: -30,
+  vertices: [
+    { x: 0, y: 50 },
+    { x: -50, y: -50 },
+    { x: 50, y: -50 }
+  ]
+})
+
 void new Puppet({
   x: 0,
-  y: -30,
+  y: -300,
   vertices: [
     { x: 0, y: 20 },
     { x: -20, y: -20 },
     { x: 20, y: -20 }
-  ]
+  ],
+  direction: SOUTH_VECTOR,
+  force: 0.05
+})
+void new Puppet({
+  x: 300,
+  y: 0,
+  vertices: [
+    { x: 0, y: 30 },
+    { x: -30, y: -30 },
+    { x: 30, y: -30 }
+  ],
+  direction: WEST_VECTOR
+})
+
+void new Puppet({
+  x: 300,
+  y: 500,
+  vertices: [
+    { x: 0, y: 100 },
+    { x: -100, y: -100 },
+    { x: 100, y: -100 }
+  ],
+  direction: NORTH_VECTOR,
+  force: 0.05
+})
+void new Puppet({
+  x: 800,
+  y: 500,
+  vertices: [
+    { x: 0, y: 100 },
+    { x: -150, y: -50 },
+    { x: 100, y: -100 }
+  ],
+  direction: NORTH_VECTOR,
+  force: 0.15
 })
 
 console.log('Start Bot')
 
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
-void new Bot({ x: 0, y: 0 })
+void new Bot({ x: 500, y: 500 })
+// void new Bot({ x: -500, y: -500 })
+// void new Bot({ x: 500, y: -500 })
+// void new Bot({ x: -500, y: 500 })
+// void new Bot({ x: 800, y: 800 })
+// void new Bot({ x: -800, y: -800 })
+// void new Bot({ x: 800, y: -800 })
+// void new Bot({ x: -800, y: 800 })
 
 console.log('Bot complete')
 
 Matter.Runner.run(runner, engine)
 
+let oldTime = Date.now()
 Matter.Events.on(engine, 'afterUpdate', () => {
-  const newTime = Date.now()
-  console.log('stepTime', newTime - oldTime)
-  oldTime = newTime
+  if (DEBUG_STEP_TIME) {
+    const newTime = Date.now()
+    console.log('stepTime', newTime - oldTime)
+    oldTime = newTime
+  }
   runner.enabled = !Actor.paused
   DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({
     x: waypoint.x,

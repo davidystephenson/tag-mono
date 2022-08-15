@@ -28,7 +28,9 @@ export function raycast ({ start, end, obstacles }: {
   const collisions = Matter.Query.ray(obstacles, start, end)
   const collide = collisions.length > 0
   if (!collide) {
-    // void new DebugLine({ start, end, color: 'purple' })
+    if (DebugLine.collision) {
+      void new DebugLine({ start, end, color: 'purple' })
+    }
     return false
   }
   const distances = collisions.map(collision => {

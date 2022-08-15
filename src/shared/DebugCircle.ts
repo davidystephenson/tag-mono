@@ -1,6 +1,6 @@
 export default class DebugCircle {
   static circles: DebugCircle[] = []
-  static debug = false
+  static botPosition = false
   readonly x: number
   readonly y: number
   readonly radius: number

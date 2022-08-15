@@ -14,7 +14,7 @@ export default class Puppet extends Actor {
     vertices,
     density = 0.0001,
     targetSpeed = 0.5,
-    force = 0.00001,
+    force = 0.01,
     direction = EAST_VECTOR,
     color = 'green'
   }: {

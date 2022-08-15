@@ -10,6 +10,7 @@ export default class Character extends Actor {
   static it?: Character
   static characters = new Map<number, Character>()
   readonly radius: number
+  force = 0.0001
   controls = new Input().controls
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
@@ -35,12 +36,11 @@ export default class Character extends Actor {
     if (this.controls.left) vector.x += -1
     if (this.controls.right) vector.x += 1
     const direction = Matter.Vector.normalise(vector)
-    const force = Matter.Vector.mult(direction, 0.00005)
-    Matter.Body.applyForce(this.feature.body, this.feature.body.position, force)
+    const multiplied = Matter.Vector.mult(direction, this.force)
+    Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
   }
 
   getVisibleFeatures (): Feature[] {
-    const obstacles = Array.from(Feature.obstacles.values())
     const visibleFeatures: Feature[] = []
     Feature.features.forEach(feature => {
       const arrow = Matter.Vector.sub(feature.body.position, this.feature.body.position)
@@ -50,7 +50,7 @@ export default class Character extends Actor {
       const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
       const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
       const viewpoints = [this.feature.body.position, leftSide, rightSide]
-      const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles })
+      const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
