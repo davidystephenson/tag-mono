@@ -139,8 +139,9 @@ export default class Bot extends Character {
       void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugCircleColor })
     }
     const visibleCharacters = this.getVisibleCharacters()
-    if (this.isPointWallVisible(this.searchPosition)) {
-      console.log('point wall visible')
+    const searchClear = this.isPointClear(this.searchPosition)
+    const searchNear = this.isPointWallVisible(this.searchPosition)
+    if (searchNear || !searchClear) {
       this.updateSearchPosition()
     }
     if (Character.it === this) {
@@ -166,10 +167,16 @@ export default class Bot extends Character {
           this.searchPosition = this.alertPoint
         }
       }
-      const goal = closest.enemy != null ? closest.enemy.feature.body.position : this.searchPosition
-      const target = this.isPointWallVisible(goal) ? goal : this.getGoalTarget(goal)
-      const debugColor = this.onAlert ? 'red' : 'white'
-      return new Direction({ start: start, end: target, debugColor })
+      if (closest.enemy == null) {
+        const goal = this.onAlert ? this.alertPoint : this.searchPosition
+        const target = this.isPointClear(goal) ? goal : this.getGoalTarget(goal)
+        return new Direction({ start: start, end: target, debugColor: 'teal' })
+      } else {
+        const goal = closest.enemy.feature.body.position
+        const target = this.isPointClear(goal) ? goal : this.getGoalTarget(goal)
+        const debugColor = this.onAlert ? 'red' : 'white'
+        return new Direction({ start: start, end: target, debugColor })
+      }
     } else if (Character.it != null) {
       const itPos = Character.it.feature.body.position
       const itVisible = this.isPointVisible(itPos)
@@ -191,10 +198,6 @@ export default class Bot extends Character {
         }
       } else {
         this.unblocking = false
-      }
-      if (!this.isPointWallClear(this.searchPosition)) {
-        console.log('point wall clear')
-        this.updateSearchPosition()
       }
       return new Direction({ start: start, end: this.searchPosition, debugColor: 'teal' })
     }
