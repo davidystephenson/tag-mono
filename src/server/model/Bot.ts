@@ -192,7 +192,7 @@ export default class Bot extends Character {
       } else {
         this.unblocking = false
       }
-      if (!this.isPointWallVisible(this.searchPosition)) {
+      if (!this.isPointWallClear(this.searchPosition)) {
         console.log('point wall clear')
         this.updateSearchPosition()
       }
