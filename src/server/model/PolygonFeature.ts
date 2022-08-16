@@ -6,11 +6,12 @@ import Feature from './Feature'
 
 export default class PolygonFeature extends Feature {
   static polygonFeatures = new Map<number, PolygonFeature>()
-  constructor ({ body, isObstacle = true }: {
+  constructor ({ body, isObstacle = true, density = 0.001 }: {
     body: Matter.Body
     isObstacle?: boolean
+    density?: number
   }) {
-    super({ body, isObstacle })
+    super({ body, isObstacle, density })
     PolygonFeature.polygonFeatures.set(this.body.id, this)
   }
 

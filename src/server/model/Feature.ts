@@ -9,9 +9,10 @@ export default class Feature {
   readonly isObstacle: boolean
   actor?: Actor
 
-  constructor ({ body, isObstacle = true }: {
+  constructor ({ body, isObstacle = true, density = 0.001 }: {
     body: Matter.Body
     isObstacle?: boolean
+    density?: number
   }) {
     this.body = body
     this.isObstacle = isObstacle
@@ -19,6 +20,7 @@ export default class Feature {
     this.body.restitution = 1
     this.body.friction = 0
     this.body.frictionAir = 0.01
+    Matter.Body.setDensity(this.body, density)
     Feature.features.set(this.body.id, this)
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }

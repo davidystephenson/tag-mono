@@ -101,6 +101,7 @@ const wallProps = [
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
 void new Wall({ x: 1000, y: -1100, width: 800, height: 500 })
+void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
 void new Wall({ x: -100, y: -1000, width: 1000, height: 40 })
 void new Wall({ x: 0, y: -900, width: 200, height: 40 })
 void new Wall({ x: 100, y: -800, width: 200, height: 40 })
