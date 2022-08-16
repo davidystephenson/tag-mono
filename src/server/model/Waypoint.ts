@@ -110,7 +110,7 @@ export default class Waypoint {
     })
     const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
     const path = this.paths[finalWaypoint.id]
-    path.push(goal)
-    return path
+    const goalPath = [...path, goal]
+    return goalPath
   }
 }

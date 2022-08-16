@@ -12,13 +12,12 @@ import config from './config.json'
 import DebugLine from '../shared/DebugLine'
 import Actor from './model/Actor'
 import Crate from './model/Crate'
-import Puppet from './model/Puppet'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
 import DebugCircle from '../shared/DebugCircle'
 import Waypoint from './model/Waypoint'
-import { NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from './lib/directions'
+import DebugLabel from '../shared/DebugLabel'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -128,6 +127,9 @@ Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
+Waypoint.waypoints.forEach(waypoint => new DebugLabel({
+  x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
+}))
 
 console.log('navigation complete')
 
@@ -227,6 +229,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
     color: 'purple'
   }))
   DebugLine.lines = []
+  Player.players.forEach(player => player.debugPath())
   Actor.actors.forEach(actor => actor.act())
 })
 
