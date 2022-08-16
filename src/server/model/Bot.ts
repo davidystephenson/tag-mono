@@ -110,8 +110,8 @@ export default class Bot extends Character {
     const path = goalWaypoint.getVectorPath(goal)
     // Should this path be allowed to go through walls?
     path.slice(0, path.length - 1).forEach((point, index) => {
-      const next = path[index + 1]
-      return new DebugLine({ start: point, end: next, color: 'purple' })
+      // const next = path[index + 1]
+      // return new DebugLine({ start: point, end: next, color: 'purple' })
     })
     const target = path.reduce((a, b) => {
       const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
@@ -142,20 +142,11 @@ export default class Bot extends Character {
       const debugCircleColor = Character.it === this ? 'red' : 'white'
       void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugCircleColor })
     }
-    // SAFE VERSION
-    // const searchClear = this.isPointClear(this.searchPosition)
-    // const searchNear = this.isPointWallVisible(this.searchPosition)
-    // if (searchNear || !searchClear) {
-    //  this.updateSearchPosition()
-    // }
-    // END OF SAFE VERSION
-    // DANGEROUS VERSION
     const searchNear = this.isPointWallVisible(this.searchGoal)
     if (searchNear) {
       this.updateSearch()
     }
-    // END OF DANGEROUS VERSION
-    void new DebugLine({ start, end: this.searchGoal, color: 'yellow' })
+    // void new DebugLine({ start, end: this.searchGoal, color: 'yellow' })
     if (Character.it === this) {
       const closestVisible: { distance: number, enemy?: Character } = { distance: Infinity }
       const visibleCharacters = this.getVisibleCharacters()
@@ -174,7 +165,6 @@ export default class Bot extends Character {
         const alertDistance = getDistance(this.alertPoint, start)
         if (alertDistance < 45) {
           this.onAlert = false
-          console.log('stop alert')
           this.updateSearch()
         } else {
           this.searchGoal = this.alertPoint
@@ -202,10 +192,8 @@ export default class Bot extends Character {
         const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 16))
         const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
         this.fleeing = true
-        console.log('fleeing')
         if (this.unblocking && distance < 150) {
           this.unblocking = false
-          console.log('stop unblocking')
           this.updateSearch()
         }
         if (blocked || this.unblocking) {
@@ -220,8 +208,14 @@ export default class Bot extends Character {
         }
         this.unblocking = false
       }
-      console.log('wandering')
       this.searchTarget = this.getGoalTarget(this.searchGoal)
+      // SPEEDUP
+      // if (!this.isPointWallClear(this.searchTarget) || this.isPointWallVisible(this.searchTarget)) {
+      //   this.updateSearch()
+      //   this.searchTarget = this.searchGoal
+      // }
+      // void new DebugLine({ start, end: this.searchTarget, color: 'teal' })
+      // END SPEEDUP
       return new Direction({ start: start, end: this.searchTarget, debugColor: 'teal' })
     }
     return null

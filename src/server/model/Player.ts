@@ -77,10 +77,12 @@ export default class Player extends Character {
     const goalWaypoint = this.getGoalWaypoint(goal)
     const path = goalWaypoint.getVectorPath(goal)
     // Should this path be allowed to go through walls?
+    /*
     path.slice(0, path.length - 1).forEach((point, index) => {
       const next = path[index + 1]
       return new DebugLine({ start: point, end: next, color: 'purple' })
     })
+    */
     const target = path.reduce((a, b) => {
       const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
       return hit === false ? b : a
@@ -89,9 +91,9 @@ export default class Player extends Character {
   }
 
   debugPath (): void {
-    const goal = Waypoint.waypoints[59].position
-    const target = this.getGoalTarget(goal)
-    void new DebugLine({ start: this.feature.body.position, end: target, color: 'teal' })
+    // const goal = Waypoint.waypoints[59].position
+    // const target = this.getGoalTarget(goal)
+    // void new DebugLine({ start: this.feature.body.position, end: target, color: 'teal' })
     // void new DebugLine({ start: this.feature.body.position, end: goal, color: 'yellow' })
   }
 }
