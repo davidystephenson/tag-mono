@@ -108,7 +108,7 @@ export default class Bot extends Character {
     // Should this path be allowed to go through walls?
     path.slice(0, path.length - 1).forEach((point, index) => {
       const next = path[index + 1]
-      return new DebugLine({ start: point, end: next, color: 'blue' })
+      return new DebugLine({ start: point, end: next, color: 'purple' })
     })
     const target = path.reduce((a, b) => {
       const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })

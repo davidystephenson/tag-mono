@@ -106,6 +106,7 @@ void new Wall({ x: -100, y: -1000, width: 1000, height: 40 })
 void new Wall({ x: 0, y: -900, width: 200, height: 40 })
 void new Wall({ x: 100, y: -800, width: 200, height: 40 })
 void new Wall({ x: 400, y: -500, width: 200, height: 500 })
+void new Wall({ x: 450, y: 700, width: 200, height: 800 })
 void new Wall({ x: 400, y: 0, width: 200, height: 40 })
 void new Wall({ x: -400, y: 0, width: 200, height: 40 })
 void new Wall({ x: 1000, y: 200, width: 100, height: 1500 })
@@ -142,60 +143,59 @@ void new Crate({ x: 0, y: -30, height: 20, width: 100 })
 void new Crate({ x: 800, y: 200, height: 200, width: 100 })
 void new Crate({ x: -800, y: -200, height: 300, width: 200 })
 void new Crate({ x: -800, y: -800, height: 300, width: 200 })
-void new Puppet({
-  x: -300,
-  y: -30,
-  vertices: [
-    { x: 0, y: 50 },
-    { x: -50, y: -50 },
-    { x: 50, y: -50 }
-  ]
-})
-
-void new Puppet({
-  x: 0,
-  y: -300,
-  vertices: [
-    { x: 0, y: 20 },
-    { x: -20, y: -20 },
-    { x: 20, y: -20 }
-  ],
-  direction: SOUTH_VECTOR,
-  force: 0.05
-})
-void new Puppet({
-  x: 300,
-  y: 0,
-  vertices: [
-    { x: 0, y: 30 },
-    { x: -30, y: -30 },
-    { x: 30, y: -30 }
-  ],
-  direction: WEST_VECTOR
-})
-
-void new Puppet({
-  x: 300,
-  y: 500,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -100, y: -100 },
-    { x: 100, y: -100 }
-  ],
-  direction: NORTH_VECTOR,
-  force: 0.05
-})
-void new Puppet({
-  x: 800,
-  y: 500,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -150, y: -50 },
-    { x: 100, y: -100 }
-  ],
-  direction: NORTH_VECTOR,
-  force: 0.15
-})
+// void new Puppet({
+//   x: -300,
+//   y: -30,
+//   vertices: [
+//     { x: 0, y: 50 },
+//     { x: -50, y: -50 },
+//     { x: 50, y: -50 }
+//   ]
+// })
+// void new Puppet({
+//   x: 0,
+//   y: -300,
+//   vertices: [
+//     { x: 0, y: 20 },
+//     { x: -20, y: -20 },
+//     { x: 20, y: -20 }
+//   ],
+//   direction: SOUTH_VECTOR,
+//   force: 0.05
+// })
+// void new Puppet({
+//   x: 300,
+//   y: 0,
+//   vertices: [
+//     { x: 0, y: 30 },
+//     { x: -30, y: -30 },
+//     { x: 30, y: -30 }
+//   ],
+//   direction: WEST_VECTOR
+// })
+//
+// void new Puppet({
+//   x: 300,
+//   y: 500,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -100, y: -100 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: NORTH_VECTOR,
+//   force: 0.05
+// })
+// void new Puppet({
+//   x: 800,
+//   y: 500,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -150, y: -50 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: NORTH_VECTOR,
+//   force: 0.15
+// })
 
 console.log('Start Bot')
 
