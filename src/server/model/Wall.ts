@@ -22,7 +22,7 @@ export default class Wall extends RectangleFeature {
     this.y = y
     this.width = width
     this.height = height
-    this.body.render.fillStyle = 'Purple'
+    this.body.render.fillStyle = 'blue'
     Matter.Body.setStatic(this.body, true)
     Wall.walls.set(this.body.id, this)
     Wall.wallObstacles.push(this.body)

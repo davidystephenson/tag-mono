@@ -16,7 +16,7 @@ export default class Puppet extends Actor {
     targetSpeed = 0.5,
     force = 0.01,
     direction = EAST_VECTOR,
-    color = 'blue'
+    color = 'aqua'
   }: {
     x: number
     y: number

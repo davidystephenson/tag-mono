@@ -105,6 +105,7 @@ export default class Bot extends Character {
     const start = this.feature.body.position
     const goalWaypoint = this.getGoalWaypoint(goal)
     const path = goalWaypoint.getVectorPath(goal)
+    // Should this path be allowed to go through walls?
     path.slice(0, path.length - 1).forEach((point, index) => {
       const next = path[index + 1]
       return new DebugLine({ start: point, end: next, color: 'blue' })
@@ -138,12 +139,20 @@ export default class Bot extends Character {
       const debugCircleColor = Character.it === this ? 'red' : 'white'
       void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugCircleColor })
     }
+    // SAFE VERSION
+    // const searchClear = this.isPointClear(this.searchPosition)
+    // const searchNear = this.isPointWallVisible(this.searchPosition)
+    // if (searchNear || !searchClear) {
+    //   this.updateSearchPosition()
+    // }
+    // DANGEROUS VERSION
     const visibleCharacters = this.getVisibleCharacters()
-    const searchClear = this.isPointClear(this.searchPosition)
     const searchNear = this.isPointWallVisible(this.searchPosition)
-    if (searchNear || !searchClear) {
+    if (searchNear) {
       this.updateSearchPosition()
     }
+    // END OF DANGEROUS VERSION
+    void new DebugLine({ start, end: this.searchPosition, color: 'aqua' })
     if (Character.it === this) {
       const closest: { distance: number, enemy?: Character } = { distance: Infinity }
       for (const character of visibleCharacters) {
@@ -170,11 +179,11 @@ export default class Bot extends Character {
       if (closest.enemy == null) {
         const goal = this.onAlert ? this.alertPoint : this.searchPosition
         const target = this.isPointClear(goal) ? goal : this.getGoalTarget(goal)
-        return new Direction({ start: start, end: target, debugColor: 'teal' })
+        return new Direction({ start: start, end: target, debugColor: 'white' })
       } else {
         const goal = closest.enemy.feature.body.position
         const target = this.isPointClear(goal) ? goal : this.getGoalTarget(goal)
-        const debugColor = this.onAlert ? 'red' : 'white'
+        const debugColor = this.onAlert ? 'red' : 'grey'
         return new Direction({ start: start, end: target, debugColor })
       }
     } else if (Character.it != null) {
@@ -204,7 +213,7 @@ export default class Bot extends Character {
     return null
   }
 
-  choose (): Partial<Controls> {
+  chooseControls (): Partial<Controls> {
     const arrow = this.chooseArrow()
     if (arrow == null) {
       const debugColor = Character.it === this ? 'red' : 'white'
@@ -222,7 +231,7 @@ export default class Bot extends Character {
   }
 
   act (): void {
-    const choice = this.choose()
+    const choice = this.chooseControls()
     this.takeInput(choice)
     super.act()
   }
