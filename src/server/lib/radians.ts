@@ -52,9 +52,9 @@ export function areRadiansDownLeft (radians: number): boolean {
 }
 
 export function areRadiansLeft (radians: number): boolean {
-  const positive = WEST_SW_RADIANS <= radians && radians < WEST_RADIANS
+  const positive = WEST_SW_RADIANS <= radians && radians <= WEST_RADIANS
 
-  return positive || (-WEST_RADIANS <= radians && radians < WEST_NW_RADIANS)
+  return positive || (-WEST_RADIANS <= radians && radians <= WEST_NW_RADIANS)
 }
 
 export function areRadiansUpLeft (radians: number): boolean {

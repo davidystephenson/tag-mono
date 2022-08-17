@@ -19,6 +19,7 @@ export default class Bot extends Character {
   unblocking: boolean = true
   fleeing: boolean = false
   searchArray: Matter.Vector[] = []
+  searchTimes: number[] = []
   searchIndex = 1
   searchGoal: Matter.Vector
   searchTarget: Matter.Vector
@@ -47,6 +48,7 @@ export default class Bot extends Character {
       waypoints.pop()
     }
     this.searchArray = searchWaypointArray.map(waypoint => waypoint.position)
+    this.searchTimes = this.searchArray.map(() => 0)
     console.log('End While Loop')
     if (typeof (Bot.oldest) === 'undefined') Bot.oldest = this
   }
@@ -69,6 +71,15 @@ export default class Bot extends Character {
       end: point,
       obstacles: Feature.obstacles
     })
+  }
+
+  isPointInRange (point: Matter.Vector): boolean {
+    const start = this.feature.body.position
+    const visibleX = start.x - VISION.width < point.x && point.x < start.x + VISION.width
+    if (!visibleX) return false
+    const visibleY = start.y - VISION.height < point.y && point.y < start.y + VISION.height
+    if (!visibleY) return false
+    return true
   }
 
   isPointWallVisible (point: Matter.Vector): boolean {
@@ -110,8 +121,8 @@ export default class Bot extends Character {
     const path = goalWaypoint.getVectorPath(goal)
     // Should this path be allowed to go through walls?
     path.slice(0, path.length - 1).forEach((point, index) => {
-      // const next = path[index + 1]
-      // return new DebugLine({ start: point, end: next, color: 'purple' })
+      const next = path[index + 1]
+      return new DebugLine({ start: point, end: next, color: 'purple' })
     })
     const target = path.reduce((a, b) => {
       const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
@@ -132,8 +143,21 @@ export default class Bot extends Character {
 
   updateSearch (): void {
     // console.trace('updateSearchPosition')
+    const start = this.feature.body.position
+    const visibleTimes = this.searchTimes.filter((time, index) => this.isPointInRange(this.searchArray[index]))
+    const minTime = Math.min(...visibleTimes)
+    const indices = Array.from(Array(this.searchTimes.length).keys())
+    const searchIndices = indices.filter(i => this.searchTimes[i] === minTime)
+    const distances = searchIndices.map(i => getDistance(start, this.searchArray[i]))
+    this.searchIndex = searchIndices[distances.indexOf(Math.min(...distances))]
     this.searchGoal = this.searchArray[this.searchIndex]
-    this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+    this.searchTimes[this.searchIndex] = Date.now()
+
+    // this.searchIndex = (this.searchIndex + 1) % this.searchArray.length
+    // const newGoal = this.searchArray[this.searchIndex]
+    // if (this.isPointInRange(newGoal)) {
+    //   this.searchGoal = this.searchArray[this.searchIndex]
+    // }
   }
 
   chooseArrow (): Direction | null {
@@ -142,7 +166,7 @@ export default class Bot extends Character {
       const debugCircleColor = Character.it === this ? 'red' : 'white'
       void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugCircleColor })
     }
-    const searchNear = this.isPointWallVisible(this.searchGoal)
+    const searchNear = getDistance(start, this.searchGoal) < 45
     if (searchNear) {
       this.updateSearch()
     }
@@ -208,13 +232,20 @@ export default class Bot extends Character {
         }
         this.unblocking = false
       }
-      this.searchTarget = this.getGoalTarget(this.searchGoal)
+      // SLOWDOWN
+      // this.searchTarget = this.getGoalTarget(this.searchGoal)
+      // SLOWDOWN
       // SPEEDUP
-      // if (!this.isPointWallClear(this.searchTarget) || this.isPointWallVisible(this.searchTarget)) {
-      //   this.updateSearch()
-      //   this.searchTarget = this.searchGoal
-      // }
-      // void new DebugLine({ start, end: this.searchTarget, color: 'teal' })
+      if (getDistance(start, this.searchGoal) < 45) {
+        this.updateSearch()
+        this.searchTarget = this.isPointWallClear(this.searchGoal) ? this.searchGoal : this.searchTarget
+      }
+      if (!this.isPointWallClear(this.searchGoal)) {
+        this.searchTarget = this.getGoalTarget(this.searchGoal)
+      }
+      this.searchTarget = this.isPointWallClear(this.searchGoal) ? this.searchGoal : this.searchTarget
+      void new DebugLine({ start, end: this.searchGoal, color: 'yellow' })
+      void new DebugLine({ start, end: this.searchTarget, color: 'teal' })
       // END SPEEDUP
       return new Direction({ start: start, end: this.searchTarget, debugColor: 'teal' })
     }
