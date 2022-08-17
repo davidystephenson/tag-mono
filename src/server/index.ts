@@ -47,7 +47,7 @@ const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(serve
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
-  setInterval(tick, 100)
+  setInterval(tick, 10)
 })
 
 async function updateClients (): Promise<void> {
@@ -85,7 +85,7 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     console.log('disconnect:', socket.id)
     const player = Player.players.get(socket.id)
-    if (Character.it === player) Bot.oldest.makeIt()
+    if (Character.it === player) Bot.oldest?.makeIt()
     player?.destroy()
   })
 })
