@@ -10,19 +10,22 @@ import VISION from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Feature from './Feature'
 import Direction from './Direction'
+import { whichMax, whichMin } from '../lib/util'
 
 export default class Bot extends Character {
   static oldest: Bot
   static bots = new Map<number, Bot>()
-  alertPoint: Matter.Vector
+  alertPoint?: Matter.Vector
   onAlert: boolean = false
   unblocking: boolean = true
   fleeing: boolean = false
   searchArray: Matter.Vector[] = []
   searchTimes: number[] = []
+  alertPath: Matter.Vector[] = []
+  alertTarget?: Matter.Vector
   searchIndex = 1
   searchGoal: Matter.Vector
-  searchTarget: Matter.Vector
+  searchTarget?: Waypoint
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -31,9 +34,7 @@ export default class Bot extends Character {
     radius?: number
   }) {
     super({ x, y, color, radius })
-    this.alertPoint = { x, y }
     this.searchGoal = Waypoint.waypoints[0].position
-    this.searchTarget = Waypoint.waypoints[0].position
     const searchWaypointArray = [Waypoint.waypoints[0]]
     const waypoints = [...Waypoint.waypoints]
     console.log('Start While Loop')
@@ -48,7 +49,7 @@ export default class Bot extends Character {
       waypoints.pop()
     }
     this.searchArray = searchWaypointArray.map(waypoint => waypoint.position)
-    this.searchTimes = this.searchArray.map(() => 0)
+    this.searchTimes = Waypoint.waypoints.map(() => 0)
     console.log('End While Loop')
     if (typeof (Bot.oldest) === 'undefined') Bot.oldest = this
   }
@@ -119,7 +120,6 @@ export default class Bot extends Character {
     const start = this.feature.body.position
     const goalWaypoint = this.getGoalWaypoint(goal)
     const path = goalWaypoint.getVectorPath(goal)
-    // Should this path be allowed to go through walls?
     path.slice(0, path.length - 1).forEach((point, index) => {
       const next = path[index + 1]
       return new DebugLine({ start: point, end: next, color: 'purple' })
@@ -135,7 +135,7 @@ export default class Bot extends Character {
     const characters = Character.characters.values()
     const visibleCharacters = []
     for (const character of characters) {
-      const isVisible = this.isPointVisible(character.feature.body.position)
+      const isVisible = character !== this && this.isPointVisible(character.feature.body.position)
       if (isVisible) visibleCharacters.push(character)
     }
     return visibleCharacters
@@ -160,108 +160,93 @@ export default class Bot extends Character {
     // }
   }
 
+  isPointClose (point: Matter.Vector): boolean {
+    const distance = getDistance(this.feature.body.position, point)
+    const close = distance < 45
+    return close
+  }
+
+  isPointBoring (point: Matter.Vector): boolean {
+    const close = this.isPointClose(point)
+    if (close) return true
+
+    const visible = this.isPointWallVisible(point)
+    return !visible
+  }
+
+  wander (debug = true): Direction {
+    if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
+      const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible(Waypoint.waypoints[index].position))
+      const earlyTime = Math.min(...visibleTimes)
+      const earlyIds = Waypoint.ids.filter(id => this.searchTimes[id] === earlyTime)
+      const earlyDistances = earlyIds.map(id => getDistance(this.feature.body.position, Waypoint.waypoints[id].position))
+      const earlyFarId = whichMax(earlyIds, earlyDistances)
+      this.searchTarget = Waypoint.waypoints[earlyFarId]
+      this.searchTimes[earlyFarId] = Date.now()
+    }
+    const debugColor = debug ? 'white' : undefined
+    return new Direction({ start: this.feature.body.position, end: this.searchTarget.position, debugColor })
+  }
+
   chooseArrow (): Direction | null {
     const start = this.feature.body.position
-    if (DebugCircle.botPosition) {
-      const debugCircleColor = Character.it === this ? 'red' : 'white'
-      void new DebugCircle({ x: start.x, y: start.y, radius: 10, color: debugCircleColor })
+    if (Character.it == null) {
+      return null
     }
-    const searchNear = getDistance(start, this.searchGoal) < 45
-    if (searchNear) {
-      this.updateSearch()
-    }
-    // void new DebugLine({ start, end: this.searchGoal, color: 'yellow' })
-    if (Character.it === this) {
-      const closestVisible: { distance: number, enemy?: Character } = { distance: Infinity }
-      const visibleCharacters = this.getVisibleCharacters()
-      for (const character of visibleCharacters) {
-        if (character !== this) {
-          const distance = getDistance(start, character.feature.body.position)
-          if (distance < closestVisible.distance) {
-            this.alertPoint = vectorToPoint(character.feature.body.position)
-            this.onAlert = true
-            closestVisible.enemy = character
-            closestVisible.distance = distance
-          }
-        }
-      }
-      if (this.onAlert) {
-        const alertDistance = getDistance(this.alertPoint, start)
-        if (alertDistance < 45) {
-          this.onAlert = false
-          this.updateSearch()
-        } else {
-          this.searchGoal = this.alertPoint
-        }
-      }
-      if (closestVisible.enemy == null) {
-        const goal = this.onAlert ? this.alertPoint : this.searchGoal
-        this.searchTarget = this.getGoalTarget(this.searchGoal)
-        const target = this.isPointClear(goal) ? goal : this.searchTarget
-        return new Direction({ start: start, end: target, debugColor: 'white' })
-      } else {
-        const goal = closestVisible.enemy.feature.body.position
-        const target = this.isPointClear(goal) ? goal : this.getGoalTarget(goal)
-        const debugColor = this.onAlert ? 'red' : 'grey'
-        this.updateSearch()
-        return new Direction({ start: start, end: target, debugColor })
-      }
-    } else if (Character.it != null) {
-      const itPos = Character.it.feature.body.position
-      const itVisible = this.isPointVisible(itPos)
+    if (Character.it !== this) {
+      const itPosition = Character.it.feature.body.position
+      const angle = (Matter.Vector.angle(itPosition, start) / Math.PI + 1) / 2
+      console.log('angle', angle)
+      const itVisible = this.isPointVisible(itPosition)
       if (itVisible) {
-        const vector = Matter.Vector.sub(start, itPos)
-        const distance = Matter.Vector.magnitude(vector)
-        const direction = Matter.Vector.normalise(vector)
-        const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 16))
-        const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
-        this.fleeing = true
-        if (this.unblocking && distance < 150) {
-          this.unblocking = false
-          this.updateSearch()
-        }
-        if (blocked || this.unblocking) {
-          this.unblocking = true
-        } else {
-          return new Direction({ start: itPos, end: start, debugColor: 'orange' })
-        }
+        return new Direction({ start: itPosition, end: start })
       } else {
-        if (this.fleeing) {
-          this.updateSearch()
-          this.fleeing = false
-        }
-        this.unblocking = false
+        return this.wander(false)
       }
-      // SLOWDOWN
-      // this.searchTarget = this.getGoalTarget(this.searchGoal)
-      // SLOWDOWN
-      // SPEEDUP
-      if (getDistance(start, this.searchGoal) < 45) {
-        this.updateSearch()
-        this.searchTarget = this.isPointWallClear(this.searchGoal) ? this.searchGoal : this.searchTarget
+    } else { // Character.it === this
+      const visibleCharacters = this.getVisibleCharacters()
+      // console.log('this.alertPath.length', this.alertPath.length)
+      if (visibleCharacters.length > 0) {
+        const distances = visibleCharacters.map(character => getDistance(start, character.feature.body.position))
+        const closeChar = whichMin(visibleCharacters, distances)
+        this.alertPoint = vectorToPoint(closeChar.feature.body.position)
+        return new Direction({ start, end: closeChar.feature.body.position, debugColor: 'yellow' })
+      } else if (this.alertPoint == null) {
+        return this.wander()
+      } else if (getDistance(start, this.alertPoint) < 45) {
+        this.alertPoint = undefined
+        return this.wander()
+      } else if (this.isPointWallVisible(this.alertPoint)) {
+        return new Direction({ start, end: this.alertPoint, debugColor: 'pink' })
+      } else {
+        this.alertPath.slice(0, this.alertPath.length - 1).forEach((point, i) => {
+          void new DebugLine({ start: point, end: this.alertPath[i + 1], color: 'purple' })
+        })
+        const target = this.alertPath.find(point => this.isPointWallVisible(point))
+        if (target != null) return new Direction({ start, end: target, debugColor: 'red' })
+        console.log('picking path...')
+        const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+          return this.isPointWallVisible(waypoint.position)
+        })
+        const distances = visibleFromStart.map(visibleWaypoint => {
+          const startToWaypoint = getDistance(visibleWaypoint.position, start)
+          if (this.alertPoint == null) throw new Error('Cannot create alert path without alert point')
+          const waypointToGoal = visibleWaypoint.getDistance(this.alertPoint)
+          return startToWaypoint + waypointToGoal
+        })
+        const startWaypoint = whichMin(visibleFromStart, distances)
+        this.alertPath = startWaypoint.getVectorPath(this.alertPoint)
+        this.alertPath.reverse()
+        const newTarget = this.alertPath.find(point => this.isPointWallVisible(point))
+        if (newTarget == null) throw new Error('No path target for new path')
+        return new Direction({ start, end: newTarget, debugColor: 'green' })
       }
-      if (!this.isPointWallClear(this.searchGoal)) {
-        this.searchTarget = this.getGoalTarget(this.searchGoal)
-      }
-      this.searchTarget = this.isPointWallClear(this.searchGoal) ? this.searchGoal : this.searchTarget
-      void new DebugLine({ start, end: this.searchGoal, color: 'yellow' })
-      void new DebugLine({ start, end: this.searchTarget, color: 'teal' })
-      // END SPEEDUP
-      return new Direction({ start: start, end: this.searchTarget, debugColor: 'teal' })
     }
-    return null
   }
 
   chooseControls (): Partial<Controls> {
     const arrow = this.chooseArrow()
     if (arrow == null) {
-      const debugColor = Character.it === this ? 'red' : 'white'
-      void new DebugCircle({
-        x: this.feature.body.position.x,
-        y: this.feature.body.position.y,
-        radius: 10,
-        color: debugColor
-      })
       return STILL
     }
     const controls = arrow.getControls()
@@ -270,6 +255,15 @@ export default class Bot extends Character {
   }
 
   act (): void {
+    if (DebugCircle.BOT_POSITION) {
+      const debugColor = Character.it === this ? 'red' : 'white'
+      void new DebugCircle({
+        x: this.feature.body.position.x,
+        y: this.feature.body.position.y,
+        radius: 10,
+        color: debugColor
+      })
+    }
     const choice = this.chooseControls()
     this.takeInput(choice)
     super.act()

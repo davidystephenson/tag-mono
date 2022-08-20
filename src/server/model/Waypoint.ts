@@ -4,6 +4,8 @@ import Wall from './Wall'
 
 export default class Waypoint {
   static waypoints: Waypoint[] = []
+  static positions: Vector[] = []
+  static ids: number[] = []
   readonly x: number
   readonly y: number
   readonly position: Matter.Vector
@@ -22,6 +24,8 @@ export default class Waypoint {
     this.id = Waypoint.waypoints.length
     if (Matter.Query.point(Wall.wallObstacles, this.position).length === 0) {
       Waypoint.waypoints.push(this)
+      Waypoint.positions.push(this.position)
+      Waypoint.ids.push(this.id)
     }
   }
 
