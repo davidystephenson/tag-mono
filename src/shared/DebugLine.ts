@@ -2,9 +2,9 @@ import Matter from 'matter-js'
 
 export default class DebugLine {
   static lines: DebugLine[] = []
-  static raycast = false
-  static collision = false
-  static alertPath = true
+  static RAYCAST = false
+  static COLLISION = false
+  static ALERT_PATH = true
   readonly start: Matter.Vector
   readonly end: Matter.Vector
   readonly color: string

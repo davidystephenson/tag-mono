@@ -15,6 +15,7 @@ import { whichMax, whichMin } from '../lib/util'
 export default class Bot extends Character {
   static oldest: Bot
   static bots = new Map<number, Bot>()
+  static DEBUG_IT_CHOICE = true
   alertPoint?: Matter.Vector
   onAlert: boolean = false
   unblocking: boolean = true
@@ -175,7 +176,6 @@ export default class Bot extends Character {
   }
 
   wander (debug = true): Direction {
-    console.log('wander test')
     if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible(Waypoint.waypoints[index].position))
       const earlyTime = Math.min(...visibleTimes)
@@ -216,7 +216,9 @@ export default class Bot extends Character {
         const distances = visibleCharacters.map(character => getDistance(start, character.feature.body.position))
         const closeChar = whichMin(visibleCharacters, distances)
         this.alertPoint = vectorToPoint(closeChar.feature.body.position)
-        console.log('chasing')
+        if (Bot.DEBUG_IT_CHOICE) {
+          console.log('chasing')
+        }
         return new Direction({ start, end: closeChar.feature.body.position, debugColor: 'yellow' })
       } else if (this.alertPoint == null) {
         console.log('wandering')
