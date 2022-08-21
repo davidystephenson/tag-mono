@@ -282,12 +282,15 @@ console.log('Bot complete')
 Matter.Runner.run(runner, engine)
 
 let oldTime = Date.now()
+let alertTime = Date.now()
 Matter.Events.on(engine, 'afterUpdate', () => {
   if (DEBUG_STEP_TIME) {
     const newTime = Date.now()
     const difference = newTime - oldTime
     if (difference > DEBUG_STEP_TIME_LIMIT) {
-      console.log('stepTime', difference)
+      const alertDifference = newTime - alertTime
+      console.log('stepTime', difference, 'alertDifference', alertDifference)
+      alertTime = newTime
     }
     oldTime = newTime
   }

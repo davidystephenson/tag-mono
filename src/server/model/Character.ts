@@ -8,6 +8,7 @@ export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
+  static DEBUG_MAKE_IT = false
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
@@ -56,7 +57,10 @@ export default class Character extends Actor {
   }
 
   makeIt (): void {
-    console.log('makeIt', this.feature.body.id)
+    if (Character.it === this) {
+      throw new Error('Already it')
+    }
+    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
     this.feature.body.render.fillStyle = 'red'
     if (Character.it != null) Character.it.feature.body.render.fillStyle = 'green'
     Character.it = this
