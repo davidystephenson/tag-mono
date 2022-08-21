@@ -231,6 +231,8 @@ export default class Bot extends Character {
 
       const itVisible = this.isPointVisible(itPosition)
       if (itVisible) {
+        this.searchTarget = undefined
+
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
         const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
@@ -251,6 +253,8 @@ export default class Bot extends Character {
         const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'orange' : undefined
         return new Direction({ start: itPosition, end: start, debugColor })
       } else {
+        this.unblockTarget = undefined
+
         if (this.fleeing) {
           this.searchTarget = undefined
           this.fleeing = false
