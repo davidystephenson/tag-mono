@@ -76,3 +76,38 @@ export function getRadiansControls (radians: number): Partial<Controls> {
   const string = String(radians)
   throw new Error(`Invalid radians: ${string}`)
 }
+
+export function whichMin <Element> (array: Element[], numbers: number[]): Element {
+  const minimum = Math.min(...numbers)
+  const index = numbers.indexOf(minimum)
+  const element = array[index]
+
+  return element
+}
+
+export function whichMax <Element> (array: Element[], numbers: number[]): Element {
+  const minimum = Math.max(...numbers)
+  const index = numbers.indexOf(minimum)
+  const element = array[index]
+
+  return element
+}
+
+export function getAnglePercentage (from: Matter.Vector, to: Matter.Vector): number {
+  const angle = (Matter.Vector.angle(from, to) / Math.PI + 1) / 2
+
+  return angle
+}
+
+export function getAnglePercentageDifference (a: number, b: number): number {
+  // 1) Take |𝐴−𝐵|.
+  const difference = a - b
+  const absoluteDifference = Math.abs(difference)
+  console.log('absoluteDifference', absoluteDifference)
+  // 2) If |𝐴−𝐵|≤180 you are done. That's your answer. other wise
+  if (absoluteDifference <= 0.5) {
+    return absoluteDifference
+  }
+  // 3) If |𝐴−𝐵|>180, take 360−|𝐴−𝐵|. You are done.
+  return 1 - absoluteDifference
+}

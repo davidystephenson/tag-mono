@@ -9,6 +9,8 @@ import { getDistance } from '../lib/engine'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 import isClear from '../lib/raycast'
+import Matter from 'matter-js'
+import { getAnglePercentage, getAnglePercentageDifference } from '../lib/math'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
@@ -77,6 +79,33 @@ export default class Player extends Character {
     super.act()
     if (Player.LOG_POSITION) {
       console.log('player position', this.feature.body.position)
+    }
+    if (Character.it != null) {
+      console.log('//// START ////')
+      const itAngle = getAnglePercentage(this.feature.body.position, Character.it.feature.body.position)
+      console.log('itAngle', itAngle)
+      const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+        return this.isPointWallVisible(waypoint.position)
+      })
+      console.log('visibleFromStart', visibleFromStart.length)
+      const mostDifferent = visibleFromStart.reduce((mostDifferent, waypoint) => {
+        const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
+        console.log('angle', angle)
+        const difference = getAnglePercentageDifference(angle, itAngle)
+        console.log('difference', difference)
+        if (difference > mostDifferent.difference) {
+          return {
+            waypoint,
+            difference,
+            angle
+          }
+        }
+        return mostDifferent
+      }, { waypoint: visibleFromStart[0], difference: 0, angle: 0 })
+      console.log('mostDifferent', mostDifferent.difference)
+
+      void new DebugLine({ start: this.feature.body.position, end: mostDifferent.waypoint.position, color: 'red' })
+      console.log('//// END ////')
     }
   }
 }

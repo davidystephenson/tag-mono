@@ -10,7 +10,7 @@ import VISION from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Feature from './Feature'
 import Direction from './Direction'
-import { whichMax, whichMin } from '../lib/util'
+import { getAnglePercentage, getAnglePercentageDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 
 export default class Bot extends Character {
@@ -161,6 +161,34 @@ export default class Bot extends Character {
     return !visible
   }
 
+  getEscapeWaypoint (): Waypoint {
+    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointWallVisible(waypoint.position)
+    })
+    if (Character.it == null || Character.it === this) {
+      return visibleFromStart[0]
+    }
+    const itAngle = getAnglePercentage(this.feature.body.position, Character.it.feature.body.position)
+
+    console.log('visibleFromStart', visibleFromStart.length)
+    const mostDifferent = visibleFromStart.reduce((mostDifferent, waypoint) => {
+      const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
+      const difference = getAnglePercentageDifference(angle, itAngle)
+      if (difference > mostDifferent.difference) {
+        return {
+          waypoint,
+          difference,
+          angle
+        }
+      }
+      return mostDifferent
+    }, { waypoint: visibleFromStart[0], difference: 0, angle: 0 })
+
+    void new DebugLine({ start: this.feature.body.position, end: mostDifferent.waypoint.position, color: 'red' })
+
+    return mostDifferent.waypoint
+  }
+
   wander (debug = true): Direction {
     let debugColor = debug ? 'white' : undefined
     if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
@@ -190,8 +218,6 @@ export default class Bot extends Character {
     }
     if (Character.it !== this) {
       const itPosition = Character.it.feature.body.position
-      // const angle = (Matter.Vector.angle(itPosition, start) / Math.PI + 1) / 2
-      // console.log('angle', angle)
       const itVisible = this.isPointVisible(itPosition)
       if (itVisible) {
         this.fleeing = true
