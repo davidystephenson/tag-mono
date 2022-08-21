@@ -6,7 +6,7 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import { DEBUG_STEP_TIME, engine, runner } from './lib/engine'
+import { DEBUG_STEP_TIME, DEBUG_STEP_TIME_LIMIT, engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
@@ -47,7 +47,7 @@ const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(serve
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
-  setInterval(tick, 10)
+  setInterval(tick, 50)
 })
 
 async function updateClients (): Promise<void> {
@@ -218,7 +218,10 @@ let oldTime = Date.now()
 Matter.Events.on(engine, 'afterUpdate', () => {
   if (DEBUG_STEP_TIME) {
     const newTime = Date.now()
-    console.log('stepTime', newTime - oldTime)
+    const difference = newTime - oldTime
+    if (difference > DEBUG_STEP_TIME_LIMIT) {
+      console.log('stepTime', difference)
+    }
     oldTime = newTime
   }
   runner.enabled = !Actor.paused
