@@ -91,12 +91,13 @@ io.on('connection', socket => {
   })
 })
 
-const MAP_SIZE = 1500
+const MAP_SIZE = 3000
+const WALL_SIZE = MAP_SIZE * 3
 const wallProps = [
-  { x: 0, y: MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
-  { x: 0, y: -MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
-  { x: MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE },
-  { x: -MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE }
+  { x: 0, y: MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
+  { x: 0, y: -MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
+  { x: MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE },
+  { x: -MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE }
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
