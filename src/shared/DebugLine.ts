@@ -5,7 +5,6 @@ export default class DebugLine {
   static RAYCAST = false
   static COLLISION = false
   static ALERT_PATH = true
-  static NOT_IT_WANDER = false
   readonly start: Matter.Vector
   readonly end: Matter.Vector
   readonly color: string

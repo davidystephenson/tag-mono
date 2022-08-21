@@ -125,14 +125,14 @@ void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
 void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
 void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const edgePadding = 30
-const size = MAP_SIZE - edgePadding
-const stepSize = size / 4
-const gridSteps = Math.ceil(2 * size / stepSize)
-for (const i of Array(gridSteps + 1).keys()) {
-  for (const j of Array(gridSteps + 1).keys()) {
-    const x = edgePadding - MAP_SIZE + i * stepSize
-    const y = edgePadding - MAP_SIZE + j * stepSize
+const EDGE_PADDING = 30
+const innerSize = MAP_SIZE - EDGE_PADDING * 2
+const GRID_RATIO = 7
+const stepSize = innerSize / GRID_RATIO
+for (let i = 0; i < GRID_RATIO + 1; i++) {
+  for (let j = 0; j < GRID_RATIO + 1; j++) {
+    const x = -innerSize / 2 + i * stepSize
+    const y = -innerSize / 2 + j * stepSize
     void new Waypoint({ x, y })
   }
 }
@@ -189,74 +189,74 @@ void new Crate({ x: 1300, y: 1300, height: 300, width: 10 })
 void new Crate({ x: 1350, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1400, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
-void new Puppet({
-  x: -685,
-  y: -1110,
-  vertices: [
-    { x: 0, y: 50 },
-    { x: -50, y: -50 },
-    { x: 50, y: -50 }
-  ]
-})
-void new Puppet({
-  x: 1400,
-  y: -1425,
-  vertices: [
-    { x: 0, y: 20 },
-    { x: -20, y: -20 },
-    { x: 20, y: -20 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.0
-})
-void new Puppet({
-  x: 750,
-  y: 750,
-  vertices: [
-    { x: 0, y: 30 },
-    { x: -30, y: -30 },
-    { x: 30, y: -30 }
-  ],
-  direction: WEST_VECTOR
-})
-void new Puppet({
-  x: 400,
-  y: 200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -100, y: -100 },
-    { x: 100, y: -100 }
-  ],
-  direction: NORTH_VECTOR,
-  force: 0.1
-})
-void new Puppet({
-  x: -1200,
-  y: -200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -150, y: -50 },
-    { x: 100, y: -100 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.15
-})
-void new Puppet({
-  x: -1225,
-  y: 900,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -75, y: -66 },
-    { x: 100, y: -144 }
-  ],
-  direction: SOUTH_VECTOR,
-  force: 0.2
-})
+// void new Puppet({
+//   x: -685,
+//   y: -1110,
+//   vertices: [
+//     { x: 0, y: 50 },
+//     { x: -50, y: -50 },
+//     { x: 50, y: -50 }
+//   ]
+// })
+// void new Puppet({
+//   x: 1400,
+//   y: -1425,
+//   vertices: [
+//     { x: 0, y: 20 },
+//     { x: -20, y: -20 },
+//     { x: 20, y: -20 }
+//   ],
+//   direction: EAST_VECTOR,
+//   force: 0.0
+// })
+// void new Puppet({
+//   x: 750,
+//   y: 750,
+//   vertices: [
+//     { x: 0, y: 30 },
+//     { x: -30, y: -30 },
+//     { x: 30, y: -30 }
+//   ],
+//   direction: WEST_VECTOR
+// })
+// void new Puppet({
+//   x: 400,
+//   y: 200,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -100, y: -100 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: NORTH_VECTOR,
+//   force: 0.1
+// })
+// void new Puppet({
+//   x: -1200,
+//   y: -200,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -150, y: -50 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: EAST_VECTOR,
+//   force: 0.15
+// })
+// void new Puppet({
+//   x: -1225,
+//   y: 900,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -75, y: -66 },
+//     { x: 100, y: -144 }
+//   ],
+//   direction: SOUTH_VECTOR,
+//   force: 0.2
+// })
 
-Waypoint.waypoints.forEach(waypoint => {
-  void new Bot({ x: waypoint.x, y: waypoint.y })
-})
-// void new Bot({ x: 500, y: 500 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 500, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
 // void new Bot({ x: -500, y: 500 })

@@ -103,7 +103,6 @@ export function getAnglePercentageDifference (a: number, b: number): number {
   // 1) Take |𝐴−𝐵|.
   const difference = a - b
   const absoluteDifference = Math.abs(difference)
-  console.log('absoluteDifference', absoluteDifference)
   // 2) If |𝐴−𝐵|≤180 you are done. That's your answer. other wise
   if (absoluteDifference <= 0.5) {
     return absoluteDifference
