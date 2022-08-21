@@ -240,7 +240,8 @@ export default class Bot extends Character {
         if (blocked && this.unblockTarget == null) {
           this.unblockTarget = this.getUnblockWaypoint()
         }
-        if (this.unblockTarget != null) {
+        const itClose = this.isPointClose({ point: itPosition, limit: 125 })
+        if (!itClose && this.unblockTarget != null) {
           const bored = this.isPointBoring(this.unblockTarget.position)
           if (bored) {
             this.unblockTarget = undefined
@@ -248,6 +249,7 @@ export default class Bot extends Character {
             return new Direction({ start: start, end: this.unblockTarget, debugColor: 'red' })
           }
         }
+        this.unblockTarget = undefined
 
         this.fleeing = true
         const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'orange' : undefined
