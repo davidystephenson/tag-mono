@@ -11,7 +11,7 @@ export default function isClear ({ start, end, obstacles }: {
   if (dist === 0) return true
   const collisions = Matter.Query.ray(obstacles, start, end)
   const collide = collisions.length > 0
-  if (DebugLine.raycast) {
+  if (DebugLine.RAYCAST) {
     const color = collide ? 'red' : 'green'
     void new DebugLine({ start, end, color })
   }
@@ -28,7 +28,7 @@ export function raycast ({ start, end, obstacles }: {
   const collisions = Matter.Query.ray(obstacles, start, end)
   const collide = collisions.length > 0
   if (!collide) {
-    if (DebugLine.collision) {
+    if (DebugLine.COLLISION) {
       void new DebugLine({ start, end, color: 'purple' })
     }
     return false
