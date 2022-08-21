@@ -127,7 +127,7 @@ void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
 const EDGE_PADDING = 30
 const innerSize = MAP_SIZE - EDGE_PADDING * 2
-const GRID_RATIO = 7
+const GRID_RATIO = 8
 const stepSize = innerSize / GRID_RATIO
 for (let i = 0; i < GRID_RATIO + 1; i++) {
   for (let j = 0; j < GRID_RATIO + 1; j++) {
