@@ -175,6 +175,7 @@ export default class Bot extends Character {
   }
 
   wander (debug = true): Direction {
+    console.log('wander test')
     if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible(Waypoint.waypoints[index].position))
       const earlyTime = Math.min(...visibleTimes)
@@ -195,13 +196,18 @@ export default class Bot extends Character {
     }
     if (Character.it !== this) {
       const itPosition = Character.it.feature.body.position
-      const angle = (Matter.Vector.angle(itPosition, start) / Math.PI + 1) / 2
-      console.log('angle', angle)
+      // const angle = (Matter.Vector.angle(itPosition, start) / Math.PI + 1) / 2
+      // console.log('angle', angle)
       const itVisible = this.isPointVisible(itPosition)
       if (itVisible) {
-        return new Direction({ start: itPosition, end: start })
+        this.fleeing = true
+        return new Direction({ start: itPosition, end: start, debugColor: 'orange' })
       } else {
-        return this.wander(false)
+        if (this.fleeing) {
+          this.searchTarget = undefined
+          this.fleeing = false
+        }
+        return this.wander()
       }
     } else { // Character.it === this
       const visibleCharacters = this.getVisibleCharacters()
@@ -210,15 +216,20 @@ export default class Bot extends Character {
         const distances = visibleCharacters.map(character => getDistance(start, character.feature.body.position))
         const closeChar = whichMin(visibleCharacters, distances)
         this.alertPoint = vectorToPoint(closeChar.feature.body.position)
+        console.log('chasing')
         return new Direction({ start, end: closeChar.feature.body.position, debugColor: 'yellow' })
       } else if (this.alertPoint == null) {
+        console.log('wandering')
         return this.wander()
       } else if (getDistance(start, this.alertPoint) < 45) {
+        console.log('giving up')
         this.alertPoint = undefined
         return this.wander()
       } else if (this.isPointWallVisible(this.alertPoint)) {
+        console.log('alerting')
         return new Direction({ start, end: this.alertPoint, debugColor: 'pink' })
       } else {
+        console.log('pathing')
         this.alertPath.slice(0, this.alertPath.length - 1).forEach((point, i) => {
           void new DebugLine({ start: point, end: this.alertPath[i + 1], color: 'purple' })
         })
