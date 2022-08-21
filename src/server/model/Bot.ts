@@ -11,6 +11,7 @@ import { getDistance, vectorToPoint } from '../lib/engine'
 import Feature from './Feature'
 import Direction from './Direction'
 import { whichMax, whichMin } from '../lib/util'
+import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
@@ -169,6 +170,9 @@ export default class Bot extends Character {
       const earlyIds = Waypoint.ids.filter(id => this.searchTimes[id] === earlyTime)
       if (earlyIds.length < 1) {
         console.warn('Bot has no visible waypoints:', this.feature.body.position)
+        Player.players.forEach(player => {
+          void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'red' })
+        })
         return new Direction({ start: this.feature.body.position, end: this.feature.body.position, debugColor })
       }
       const earlyDistances = earlyIds.map(id => getDistance(this.feature.body.position, Waypoint.waypoints[id].position))
