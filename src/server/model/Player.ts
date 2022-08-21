@@ -8,7 +8,7 @@ import VISION from '../../shared/VISION'
 import { getDistance } from '../lib/engine'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
-import isClear, { raycast } from '../lib/raycast'
+import isClear from '../lib/raycast'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
@@ -70,30 +70,5 @@ export default class Player extends Character {
       return startToWaypoint + waypointToGoal
     })
     return visibleFromStart[distances.indexOf(Math.min(...distances))]
-  }
-
-  getGoalTarget (goal: Matter.Vector): Matter.Vector {
-    const start = this.feature.body.position
-    const goalWaypoint = this.getGoalWaypoint(goal)
-    const path = goalWaypoint.getVectorPath(goal)
-    // Should this path be allowed to go through walls?
-    /*
-    path.slice(0, path.length - 1).forEach((point, index) => {
-      const next = path[index + 1]
-      return new DebugLine({ start: point, end: next, color: 'purple' })
-    })
-    */
-    const target = path.reduce((a, b) => {
-      const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
-      return hit === false ? b : a
-    })
-    return target
-  }
-
-  debugPath (): void {
-    // const goal = Waypoint.waypoints[59].position
-    // const target = this.getGoalTarget(goal)
-    // void new DebugLine({ start: this.feature.body.position, end: target, color: 'teal' })
-    // void new DebugLine({ start: this.feature.body.position, end: goal, color: 'yellow' })
   }
 }

@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import isClear, { raycast } from '../lib/raycast'
+import isClear from '../lib/raycast'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
@@ -15,7 +15,7 @@ import { whichMax, whichMin } from '../lib/util'
 export default class Bot extends Character {
   static oldest: Bot
   static bots = new Map<number, Bot>()
-  static DEBUG_IT_CHOICE = true
+  static DEBUG_IT_CHOICE = false
   alertPoint?: Matter.Vector
   onAlert: boolean = false
   unblocking: boolean = true
@@ -117,21 +117,6 @@ export default class Bot extends Character {
     return visibleFromStart[distances.indexOf(Math.min(...distances))]
   }
 
-  getGoalTarget (goal: Matter.Vector): Matter.Vector {
-    const start = this.feature.body.position
-    const goalWaypoint = this.getGoalWaypoint(goal)
-    const path = goalWaypoint.getVectorPath(goal)
-    path.slice(0, path.length - 1).forEach((point, index) => {
-      const next = path[index + 1]
-      return new DebugLine({ start: point, end: next, color: 'purple' })
-    })
-    const target = path.reduce((a, b) => {
-      const hit = raycast({ start, end: b, obstacles: Wall.wallObstacles })
-      return hit === false ? b : a
-    })
-    return target
-  }
-
   getVisibleCharacters (): Character[] {
     const characters = Character.characters.values()
     const visibleCharacters = []
@@ -176,16 +161,21 @@ export default class Bot extends Character {
   }
 
   wander (debug = true): Direction {
+    let debugColor = debug ? 'white' : undefined
     if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
+      if (debug) debugColor = 'gray'
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible(Waypoint.waypoints[index].position))
       const earlyTime = Math.min(...visibleTimes)
       const earlyIds = Waypoint.ids.filter(id => this.searchTimes[id] === earlyTime)
+      if (earlyIds.length < 1) {
+        console.warn('Bot has no visible waypoints:', this.feature.body.position)
+        return new Direction({ start: this.feature.body.position, end: this.feature.body.position, debugColor })
+      }
       const earlyDistances = earlyIds.map(id => getDistance(this.feature.body.position, Waypoint.waypoints[id].position))
       const earlyFarId = whichMax(earlyIds, earlyDistances)
       this.searchTarget = Waypoint.waypoints[earlyFarId]
       this.searchTimes[earlyFarId] = Date.now()
     }
-    const debugColor = debug ? 'white' : undefined
     return new Direction({ start: this.feature.body.position, end: this.searchTarget.position, debugColor })
   }
 
@@ -207,7 +197,7 @@ export default class Bot extends Character {
           this.searchTarget = undefined
           this.fleeing = false
         }
-        return this.wander()
+        return this.wander(DebugLine.NOT_IT_WANDER)
       }
     } else { // Character.it === this
       const visibleCharacters = this.getVisibleCharacters()
@@ -216,25 +206,25 @@ export default class Bot extends Character {
         const distances = visibleCharacters.map(character => getDistance(start, character.feature.body.position))
         const closeChar = whichMin(visibleCharacters, distances)
         this.alertPoint = vectorToPoint(closeChar.feature.body.position)
-        if (Bot.DEBUG_IT_CHOICE) {
-          console.log('chasing')
-        }
+        if (Bot.DEBUG_IT_CHOICE) console.log('chasing')
         return new Direction({ start, end: closeChar.feature.body.position, debugColor: 'yellow' })
       } else if (this.alertPoint == null) {
-        console.log('wandering')
+        if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
         return this.wander()
       } else if (getDistance(start, this.alertPoint) < 45) {
-        console.log('giving up')
         this.alertPoint = undefined
+        if (Bot.DEBUG_IT_CHOICE) console.log('giving up')
         return this.wander()
       } else if (this.isPointWallVisible(this.alertPoint)) {
-        console.log('alerting')
+        if (Bot.DEBUG_IT_CHOICE) console.log('alerting')
         return new Direction({ start, end: this.alertPoint, debugColor: 'pink' })
       } else {
-        console.log('pathing')
-        this.alertPath.slice(0, this.alertPath.length - 1).forEach((point, i) => {
-          void new DebugLine({ start: point, end: this.alertPath[i + 1], color: 'purple' })
-        })
+        if (Bot.DEBUG_IT_CHOICE) console.log('pathing')
+        if (DebugLine.ALERT_PATH) {
+          this.alertPath.slice(0, this.alertPath.length - 1).forEach((point, i) => {
+            void new DebugLine({ start: point, end: this.alertPath[i + 1], color: 'purple' })
+          })
+        }
         const target = this.alertPath.find(point => this.isPointWallVisible(point))
         if (target != null) return new Direction({ start, end: target, debugColor: 'red' })
         console.log('picking path...')

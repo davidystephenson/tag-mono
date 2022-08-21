@@ -139,14 +139,17 @@ Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
-Waypoint.waypoints.forEach(waypoint => new DebugLabel({
-  x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
-}))
+if (DebugLabel.WAYPOINTS) {
+  Waypoint.waypoints.forEach(waypoint => new DebugLabel({
+    x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
+  }))
+}
 
 console.log('navigation complete')
 
-void new Crate({ x: -800, y: -800, height: 300, width: 200 })
+void new Crate({ x: 200, y: -1200, height: 500, width: 10 })
 void new Crate({ x: -0, y: -900, height: 300, width: 100 })
+void new Crate({ x: -800, y: -800, height: 300, width: 200 })
 void new Crate({ x: -800, y: -200, height: 300, width: 200 })
 void new Crate({ x: -500, y: -200, height: 300, width: 200 })
 void new Crate({ x: -30, y: -30, height: 20, width: 20 })
@@ -240,14 +243,39 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 
 console.log('Start Bot')
 
-void new Bot({ x: 500, y: 500 })
-void new Bot({ x: -500, y: -500 })
-void new Bot({ x: 500, y: -500 })
-void new Bot({ x: -500, y: 500 })
-void new Bot({ x: 800, y: 800 })
-void new Bot({ x: -800, y: -800 })
-void new Bot({ x: 800, y: -800 })
-void new Bot({ x: -800, y: 800 })
+Waypoint.waypoints.forEach(waypoint => {
+  void new Bot({ x: waypoint.x, y: waypoint.y })
+})
+// void new Bot({ x: 500, y: 500 })
+// void new Bot({ x: -500, y: -500 })
+// void new Bot({ x: 500, y: -500 })
+// void new Bot({ x: -500, y: 500 })
+// void new Bot({ x: 800, y: 800 })
+// void new Bot({ x: -800, y: -800 })
+// void new Bot({ x: 800, y: -800 })
+// void new Bot({ x: -800, y: 450 })
+// void new Bot({ x: -850, y: 450 })
+// void new Bot({ x: -800, y: 500 })
+// void new Bot({ x: -850, y: 500 })
+// void new Bot({ x: -800, y: 550 })
+// void new Bot({ x: -850, y: 550 })
+// void new Bot({ x: -800, y: 600 })
+// void new Bot({ x: -850, y: 600 })
+// void new Bot({ x: -800, y: 650 })
+// void new Bot({ x: -850, y: 650 })
+// void new Bot({ x: -800, y: 700 })
+// void new Bot({ x: -850, y: 700 })
+// void new Bot({ x: -800, y: 750 })
+// void new Bot({ x: -850, y: 750 })
+// void new Bot({ x: -800, y: 800 })
+// void new Bot({ x: -850, y: 800 })
+// void new Bot({ x: -850, y: 850 })
+// void new Bot({ x: -800, y: 900 })
+// void new Bot({ x: -850, y: 900 })
+// void new Bot({ x: -800, y: 950 })
+// void new Bot({ x: -850, y: 950 })
+// void new Bot({ x: -800, y: 1000 })
+// void new Bot({ x: -850, y: 1000 })
 
 console.log('Bot complete')
 
@@ -271,7 +299,6 @@ Matter.Events.on(engine, 'afterUpdate', () => {
     color: 'purple'
   }))
   DebugLine.lines = []
-  Player.players.forEach(player => player.debugPath())
   Actor.actors.forEach(actor => actor.act())
 })
 
