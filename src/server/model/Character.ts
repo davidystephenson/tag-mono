@@ -12,6 +12,7 @@ export default class Character extends Actor {
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
+  controllable = true
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -30,14 +31,16 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    const vector = { x: 0, y: 0 }
-    if (this.controls.up) vector.y += -1
-    if (this.controls.down) vector.y += 1
-    if (this.controls.left) vector.x += -1
-    if (this.controls.right) vector.x += 1
-    const direction = Matter.Vector.normalise(vector)
-    const multiplied = Matter.Vector.mult(direction, this.force)
-    Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    if (this.controllable) {
+      const vector = { x: 0, y: 0 }
+      if (this.controls.up) vector.y += -1
+      if (this.controls.down) vector.y += 1
+      if (this.controls.left) vector.x += -1
+      if (this.controls.right) vector.x += 1
+      const direction = Matter.Vector.normalise(vector)
+      const multiplied = Matter.Vector.mult(direction, this.force)
+      Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    }
   }
 
   getVisibleFeatures (): Feature[] {
@@ -57,12 +60,18 @@ export default class Character extends Actor {
   }
 
   makeIt (): void {
+    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
-    this.feature.body.render.fillStyle = 'red'
     if (Character.it != null) Character.it.feature.body.render.fillStyle = 'green'
     Character.it = this
+    this.controllable = false
+    this.feature.body.render.fillStyle = 'white'
+    setTimeout(() => {
+      this.controllable = true
+
+      this.feature.body.render.fillStyle = 'red'
+    }, 5000)
   }
 }

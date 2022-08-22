@@ -178,7 +178,7 @@ export default class Bot extends Character {
     }
     const itAngle = getAnglePercentage(this.feature.body.position, Character.it.feature.body.position)
 
-    console.log('visibleFromStart', visible.length)
+    console.log('far', far.length)
     const mostDifferent = far.reduce((mostDifferent, waypoint) => {
       const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
       const difference = getAnglePercentageDifference(angle, itAngle)
@@ -267,6 +267,8 @@ export default class Bot extends Character {
       const visibleCharacters = this.getVisibleCharacters()
       // console.log('this.alertPath.length', this.alertPath.length)
       if (visibleCharacters.length > 0) {
+        this.alertPoint = undefined
+        this.alertPath = []
         const distances = visibleCharacters.map(character => getDistance(start, character.feature.body.position))
         const closeChar = whichMin(visibleCharacters, distances)
         this.alertPoint = vectorToPoint(closeChar.feature.body.position)
@@ -282,6 +284,7 @@ export default class Bot extends Character {
         return this.wander(Bot.DEBUG_IT_CHOICE)
       } else if (this.isPointWallVisible(this.alertPoint)) {
         if (Bot.DEBUG_IT_CHOICE) console.log('alerting')
+        this.alertPath = []
         return new Direction({ start, end: this.alertPoint, debugColor: 'pink' })
       } else {
         if (Bot.DEBUG_IT_CHOICE) console.log('pathing')

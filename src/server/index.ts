@@ -295,9 +295,9 @@ Matter.Events.on(engine, 'collisionStart', event => {
       // const bodyA = actorA.feature.body
       // const bodyB = actorB.feature.body
       // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
-      if (Character.it === actorA) {
+      if (Character.it === actorA && actorA.controllable) {
         actorB.makeIt()
-      } else if (Character.it === actorB) {
+      } else if (Character.it === actorB && actorB.controllable) {
         actorA.makeIt()
       }
     }
