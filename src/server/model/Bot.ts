@@ -125,7 +125,7 @@ export default class Bot extends Character {
     const characters = Character.characters.values()
     const visibleCharacters = []
     for (const character of characters) {
-      const isVisible = character !== this && this.isPointVisible(character.feature.body.position)
+      const isVisible = character !== this && this.isFeatureVisible(character.feature)
       if (isVisible) visibleCharacters.push(character)
     }
     return visibleCharacters
@@ -178,7 +178,6 @@ export default class Bot extends Character {
     }
     const itAngle = getAnglePercentage(this.feature.body.position, Character.it.feature.body.position)
 
-    console.log('far', far.length)
     const mostDifferent = far.reduce((mostDifferent, waypoint) => {
       const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
       const difference = getAnglePercentageDifference(angle, itAngle)
@@ -194,7 +193,6 @@ export default class Bot extends Character {
     }, { waypoint: first, difference: 0, angle: 0 })
 
     // void new DebugLine({ start: this.feature.body.position, end: mostDifferent.waypoint.position, color: 'red' })
-    console.log('mostDifferent test:', mostDifferent.waypoint.id)
 
     return mostDifferent.waypoint
   }

@@ -43,17 +43,23 @@ export default class Character extends Actor {
     }
   }
 
+  isFeatureVisible (feature: Feature): boolean {
+    const arrow = Matter.Vector.sub(feature.body.position, this.feature.body.position)
+    const direction = Matter.Vector.normalise(arrow)
+    const perp = Matter.Vector.perp(direction)
+    const startPerp = Matter.Vector.mult(perp, this.radius)
+    const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
+    const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
+    const viewpoints = [this.feature.body.position, leftSide, rightSide]
+    const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
+
+    return isVisible
+  }
+
   getVisibleFeatures (): Feature[] {
     const visibleFeatures: Feature[] = []
     Feature.features.forEach(feature => {
-      const arrow = Matter.Vector.sub(feature.body.position, this.feature.body.position)
-      const direction = Matter.Vector.normalise(arrow)
-      const perp = Matter.Vector.perp(direction)
-      const startPerp = Matter.Vector.mult(perp, this.radius)
-      const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
-      const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-      const viewpoints = [this.feature.body.position, leftSide, rightSide]
-      const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
+      const isVisible = this.isFeatureVisible(feature)
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
