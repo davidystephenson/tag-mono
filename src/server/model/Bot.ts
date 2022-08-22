@@ -156,8 +156,8 @@ export default class Bot extends Character {
     return close
   }
 
-  isPointBoring (point: Matter.Vector): boolean {
-    const close = this.isPointClose({ point })
+  isPointBoring ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
+    const close = this.isPointClose({ point, limit })
     if (close) return true
 
     const visible = this.isPointWallVisible(point)
@@ -169,9 +169,13 @@ export default class Bot extends Character {
       return this.isPointWallVisible(waypoint.position)
     })
     const far = visible.filter(waypoint => {
-      const isClose = this.isPointClose({ point: waypoint.position })
+      const isClose = this.isPointClose({ point: waypoint.position, limit: 125 })
       return !isClose
     })
+    if (far.length === 0) {
+      console.warn('Cannot unblock')
+      return Waypoint.waypoints[0]
+    }
     const first = far[0]
     if (Character.it == null || Character.it === this) {
       return first
@@ -199,7 +203,7 @@ export default class Bot extends Character {
 
   wander (debug = true): Direction {
     let debugColor = debug ? 'white' : undefined
-    if (this.searchTarget == null || this.isPointBoring(this.searchTarget.position)) {
+    if (this.searchTarget == null || this.isPointBoring({ point: this.searchTarget.position })) {
       if (debug) debugColor = 'gray'
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible(Waypoint.waypoints[index].position))
       const earlyTime = Math.min(...visibleTimes)
@@ -233,18 +237,21 @@ export default class Bot extends Character {
 
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
-        const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
+        const checkPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 125))
         const blocked = Matter.Query.point(Wall.wallObstacles, checkPoint).length > 0
-        if (blocked && this.unblockTarget == null) {
-          this.unblockTarget = this.getUnblockWaypoint()
+        if (blocked) {
+          if (this.unblockTarget == null || this.isPointBoring({ point: this.unblockTarget.position })) {
+            this.unblockTarget = this.getUnblockWaypoint()
+          }
+
+          return new Direction({ start, end: this.unblockTarget.position, debugColor: 'black' })
         }
-        const itClose = this.isPointClose({ point: itPosition, limit: 125 })
-        if (!itClose && this.unblockTarget != null) {
-          const bored = this.isPointBoring(this.unblockTarget.position)
+        if (this.unblockTarget != null && !this.isPointClose({ point: itPosition, limit: 150 })) {
+          const bored = this.isPointBoring({ point: this.unblockTarget.position, limit: 125 })
           if (bored) {
             this.unblockTarget = undefined
           } else {
-            return new Direction({ start: start, end: this.unblockTarget, debugColor: 'red' })
+            return new Direction({ start: start, end: this.unblockTarget.position, debugColor: 'red' })
           }
         }
         this.unblockTarget = undefined

@@ -253,10 +253,10 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   force: 0.2
 // })
 
-Waypoint.waypoints.forEach(waypoint => {
-  void new Bot({ x: waypoint.x, y: waypoint.y })
-})
-// void new Bot({ x: 500, y: 500 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 500, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
 // void new Bot({ x: -500, y: 500 })
