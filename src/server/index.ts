@@ -20,6 +20,7 @@ import DebugLabel from '../shared/DebugLabel'
 import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from './lib/directions'
 import Puppet from './model/Puppet'
 import DebugCircle from '../shared/DebugCircle'
+import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -66,7 +67,16 @@ async function updateClients (): Promise<void> {
       socket.emit('updateClient', message)
       */
     } else {
-      Bot.lostPoints.forEach(point => new DebugCircle({ x: point.x, y: point.y, radius: 125, color: 'yellow' }))
+      if (Bot.DEBUG_LOST_POINTS) {
+        Bot.lostPoints.forEach(point => {
+          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+
+          Player.players.forEach(player => {
+            void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
+          })
+        })
+      }
+
       player.updateClient()
     }
   })
@@ -129,15 +139,35 @@ void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
 const EDGE_PADDING = 30
 const innerSize = MAP_SIZE - EDGE_PADDING * 2
-const GRID_RATIO = 8
-const stepSize = innerSize / GRID_RATIO
-for (let i = 0; i < GRID_RATIO + 1; i++) {
-  for (let j = 0; j < GRID_RATIO + 1; j++) {
-    const x = -innerSize / 2 + i * stepSize
-    const y = -innerSize / 2 + j * stepSize
+let xFactor = 2
+let xSegment = innerSize / xFactor
+while (xSegment > VISION_INNER_WIDTH) {
+  xFactor = xFactor + 1
+  xSegment = innerSize / xFactor
+}
+let yFactor = 2
+let ySegment = innerSize / yFactor
+while (ySegment > VISION_INNER_HEIGHT) {
+  yFactor = yFactor + 1
+  ySegment = innerSize / yFactor
+}
+for (let i = 0; i <= xFactor; i++) {
+  for (let j = 0; j <= yFactor; j++) {
+    const x = -innerSize / 2 + i * xSegment
+    const y = -innerSize / 2 + j * ySegment
+
     void new Waypoint({ x, y })
   }
 }
+// const GRID_RATIO = 8
+// const stepSize = innerSize / GRID_RATIO
+// for (let i = 0; i < GRID_RATIO + 1; i++) {
+// for (let j = 0; j < GRID_RATIO + 1; j++) {
+// const x = -innerSize / 2 + i * stepSize
+// const y = -innerSize / 2 + j * stepSize
+// void new Waypoint({ x, y })
+// }
+// }
 
 Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
@@ -241,7 +271,7 @@ void new Puppet({
     { x: 100, y: -100 }
   ],
   direction: EAST_VECTOR,
-  force: 0.15
+  force: 0.05
 })
 void new Puppet({
   x: -1225,
@@ -252,7 +282,7 @@ void new Puppet({
     { x: 100, y: -144 }
   ],
   direction: SOUTH_VECTOR,
-  force: 0.2
+  force: 0.1
 })
 
 Waypoint.waypoints.forEach(waypoint => {
@@ -270,19 +300,25 @@ Matter.Runner.run(runner, engine)
 
 let oldTime = Date.now()
 let alertTime = Date.now()
+let alertCount = 0
+let alertDifferenceTotal = 0
 Matter.Events.on(engine, 'afterUpdate', () => {
   if (DEBUG_STEP_TIME) {
     const newTime = Date.now()
     const difference = newTime - oldTime
     if (difference > DEBUG_STEP_TIME_LIMIT) {
+      alertCount = alertCount + 1
       const alertDifference = newTime - alertTime
-      console.log('stepTime', difference, 'alertDifference', alertDifference)
+      alertDifferenceTotal = alertDifferenceTotal + alertDifference
+      const average = Math.floor(alertDifferenceTotal / alertCount)
+      console.log(`${alertCount} - ${difference} (${alertDifference}) [${average}]`)
       alertTime = newTime
     }
     oldTime = newTime
   }
   runner.enabled = !Actor.paused
   DebugLine.lines = []
+  DebugCircle.circles = []
   Actor.actors.forEach(actor => actor.act())
 })
 
