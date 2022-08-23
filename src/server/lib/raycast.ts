@@ -63,7 +63,7 @@ export function raycast ({ start, end, obstacles }: {
   return { entryPoint, exitPoint, hitBody }
 }
 
-export function someRaycast ({ casts, obstacles }: {
+export function someIsClear ({ casts, obstacles }: {
   casts: Matter.Vector[][]
   obstacles: Matter.Body[]
 }): boolean {
@@ -76,12 +76,42 @@ export function someRaycast ({ casts, obstacles }: {
   return open
 }
 
-export function someToPoint ({ starts, end, obstacles }: {
+export function everyIsClear ({ casts, obstacles }: {
+  casts: Matter.Vector[][]
+  obstacles: Matter.Body[]
+}): boolean {
+  const open = casts.every(cast => isClear({
+    start: cast[0],
+    end: cast[1],
+    obstacles
+  }))
+
+  return open
+}
+
+export function casterPointClear ({ starts, end, obstacles, caster }: {
+  starts: Matter.Vector[]
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+  caster: ({ casts, obstacles }: { casts: Matter.Vector[][], obstacles: Matter.Body[] }) => boolean
+}): boolean {
+  const casts = starts.map(start => [start, end])
+
+  return caster({ casts, obstacles })
+}
+
+export function someClearPoint ({ starts, end, obstacles }: {
   starts: Matter.Vector[]
   end: Matter.Vector
   obstacles: Matter.Body[]
 }): boolean {
-  const casts = starts.map(start => [start, end])
+  return casterPointClear({ starts, end, obstacles, caster: someIsClear })
+}
 
-  return someRaycast({ casts, obstacles })
+export function everyClearPoint ({ starts, end, obstacles }: {
+  starts: Matter.Vector[]
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+}): boolean {
+  return casterPointClear({ starts, end, obstacles, caster: everyIsClear })
 }
