@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import isClear from '../lib/raycast'
+import isClear, { everyClearPoint, everyIsClear } from '../lib/raycast'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
@@ -64,8 +64,9 @@ export default class Bot extends Character {
   }
 
   isPointWallClear (point: Matter.Vector): boolean {
-    return isClear({
-      start: this.feature.body.position,
+    const viewpoints = this.getViewpoints(point)
+    return everyClearPoint({
+      starts: viewpoints,
       end: point,
       obstacles: Wall.wallObstacles
     })
