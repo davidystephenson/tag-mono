@@ -15,7 +15,7 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = false
-  static DEBUG_IT_CHOICE = true
+  static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST_POINTS = false
@@ -44,10 +44,10 @@ export default class Bot extends Character {
   }
 
   isPointWallClear (point: Matter.Vector): boolean {
-    const viewpoints = this.getViewpoints(point)
+    const sides = this.getSides(point)
 
     return everyClearPoint({
-      starts: viewpoints,
+      starts: sides,
       end: point,
       obstacles: Wall.wallObstacles
     })

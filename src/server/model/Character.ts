@@ -43,20 +43,19 @@ export default class Character extends Actor {
     }
   }
 
-  getViewpoints (point: Matter.Vector): Matter.Vector[] {
+  getSides (point: Matter.Vector): Matter.Vector[] {
     const arrow = Matter.Vector.sub(point, this.feature.body.position)
     const direction = Matter.Vector.normalise(arrow)
     const perp = Matter.Vector.perp(direction)
     const startPerp = Matter.Vector.mult(perp, this.radius)
     const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
     const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-    const viewpoints = [this.feature.body.position, leftSide, rightSide]
-
-    return viewpoints
+    return [leftSide, rightSide]
   }
 
   isFeatureVisible (feature: Feature): boolean {
-    const viewpoints = this.getViewpoints(feature.body.position)
+    const sides = this.getSides(feature.body.position)
+    const viewpoints = [this.feature.body.position, ...sides]
     const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
 
     return isVisible
