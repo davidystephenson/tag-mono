@@ -1,5 +1,5 @@
 import Matter, { Vector } from 'matter-js'
-import isClear from '../lib/raycast'
+import isClear from '../lib/isClear'
 import Wall from './Wall'
 
 export default class Waypoint {

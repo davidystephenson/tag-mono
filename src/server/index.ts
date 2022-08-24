@@ -17,8 +17,6 @@ import Character from './model/Character'
 import Player from './model/Player'
 import Waypoint from './model/Waypoint'
 import DebugLabel from '../shared/DebugLabel'
-import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from './lib/directions'
-import Puppet from './model/Puppet'
 import DebugCircle from '../shared/DebugCircle'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 
@@ -221,80 +219,80 @@ void new Crate({ x: 1300, y: 1300, height: 300, width: 10 })
 void new Crate({ x: 1350, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1400, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
-void new Puppet({
-  x: -685,
-  y: -1110,
-  vertices: [
-    { x: 0, y: 50 },
-    { x: -50, y: -50 },
-    { x: 50, y: -50 }
-  ]
-})
-void new Puppet({
-  x: 1400,
-  y: -1425,
-  vertices: [
-    { x: 0, y: 20 },
-    { x: -20, y: -20 },
-    { x: 20, y: -20 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.0
-})
-void new Puppet({
-  x: 750,
-  y: 750,
-  vertices: [
-    { x: 0, y: 30 },
-    { x: -30, y: -30 },
-    { x: 30, y: -30 }
-  ],
-  direction: WEST_VECTOR
-})
-void new Puppet({
-  x: 400,
-  y: 200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -100, y: -100 },
-    { x: 100, y: -100 }
-  ],
-  direction: NORTH_VECTOR,
-  force: 0.1
-})
-void new Puppet({
-  x: -1200,
-  y: -200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -150, y: -50 },
-    { x: 100, y: -100 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.05
-})
-void new Puppet({
-  x: -1225,
-  y: 900,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -75, y: -66 },
-    { x: 100, y: -144 }
-  ],
-  direction: SOUTH_VECTOR,
-  force: 0.1
-})
+// void new Puppet({
+//   x: -685,
+//   y: -1110,
+//   vertices: [
+//     { x: 0, y: 50 },
+//     { x: -50, y: -50 },
+//     { x: 50, y: -50 }
+//   ]
+// })
+// void new Puppet({
+//   x: 1400,
+//   y: -1425,
+//   vertices: [
+//     { x: 0, y: 20 },
+//     { x: -20, y: -20 },
+//     { x: 20, y: -20 }
+//   ],
+//   direction: EAST_VECTOR,
+//   force: 0.0
+// })
+// void new Puppet({
+//   x: 750,
+//   y: 750,
+//   vertices: [
+//     { x: 0, y: 30 },
+//     { x: -30, y: -30 },
+//     { x: 30, y: -30 }
+//   ],
+//   direction: WEST_VECTOR
+// })
+// void new Puppet({
+//   x: 400,
+//   y: 200,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -100, y: -100 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: NORTH_VECTOR,
+//   force: 0.1
+// })
+// void new Puppet({
+//   x: -1200,
+//   y: -200,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -150, y: -50 },
+//     { x: 100, y: -100 }
+//   ],
+//   direction: EAST_VECTOR,
+//   force: 0.05
+// })
+// void new Puppet({
+//   x: -1225,
+//   y: 900,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -75, y: -66 },
+//     { x: 100, y: -144 }
+//   ],
+//   direction: SOUTH_VECTOR,
+//   force: 0.1
+// })
 
-Waypoint.waypoints.forEach(waypoint => {
-  void new Bot({ x: waypoint.x, y: waypoint.y })
-})
-// void new Bot({ x: 499, y: 500 })
-// void new Bot({ x: -500, y: -500 })
-// void new Bot({ x: 500, y: -500 })
-// void new Bot({ x: -500, y: 500 })
-// void new Bot({ x: 800, y: 800 })
-// void new Bot({ x: -800, y: -800 })
-// void new Bot({ x: 800, y: -800 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 499, y: 500 })
+void new Bot({ x: -500, y: -500 })
+void new Bot({ x: 500, y: -500 })
+void new Bot({ x: -500, y: 500 })
+void new Bot({ x: 800, y: 800 })
+void new Bot({ x: -800, y: -800 })
+void new Bot({ x: 800, y: -800 })
 
 Matter.Runner.run(runner, engine)
 

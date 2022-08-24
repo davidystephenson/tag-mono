@@ -2,7 +2,7 @@ import Matter from 'matter-js'
 
 export default class DebugLine {
   static lines: DebugLine[] = []
-  static RAYCAST = false
+  static IS_CLEAR = false
   static COLLISION = false
   static ALERT_PATH = false
   readonly start: Matter.Vector

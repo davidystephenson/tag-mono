@@ -2,6 +2,7 @@ import Matter from 'matter-js'
 import Input from '../../shared/Input'
 import Actor from './Actor'
 import CircleFeature from './CircleFeature'
+import Direction from './Direction'
 import Feature from './Feature'
 
 export default class Character extends Actor {
@@ -41,6 +42,10 @@ export default class Character extends Actor {
       const multiplied = Matter.Vector.mult(direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
     }
+  }
+
+  getDirection ({ end, debugColor }: { end: Matter.Vector, debugColor?: string }): Direction {
+    return new Direction({ start: this.feature.body.position, end, debugColor })
   }
 
   getSides (point: Matter.Vector): Matter.Vector[] {
