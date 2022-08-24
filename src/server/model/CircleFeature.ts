@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
-import { someToPoint } from '../lib/raycast'
+import { someClearPoint } from '../lib/isClear'
 import Feature from './Feature'
 
 export default class CircleFeature extends Feature {
@@ -41,6 +41,6 @@ export default class CircleFeature extends Feature {
     const leftSide = Matter.Vector.add(this.body.position, startPerp)
     const rightSide = Matter.Vector.sub(this.body.position, startPerp)
     const endpoints = [this.body.position, leftSide, rightSide]
-    return endpoints.some(vertex => someToPoint({ starts: viewpoints, end: vertex, obstacles }))
+    return endpoints.some(vertex => someClearPoint({ starts: viewpoints, end: vertex, obstacles }))
   }
 }

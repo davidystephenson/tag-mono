@@ -6,7 +6,7 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import { DEBUG_STEP_TIME, engine, runner } from './lib/engine'
+import { DEBUG_STEP_TIME, DEBUG_STEP_TIME_LIMIT, engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
@@ -15,9 +15,10 @@ import Crate from './model/Crate'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
-import DebugCircle from '../shared/DebugCircle'
 import Waypoint from './model/Waypoint'
 import DebugLabel from '../shared/DebugLabel'
+import DebugCircle from '../shared/DebugCircle'
+import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -47,7 +48,7 @@ const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(serve
 const PORT = process.env.PORT ?? 3000
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
-  setInterval(tick, 10)
+  setInterval(tick, 50)
 })
 
 async function updateClients (): Promise<void> {
@@ -64,6 +65,16 @@ async function updateClients (): Promise<void> {
       socket.emit('updateClient', message)
       */
     } else {
+      if (Bot.DEBUG_LOST_POINTS) {
+        Bot.lostPoints.forEach(point => {
+          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+
+          Player.players.forEach(player => {
+            void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
+          })
+        })
+      }
+
       player.updateClient()
     }
   })
@@ -90,63 +101,98 @@ io.on('connection', socket => {
   })
 })
 
-const MAP_SIZE = 1500
+const MAP_SIZE = 3000
+const WALL_SIZE = MAP_SIZE * 3
 const wallProps = [
-  { x: 0, y: MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
-  { x: 0, y: -MAP_SIZE, width: 2 * MAP_SIZE, height: 15 },
-  { x: MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE },
-  { x: -MAP_SIZE, y: 0, width: 15, height: 2 * MAP_SIZE }
+  { x: 0, y: MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
+  { x: 0, y: -MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
+  { x: MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE },
+  { x: -MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE }
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-// void new Wall({ x: 1000, y: -1100, width: 800, height: 500 })
-// void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
-// void new Wall({ x: -500, y: -500, width: 100, height: 100 })
-// void new Wall({ x: 400, y: -500, width: 200, height: 500 })
-// void new Wall({ x: -1100, y: 400, width: 200, height: 500 })
-// void new Wall({ x: 0, y: -200, width: 100, height: 100 })
-// void new Wall({ x: 1000, y: 200, width: 200, height: 1500 })
-// void new Wall({ x: -400, y: 600, width: 1000, height: 1000 })
-// void new Wall({ x: 450, y: 700, width: 200, height: 800 })
-// void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
-// void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
+void new Wall({ x: 1000, y: -1100, width: 800, height: 500 })
+void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
+void new Wall({ x: 0, y: -900, width: 50, height: 800 })
+void new Wall({ x: -500, y: -1300, width: 100, height: 100 })
+void new Wall({ x: -500, y: -1100, width: 100, height: 100 })
+void new Wall({ x: -500, y: -900, width: 100, height: 100 })
+void new Wall({ x: -500, y: -700, width: 100, height: 100 })
+void new Wall({ x: -1300, y: -500, width: 100, height: 100 })
+void new Wall({ x: -1100, y: -500, width: 100, height: 100 })
+void new Wall({ x: -900, y: -500, width: 100, height: 100 })
+void new Wall({ x: -700, y: -500, width: 100, height: 100 })
+void new Wall({ x: -500, y: -500, width: 100, height: 100 })
+void new Wall({ x: -240, y: -500, width: 220, height: 100 })
+void new Wall({ x: 400, y: -500, width: 200, height: 500 })
+void new Wall({ x: -1100, y: 400, width: 200, height: 500 })
+void new Wall({ x: 0, y: -200, width: 100, height: 100 })
+void new Wall({ x: 1000, y: 200, width: 200, height: 1500 })
+void new Wall({ x: -400, y: 600, width: 1000, height: 1000 })
+void new Wall({ x: 450, y: 700, width: 200, height: 800 })
+void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
+void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
+void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const edgePadding = 30
-const size = MAP_SIZE - edgePadding
-const stepSize = size / 4
-const gridSteps = Math.ceil(2 * size / stepSize)
-for (const i of Array(gridSteps + 1).keys()) {
-  for (const j of Array(gridSteps + 1).keys()) {
-    const x = edgePadding - MAP_SIZE + i * stepSize
-    const y = edgePadding - MAP_SIZE + j * stepSize
+const EDGE_PADDING = 30
+const innerSize = MAP_SIZE - EDGE_PADDING * 2
+let xFactor = 2
+let xSegment = innerSize / xFactor
+while (xSegment > VISION_INNER_WIDTH) {
+  xFactor = xFactor + 1
+  xSegment = innerSize / xFactor
+}
+let yFactor = 2
+let ySegment = innerSize / yFactor
+while (ySegment > VISION_INNER_HEIGHT) {
+  yFactor = yFactor + 1
+  ySegment = innerSize / yFactor
+}
+for (let i = 0; i <= xFactor; i++) {
+  for (let j = 0; j <= yFactor; j++) {
+    const x = -innerSize / 2 + i * xSegment
+    const y = -innerSize / 2 + j * ySegment
+
     void new Waypoint({ x, y })
   }
 }
+// const GRID_RATIO = 8
+// const stepSize = innerSize / GRID_RATIO
+// for (let i = 0; i < GRID_RATIO + 1; i++) {
+// for (let j = 0; j < GRID_RATIO + 1; j++) {
+// const x = -innerSize / 2 + i * stepSize
+// const y = -innerSize / 2 + j * stepSize
+// void new Waypoint({ x, y })
+// }
+// }
 
 Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
-Waypoint.waypoints.forEach(waypoint => new DebugLabel({
-  x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
-}))
+if (DebugLabel.WAYPOINTS) {
+  Waypoint.waypoints.forEach(waypoint => new DebugLabel({
+    x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
+  }))
+}
 
 console.log('navigation complete')
 
-void new Crate({ x: -800, y: -800, height: 300, width: 200 })
-void new Crate({ x: -0, y: -900, height: 300, width: 300 })
-void new Crate({ x: -800, y: -200, height: 300, width: 200 })
-void new Crate({ x: -500, y: -200, height: 300, width: 200 })
+void new Crate({ x: 200, y: -1200, height: 500, width: 10 })
+void new Crate({ x: -0, y: -900, height: 300, width: 100 })
+void new Crate({ x: -800, y: -800, height: 10, width: 200 })
+void new Crate({ x: -800, y: -200, height: 300, width: 10 })
+void new Crate({ x: -500, y: -200, height: 300, width: 100 })
 void new Crate({ x: -30, y: -30, height: 20, width: 20 })
 void new Crate({ x: 30, y: -30, height: 20, width: 20 })
 void new Crate({ x: 0, y: -30, height: 20, width: 20 })
 void new Crate({ x: 0, y: -30, height: 20, width: 100 })
 void new Crate({ x: 30, y: 0, height: 30, width: 50 })
 void new Crate({ x: -30, y: 0, height: 50, width: 30 })
-void new Crate({ x: -800, y: 0, height: 50, width: 50 })
+void new Crate({ x: -800, y: 0, height: 80, width: 30 })
 void new Crate({ x: -900, y: 0, height: 50, width: 50 })
 void new Crate({ x: -1000, y: 0, height: 50, width: 50 })
-void new Crate({ x: -1100, y: 0, height: 50, width: 50 })
+void new Crate({ x: -1100, y: 0, height: 90, width: 80 })
 void new Crate({ x: -1200, y: 0, height: 50, width: 50 })
 void new Crate({ x: -1300, y: 0, height: 50, width: 50 })
 void new Crate({ x: -1400, y: 0, height: 50, width: 50 })
@@ -165,16 +211,16 @@ void new Crate({ x: 950, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1000, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1050, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1100, y: 1300, height: 200, width: 10 })
-void new Crate({ x: 1150, y: 1300, height: 200, width: 10 })
-void new Crate({ x: 1200, y: 1300, height: 200, width: 10 })
+void new Crate({ x: 1150, y: 1300, height: 100, width: 10 })
+void new Crate({ x: 1200, y: 1300, height: 200, width: 20 })
 void new Crate({ x: 1250, y: 1300, height: 200, width: 10 })
-void new Crate({ x: 1300, y: 1300, height: 200, width: 10 })
+void new Crate({ x: 1300, y: 1300, height: 300, width: 10 })
 void new Crate({ x: 1350, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1400, y: 1300, height: 200, width: 10 })
 void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 // void new Puppet({
-//   x: -300,
-//   y: -30,
+//   x: -685,
+//   y: -1110,
 //   vertices: [
 //     { x: 0, y: 50 },
 //     { x: -50, y: -50 },
@@ -182,19 +228,19 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   ]
 // })
 // void new Puppet({
-//   x: 0,
-//   y: -300,
+//   x: 1400,
+//   y: -1425,
 //   vertices: [
 //     { x: 0, y: 20 },
 //     { x: -20, y: -20 },
 //     { x: 20, y: -20 }
 //   ],
-//   direction: SOUTH_VECTOR,
-//   force: 0.05
+//   direction: EAST_VECTOR,
+//   force: 0.0
 // })
 // void new Puppet({
-//   x: 300,
-//   y: 0,
+//   x: 750,
+//   y: 750,
 //   vertices: [
 //     { x: 0, y: 30 },
 //     { x: -30, y: -30 },
@@ -202,61 +248,74 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   ],
 //   direction: WEST_VECTOR
 // })
-//
 // void new Puppet({
-//   x: 300,
-//   y: 500,
+//   x: 400,
+//   y: 200,
 //   vertices: [
 //     { x: 0, y: 100 },
 //     { x: -100, y: -100 },
 //     { x: 100, y: -100 }
 //   ],
 //   direction: NORTH_VECTOR,
-//   force: 0.05
+//   force: 0.1
 // })
 // void new Puppet({
-//   x: 800,
-//   y: 500,
+//   x: -1200,
+//   y: -200,
 //   vertices: [
 //     { x: 0, y: 100 },
 //     { x: -150, y: -50 },
 //     { x: 100, y: -100 }
 //   ],
-//   direction: NORTH_VECTOR,
-//   force: 0.15
+//   direction: EAST_VECTOR,
+//   force: 0.05
+// })
+// void new Puppet({
+//   x: -1225,
+//   y: 900,
+//   vertices: [
+//     { x: 0, y: 100 },
+//     { x: -75, y: -66 },
+//     { x: 100, y: -144 }
+//   ],
+//   direction: SOUTH_VECTOR,
+//   force: 0.1
 // })
 
-console.log('Start Bot')
-
-void new Bot({ x: 500, y: 500 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 100, y: -100 })
+// void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
 // void new Bot({ x: -500, y: 500 })
 // void new Bot({ x: 800, y: 800 })
 // void new Bot({ x: -800, y: -800 })
-// void new Bot({ x: 800, y: -800 })
-// void new Bot({ x: -800, y: 800 })
-
-console.log('Bot complete')
 
 Matter.Runner.run(runner, engine)
 
 let oldTime = Date.now()
+let alertTime = Date.now()
+let alertCount = 0
+let alertDifferenceTotal = 0
 Matter.Events.on(engine, 'afterUpdate', () => {
   if (DEBUG_STEP_TIME) {
     const newTime = Date.now()
-    console.log('stepTime', newTime - oldTime)
+    const difference = newTime - oldTime
+    if (difference > DEBUG_STEP_TIME_LIMIT) {
+      alertCount = alertCount + 1
+      const alertDifference = newTime - alertTime
+      alertDifferenceTotal = alertDifferenceTotal + alertDifference
+      const average = Math.floor(alertDifferenceTotal / alertCount)
+      console.log(`${alertCount} - ${difference} (${alertDifference}) [${average}]`)
+      alertTime = newTime
+    }
     oldTime = newTime
   }
   runner.enabled = !Actor.paused
-  DebugCircle.circles = Waypoint.waypoints.map(waypoint => new DebugCircle({
-    x: waypoint.x,
-    y: waypoint.y,
-    radius: 5,
-    color: 'purple'
-  }))
   DebugLine.lines = []
-  Player.players.forEach(player => player.debugPath())
+  DebugCircle.circles = []
   Actor.actors.forEach(actor => actor.act())
 })
 
@@ -271,9 +330,9 @@ Matter.Events.on(engine, 'collisionStart', event => {
       // const bodyA = actorA.feature.body
       // const bodyB = actorB.feature.body
       // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
-      if (Character.it === actorA) {
+      if (Character.it === actorA && actorA.controllable) {
         actorB.makeIt()
-      } else if (Character.it === actorB) {
+      } else if (Character.it === actorB && actorB.controllable) {
         actorA.makeIt()
       }
     }

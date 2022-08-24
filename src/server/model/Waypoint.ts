@@ -1,5 +1,5 @@
 import Matter, { Vector } from 'matter-js'
-import isClear from '../lib/raycast'
+import isClear from '../lib/isClear'
 import Wall from './Wall'
 
 export default class Waypoint {
@@ -102,19 +102,18 @@ export default class Waypoint {
     return Math.min(...distances)
   }
 
-  getVectorPath (goal: Matter.Vector): Matter.Vector[] {
+  getVectorPath (point: Matter.Vector): Matter.Vector[] {
     const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
-      start: goal,
+      start: point,
       end: waypoint.position,
       obstacles: Wall.wallObstacles
     }))
     const distances = visibleFromGoal.map(visbleWaypoint => {
-      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      const vector = Matter.Vector.sub(point, visbleWaypoint.position)
       return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
     })
     const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
     const path = this.paths[finalWaypoint.id]
-    const goalPath = [...path, goal]
-    return goalPath
+    return path
   }
 }
