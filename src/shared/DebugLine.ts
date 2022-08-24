@@ -4,7 +4,6 @@ export default class DebugLine {
   static lines: DebugLine[] = []
   static IS_CLEAR = false
   static COLLISION = false
-  static ALERT_PATH = false
   readonly start: Matter.Vector
   readonly end: Matter.Vector
   readonly color: string

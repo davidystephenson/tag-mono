@@ -15,13 +15,12 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = false
-  static DEBUG_IT_CHOICE = false
+  static DEBUG_IT_CHOICE = true
   static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST_POINTS = false
   static lostPoints: Matter.Vector[] = []
   alertPoint?: Matter.Vector
-  unblocking: boolean = true
   fleeing: boolean = false
   searchTimes: number[] = []
   alertPath?: Matter.Vector[]
@@ -129,20 +128,21 @@ export default class Bot extends Character {
         if (Bot.DEBUG_IT_CHOICE) console.log('arriving')
         this.alertPoint = undefined
         return this.wander(Bot.DEBUG_IT_CHOICE)
-      } else if (this.isPointWallVisible({ point: this.alertPoint })) {
+      } else if (this.isPointWallClear({ point: this.alertPoint })) {
         if (Bot.DEBUG_IT_CHOICE) console.log('alerting')
         this.alertPath = undefined
-        return this.getDirection({ end: this.alertPoint, debugColor: 'pink' })
+        const debugColor = Bot.DEBUG_IT_CHOICE ? 'pink' : undefined
+        return this.getDirection({ end: this.alertPoint, debugColor })
       } else {
-        if (Bot.DEBUG_IT_CHOICE) console.log('pathing')
+        if (Bot.DEBUG_IT_CHOICE) {
+          console.log('pathing')
+          void new DebugLine({ start, end: this.alertPoint, color: 'orange' })
+        }
         if (this.alertPath != null) {
           if (this.alertPath.length === 0) {
             throw new Error('alertPath is empty')
           }
-          if (this.alertPath.length === 1) {
-            throw new Error('alertPath is only alertPoint')
-          }
-          if (DebugLine.ALERT_PATH) {
+          if (Bot.DEBUG_IT_CHOICE) {
             this.alertPath.slice(0, this.alertPath.length - 1).forEach((point, i) => {
               if (this.alertPath != null) {
                 void new DebugLine({ start: point, end: this.alertPath[i + 1], color: 'purple' })
@@ -156,27 +156,35 @@ export default class Bot extends Character {
           }
         }
         console.log('picking path...')
-        const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
-          return this.isPointWallVisible({ point: waypoint.position })
-        })
-        const distances = visibleFromStart.map(visibleWaypoint => {
-          const startToWaypoint = this.getDistance(visibleWaypoint.position)
-          if (this.alertPoint == null) throw new Error('Cannot create alert path without alert point')
-          const waypointToGoal = visibleWaypoint.getDistance(this.alertPoint)
-          return startToWaypoint + waypointToGoal
-        })
-        const startWaypoint = whichMin(visibleFromStart, distances)
-        this.alertPath = startWaypoint.getVectorPath(this.alertPoint)
-        this.alertPath.reverse()
+        this.alertPath = this.getPath({ end: this.alertPoint })
+        console.log('path determined')
         const newTarget = this.alertPath.find(point => this.isPointWallVisible({ point }))
         if (newTarget == null) throw new Error('No path target for new path')
-        return this.getDirection({ end: newTarget, debugColor: 'green' })
+        const debugColor = Bot.DEBUG_IT_CHOICE ? 'green' : undefined
+        return this.getDirection({ end: newTarget, debugColor })
       }
     }
   }
 
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
+  }
+
+  getPath ({ end }: { end: Matter.Vector }): Matter.Vector[] {
+    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointWallVisible({ point: waypoint.position })
+    })
+    const distances = visibleFromStart.map(visibleWaypoint => {
+      const startToWaypoint = this.getDistance(visibleWaypoint.position)
+      if (this.alertPoint == null) throw new Error('Cannot create alert path without alert point')
+      const waypointToGoal = visibleWaypoint.getDistance(this.alertPoint)
+      return startToWaypoint + waypointToGoal
+    })
+    const startWaypoint = whichMin(visibleFromStart, distances)
+    const path = startWaypoint.getVectorPath(end)
+    path.reverse()
+
+    return path
   }
 
   getUnblockPoint (): Matter.Vector | undefined {
