@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import { everyClearPoint } from '../lib/isClear'
+import isClear, { everyClearPoint } from '../lib/isClear'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
@@ -15,7 +15,7 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = false
-  static DEBUG_IT_CHOICE = false
+  static DEBUG_IT_CHOICE = true
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST_POINTS = false
@@ -156,7 +156,7 @@ export default class Bot extends Character {
           }
         }
         console.log('picking path...')
-        this.alertPath = this.getPath({ end: this.alertPoint })
+        this.alertPath = this.getPointToPointPath({ start, end: this.alertPoint }) // this.getPath({ end: this.alertPoint })
         console.log('path determined')
         const newTarget = this.alertPath.find(point => this.isPointWallVisible({ point }))
         if (newTarget == null) throw new Error('No path target for new path')
@@ -170,20 +170,29 @@ export default class Bot extends Character {
     return getDistance(this.feature.body.position, point)
   }
 
-  getPath ({ end }: { end: Matter.Vector }): Matter.Vector[] {
+  getPointToPointPath ({ start, end }: {
+    start: Matter.Vector
+    end: Matter.Vector
+  }): Matter.Vector[] {
     const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
       return this.isPointWallVisible({ point: waypoint.position })
     })
-    const distances = visibleFromStart.map(visibleWaypoint => {
-      const startToWaypoint = this.getDistance(visibleWaypoint.position)
-      if (this.alertPoint == null) throw new Error('Cannot create alert path without alert point')
-      const waypointToGoal = visibleWaypoint.getDistance(this.alertPoint)
-      return startToWaypoint + waypointToGoal
+    const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
+      return isClear({ start: waypoint.position, end, obstacles: Wall.wallObstacles })
     })
-    const startWaypoint = whichMin(visibleFromStart, distances)
-    const path = startWaypoint.getVectorPath(end)
+    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
+    console.log('pairs', pairs)
+    const distances = pairs.map(pair => {
+      const first = pair[0]
+      const last = pair[1]
+      const startToFirst = this.getDistance(first.position)
+      const firstToLast = first.distances[last.id]
+      const lastToEnd = getDistance(last.position, end)
+      return startToFirst + firstToLast + lastToEnd
+    })
+    const pair = whichMin(pairs, distances)
+    const path = pair[0].paths[pair[1].id]
     path.reverse()
-
     return path
   }
 

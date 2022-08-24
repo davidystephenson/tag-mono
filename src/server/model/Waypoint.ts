@@ -89,7 +89,7 @@ export default class Waypoint {
     return path
   }
 
-  getDistance (goal: Matter.Vector): number {
+  getPathDistance (goal: Matter.Vector): number {
     const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
       start: goal,
       end: waypoint.position,
