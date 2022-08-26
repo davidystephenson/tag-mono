@@ -18,12 +18,11 @@ export default class Bot extends Character {
   static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
-  static DEBUG_LOST = true
+  static DEBUG_LOST = false
   static lostPoints: Matter.Vector[] = []
   searchTimes: number[] = []
   path: Matter.Vector[] = []
   searchPoint?: Matter.Vector
-  unblockPoint?: Matter.Vector
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
