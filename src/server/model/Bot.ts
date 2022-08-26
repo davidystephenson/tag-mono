@@ -14,8 +14,8 @@ import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
-  static DEBUG_IT_CHOICE = true
-  static DEBUG_NOT_IT_CHOICE = true
+  static DEBUG_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST = true
   static lostPoints: Matter.Vector[] = []
@@ -76,35 +76,65 @@ export default class Bot extends Character {
 
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
-        const blockPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 20))
-        const blocked = !this.isPointWallClear({ point: blockPoint, debug: true })
+        const blockPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
+        const blocked = !this.isPointWallClear({ point: blockPoint })
         if (blocked) {
-          if (this.unblockPoint == null || this.isPointBoring({ point: this.unblockPoint })) {
-            this.unblockPoint = this.getUnblockPoint()
-            if (this.unblockPoint == null) return null
-          }
-          const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'black' : undefined
-          return this.getDirection({ end: this.unblockPoint, debugColor })
-        }
-        if (this.unblockPoint != null && !this.isPointClose({ point: itPosition, limit: 150 })) {
-          const bored = this.isPointBoring({ point: this.unblockPoint, limit: 125 })
-          if (bored) {
-            this.unblockPoint = undefined
-          } else {
-            const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'red' : undefined
-            return this.getDirection({ end: this.unblockPoint, debugColor })
-          }
-        }
-        this.unblockPoint = undefined
+          if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
+            const unblockPoint = this.getUnblockPoint()
 
-        this.fleeing = true
-        const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'orange' : undefined
-        return Character.it.getDirection({ end: start, debugColor })
+            const target = this.pathfindNot({ end: unblockPoint })
+            const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'black' : undefined
+            return this.getDirection({ end: target, debugColor })
+          }
+          if (Bot.DEBUG_NOT_IT_CHOICE) {
+            this.path.slice(0, this.path.length - 1).forEach((point, i) => {
+              if (this.alertPath != null) {
+                void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
+              }
+            })
+          }
+          const target = this.getTarget({ path: this.path })
+          if (target == null) {
+            const unblockPoint = this.getUnblockPoint()
+
+            const target = this.pathfindNot({ end: unblockPoint })
+            const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'black' : undefined
+            return this.getDirection({ end: target, debugColor })
+          }
+
+          const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'green' : undefined
+          return this.getDirection({ end: target, debugColor })
+        }
+        if (this.isPointClose({ point: itPosition, limit: 200 })) {
+          return this.flee()
+        }
+        if (this.path.length > 0) {
+          if (Bot.DEBUG_NOT_IT_CHOICE) {
+            this.path.slice(0, this.path.length - 1).forEach((point, i) => {
+              if (this.alertPath != null) {
+                void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
+              }
+            })
+          }
+          if (this.isPointClose({ point: this.path[0] })) {
+            return this.flee()
+          }
+
+          const target = this.getTarget({ path: this.path })
+          if (target == null) {
+            const target = this.pathfindNot({ end: this.path[0] })
+            const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'pink' : undefined
+            return this.getDirection({ end: target, debugColor })
+          }
+          const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'red' : undefined
+          return this.getDirection({ end: target, debugColor })
+        }
+
+        return this.flee()
       } else {
-        this.unblockPoint = undefined
+        this.path = []
 
         if (this.fleeing) {
-          this.searchPoint = undefined
           this.fleeing = false
         }
         return this.wander(Bot.DEBUG_NOT_IT_CHOICE)
@@ -151,6 +181,16 @@ export default class Bot extends Character {
     }
   }
 
+  flee (): Direction {
+    this.fleeing = true
+    this.path = []
+    const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'orange' : undefined
+    if (Character.it == null) {
+      throw new Error('Fleeing from no one')
+    }
+    return Character.it.getDirection({ end: this.feature.body.position, debugColor })
+  }
+
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
   }
@@ -159,10 +199,10 @@ export default class Bot extends Character {
     return path.find(point => this.isPointWallVisible({ point }))
   }
 
-  getUnblockPoint (): Matter.Vector | undefined {
+  getUnblockPoint (): Matter.Vector {
     if (Bot.DEBUG_NOT_IT_CHOICE) console.log('unblocking...')
     const visible = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position })
+      return this.isPointWallVisible({ point: waypoint.position, debug: true })
     })
     if (Bot.DEBUG_NOT_IT_CHOICE) {
       visible.forEach(waypoint => new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'green' }))
@@ -175,7 +215,7 @@ export default class Bot extends Character {
         })
       }
       Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
-      return undefined
+      return this.feature.body.position
     }
     const far = visible.filter(waypoint => {
       const isClose = this.isPointClose({ point: waypoint.position, limit: 125 })
@@ -185,8 +225,10 @@ export default class Bot extends Character {
       Player.players.forEach(player => {
         void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
       })
-      console.warn('No distance to unblock')
-      return visible[0].position
+      Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
+      console.log('visible test:', visible.map(waypoint => waypoint.id))
+      console.log('far test:', far.map(waypoint => waypoint.id))
+      throw new Error('No distance to unblock')
     }
     const first = far[0]
     if (Character.it == null || Character.it === this) {
@@ -198,7 +240,7 @@ export default class Bot extends Character {
       const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
       const difference = getAnglePercentageDifference(angle, itAngle)
       if (Bot.DEBUG_NOT_IT_CHOICE) {
-        void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'yellow' })
+        // void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'yellow' })
       }
       if (difference > mostDifferent.difference) {
         return {
@@ -249,7 +291,7 @@ export default class Bot extends Character {
     const toArrow = Matter.Vector.sub(point, this.feature.body.position)
     const toDirection = Matter.Vector.normalise(toArrow)
     const toPerp = Matter.Vector.perp(toDirection)
-    const startPerp = Matter.Vector.mult(toPerp, this.radius)
+    const startPerp = Matter.Vector.mult(toPerp, this.radius - 1)
     const leftStart = Matter.Vector.add(this.feature.body.position, startPerp)
     const rightStart = Matter.Vector.sub(this.feature.body.position, startPerp)
 
@@ -304,6 +346,41 @@ export default class Bot extends Character {
     reversed.unshift(point)
     this.alertPath = reversed
     const target = this.getTarget({ path: this.alertPath })
+    if (target == null) throw new Error('No path target for new path')
+
+    return target
+  }
+
+  pathfindNot ({ end }: {
+    end: Matter.Vector
+  }): Matter.Vector {
+    const point = vectorToPoint(end)
+    if (this.isPointWallVisible({ point: end })) {
+      this.path = [point]
+
+      return point
+    }
+    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointWallVisible({ point: waypoint.position })
+    })
+    const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
+      return Wall.isClear({ start: waypoint.position, end: point })
+    })
+    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
+    const distances = pairs.map(pair => {
+      const first = pair[0]
+      const last = pair[1]
+      const startToFirst = this.getDistance(first.position)
+      const firstToLast = first.distances[last.id]
+      const lastToEnd = getDistance(last.position, point)
+      return startToFirst + firstToLast + lastToEnd
+    })
+    const pair = whichMin(pairs, distances)
+    const waypointPath = pair[0].paths[pair[1].id]
+    const reversed = [...waypointPath].reverse()
+    reversed.unshift(point)
+    this.path = reversed
+    const target = this.getTarget({ path: this.path })
     if (target == null) throw new Error('No path target for new path')
 
     return target

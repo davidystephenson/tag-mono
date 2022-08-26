@@ -7,6 +7,7 @@ import Waypoint from './Waypoint'
 export default class Wall extends RectangleFeature {
   static walls = new Map<number, Wall>()
   static wallObstacles: Matter.Body[] = []
+  static BUFFER = 45
   static isClear ({ start, end }: {
     start: Matter.Vector
     end: Matter.Vector
@@ -41,7 +42,7 @@ export default class Wall extends RectangleFeature {
           x: Math.sign(corner.x - this.body.position.x),
           y: Math.sign(corner.y - this.body.position.y)
         })
-        const away = Matter.Vector.mult(direction, 30)
+        const away = Matter.Vector.mult(direction, Wall.BUFFER)
         const location = Matter.Vector.add(corner, away)
         void new Waypoint({ x: location.x, y: location.y })
       })
@@ -54,11 +55,11 @@ export default class Wall extends RectangleFeature {
         }
         console.log('factors test:', factor)
         for (let i = 1; i < factor; i++) {
-          const left = this.x - this.width / 2 - 30
+          const left = this.x - this.width / 2 - Wall.BUFFER
           const y = this.y - this.height / 2 + (this.height / factor) * i
           void new Waypoint({ x: left, y })
 
-          const right = this.x + this.width / 2 + 30
+          const right = this.x + this.width / 2 + Wall.BUFFER
           void new Waypoint({ x: right, y })
         }
       }
@@ -72,10 +73,10 @@ export default class Wall extends RectangleFeature {
         console.log('width factor test:', factor)
         for (let i = 1; i < factor; i++) {
           const x = this.x - this.width / 2 + (this.width / factor) * i
-          const top = this.y - this.height / 2 - 30
+          const top = this.y - this.height / 2 - Wall.BUFFER
           void new Waypoint({ x, y: top })
 
-          const bottom = this.y + this.height / 2 + 30
+          const bottom = this.y + this.height / 2 + Wall.BUFFER
           void new Waypoint({ x, y: bottom })
         }
       }

@@ -68,10 +68,6 @@ async function updateClients (): Promise<void> {
       if (Bot.DEBUG_LOST) {
         Bot.lostPoints.forEach(point => {
           void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
-
-          Player.players.forEach(player => {
-            void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
-          })
         })
       }
 
@@ -111,7 +107,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-void new Wall({ x: 1000, y: -1100, width: 800, height: 500 })
+void new Wall({ x: 1000, y: -1100, width: 850, height: 500 })
 void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
 void new Wall({ x: 0, y: -900, width: 50, height: 800 })
 void new Wall({ x: -500, y: -1300, width: 100, height: 100 })
@@ -134,7 +130,7 @@ void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
 void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
 void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const EDGE_PADDING = 30
+const EDGE_PADDING = 45
 const innerSize = MAP_SIZE - EDGE_PADDING * 2
 let xFactor = 2
 let xSegment = innerSize / xFactor
@@ -170,11 +166,17 @@ Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
-if (DebugLabel.WAYPOINTS) {
-  Waypoint.waypoints.forEach(waypoint => new DebugLabel({
-    x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
-  }))
-}
+Waypoint.waypoints.forEach(waypoint => {
+  if (DebugLabel.WAYPOINTS) {
+    void new DebugLabel({
+      x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
+    })
+  }
+
+  if (DebugCircle.WAYPOINTS) {
+    void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'white' })
+  }
+})
 
 console.log('navigation complete')
 
@@ -282,10 +284,10 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   force: 0.1
 // })
 
-// Waypoint.waypoints.forEach(waypoint => {
-//   void new Bot({ x: waypoint.x, y: waypoint.y })
-// })
-void new Bot({ x: 100, y: -100 })
+Waypoint.waypoints.forEach(waypoint => {
+  void new Bot({ x: waypoint.x, y: waypoint.y })
+})
+// void new Bot({ x: 100, y: -100 })
 // void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
