@@ -1,11 +1,19 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
+import isClear from '../lib/isClear'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
 export default class Wall extends RectangleFeature {
   static walls = new Map<number, Wall>()
   static wallObstacles: Matter.Body[] = []
+  static isClear ({ start, end }: {
+    start: Matter.Vector
+    end: Matter.Vector
+  }): boolean {
+    return isClear({ start, end, obstacles: Wall.wallObstacles })
+  }
+
   readonly x: number
   readonly y: number
   readonly width: number

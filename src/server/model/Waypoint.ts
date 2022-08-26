@@ -88,32 +88,4 @@ export default class Waypoint {
     path.push(goal)
     return path
   }
-
-  getPathDistance (goal: Matter.Vector): number {
-    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
-      start: goal,
-      end: waypoint.position,
-      obstacles: Wall.wallObstacles
-    }))
-    const distances = visibleFromGoal.map(visbleWaypoint => {
-      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
-      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
-    })
-    return Math.min(...distances)
-  }
-
-  getVectorPath (point: Matter.Vector): Matter.Vector[] {
-    const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
-      start: point,
-      end: waypoint.position,
-      obstacles: Wall.wallObstacles
-    }))
-    const distances = visibleFromGoal.map(visbleWaypoint => {
-      const vector = Matter.Vector.sub(point, visbleWaypoint.position)
-      return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
-    })
-    const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
-    const path = this.paths[finalWaypoint.id]
-    return path
-  }
 }
