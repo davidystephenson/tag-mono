@@ -14,13 +14,14 @@ import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
-  static DEBUG_IT_CHOICE = true
+  static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST_POINTS = false
   static lostPoints: Matter.Vector[] = []
   fleeing: boolean = false
   searchTimes: number[] = []
+  path: Matter.Vector[] = []
   alertPath: Matter.Vector[] = []
   searchPoint?: Matter.Vector
   unblockPoint?: Matter.Vector
@@ -155,9 +156,9 @@ export default class Bot extends Character {
   }
 
   getUnblockPoint (): Matter.Vector | undefined {
-    console.log('unblocking...')
+    if (Bot.DEBUG_NOT_IT_CHOICE) console.log('unblocking...')
     const visible = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position, debug: true })
+      return this.isPointWallVisible({ point: waypoint.position })
     })
     if (Bot.DEBUG_NOT_IT_CHOICE) {
       visible.forEach(waypoint => new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'green' }))
@@ -259,6 +260,11 @@ export default class Bot extends Character {
     if (!inRange) return false
     const clear = this.isPointWallClear({ point, debug })
     return clear
+  }
+
+  makeIt (): void {
+    super.makeIt()
+    this.path = []
   }
 
   pathfind ({ end }: {
