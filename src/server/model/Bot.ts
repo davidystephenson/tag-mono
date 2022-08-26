@@ -14,6 +14,7 @@ import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
+  static DEBUG_IT_CHASE = true
   static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
@@ -77,7 +78,7 @@ export default class Bot extends Character {
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
         const blockPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
-        const blocked = !this.isPointWallClear({ point: blockPoint })
+        const blocked = !this.isPointWallClear({ point: blockPoint, debug: true })
         if (blocked) {
           if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
             const unblockPoint = this.getUnblockPoint()
@@ -147,7 +148,7 @@ export default class Bot extends Character {
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         const target = this.pathfind({ end: close.feature.body.position })
-        const debugColor = Bot.DEBUG_IT_CHOICE ? 'yellow' : undefined
+        const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_IT_CHASE ? 'yellow' : undefined
         return this.getDirection({ end: target, debugColor })
       } else if (this.alertPath.length === 0) {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
@@ -202,7 +203,7 @@ export default class Bot extends Character {
   getUnblockPoint (): Matter.Vector {
     if (Bot.DEBUG_NOT_IT_CHOICE) console.log('unblocking...')
     const visible = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position, debug: true })
+      return this.isPointWallVisible({ point: waypoint.position })
     })
     if (Bot.DEBUG_NOT_IT_CHOICE) {
       visible.forEach(waypoint => new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'green' }))
@@ -218,7 +219,7 @@ export default class Bot extends Character {
       return this.feature.body.position
     }
     const far = visible.filter(waypoint => {
-      const isClose = this.isPointClose({ point: waypoint.position, limit: 125 })
+      const isClose = this.isPointClose({ point: waypoint.position, limit: 45 })
       return !isClose
     })
     if (far.length === 0) {
