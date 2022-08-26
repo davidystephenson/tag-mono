@@ -14,10 +14,10 @@ import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
-  static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = false
+  static DEBUG_IT_CHOICE = true
+  static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
-  static DEBUG_LOST_POINTS = false
+  static DEBUG_LOST = true
   static lostPoints: Matter.Vector[] = []
   fleeing: boolean = false
   searchTimes: number[] = []
@@ -33,7 +33,7 @@ export default class Bot extends Character {
     radius?: number
   }) {
     super({ x, y, color, radius })
-    this.searchTimes = Waypoint.waypoints.map((waypoint) => this.getDistance(waypoint.position))
+    this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
     if (Bot.oldest == null) Bot.oldest = this
   }
 
@@ -134,7 +134,7 @@ export default class Bot extends Character {
             }
           })
         }
-        const target = this.alertPath.find(point => this.isPointWallVisible({ point }))
+        const target = this.getTarget({ path: this.alertPath })
         if (target == null) {
           if (Bot.DEBUG_IT_CHOICE) {
             console.log('pathing')
@@ -155,6 +155,10 @@ export default class Bot extends Character {
     return getDistance(this.feature.body.position, point)
   }
 
+  getTarget ({ path }: { path: Matter.Vector[] }): Matter.Vector | undefined {
+    return path.find(point => this.isPointWallVisible({ point }))
+  }
+
   getUnblockPoint (): Matter.Vector | undefined {
     if (Bot.DEBUG_NOT_IT_CHOICE) console.log('unblocking...')
     const visible = Waypoint.waypoints.filter(waypoint => {
@@ -165,9 +169,12 @@ export default class Bot extends Character {
     }
     if (visible.length === 0) {
       console.warn('No vision to unblock')
-      Player.players.forEach(player => {
-        void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
-      })
+      if (Bot.DEBUG_LOST) {
+        Player.players.forEach(player => {
+          void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
+        })
+      }
+      Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
       return undefined
     }
     const far = visible.filter(waypoint => {
@@ -296,7 +303,7 @@ export default class Bot extends Character {
     const reversed = [...waypointPath].reverse()
     reversed.unshift(point)
     this.alertPath = reversed
-    const target = this.alertPath.find(point => this.isPointWallVisible({ point }))
+    const target = this.getTarget({ path: this.alertPath })
     if (target == null) throw new Error('No path target for new path')
 
     return target
@@ -308,7 +315,7 @@ export default class Bot extends Character {
       if (debug) debugColor = 'gray'
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible({ point: Waypoint.waypoints[index].position }))
       if (visibleTimes.length === 0) {
-        if (Bot.DEBUG_LOST_POINTS) {
+        if (Bot.DEBUG_LOST) {
           const point = vectorToPoint(this.feature.body.position)
           console.warn('Nothing visible to wander to', this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
           Bot.lostPoints.push(point)

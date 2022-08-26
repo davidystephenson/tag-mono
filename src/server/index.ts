@@ -65,7 +65,7 @@ async function updateClients (): Promise<void> {
       socket.emit('updateClient', message)
       */
     } else {
-      if (Bot.DEBUG_LOST_POINTS) {
+      if (Bot.DEBUG_LOST) {
         Bot.lostPoints.forEach(point => {
           void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
 
@@ -282,10 +282,10 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   force: 0.1
 // })
 
-Waypoint.waypoints.forEach(waypoint => {
-  void new Bot({ x: waypoint.x, y: waypoint.y })
-})
-// void new Bot({ x: 100, y: -100 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 100, y: -100 })
 // void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
@@ -314,7 +314,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
       const average = Math.floor(warningDifferenceTotal / warningCount)
-      console.log(`${warningCount} - ${difference} (${warningDifference}) [${average}]`)
+      console.log(`Warning ${warningCount}: ${difference} (${warningDifference}) [${average}]`)
       warningTime = newTime
     }
     oldTime = newTime
