@@ -115,14 +115,13 @@ export default class Bot extends Character {
         this.alertPath = []
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
-        const target = this.getPath({ end: close.feature.body.position })
-        if (target == null) throw new Error('No path target for new path')
+        const target = this.pathfind({ end: close.feature.body.position })
         const debugColor = Bot.DEBUG_IT_CHOICE ? 'yellow' : undefined
         return this.getDirection({ end: target, debugColor })
       } else if (this.alertPath.length === 0) {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
         return this.wander(Bot.DEBUG_IT_CHOICE)
-      } else if (this.getDistance(this.alertPath[0]) < 45) {
+      } else if (this.isPointClose({ point: this.alertPath[0], limit: 45 })) {
         if (Bot.DEBUG_IT_CHOICE) console.log('arriving')
         this.alertPath = []
         return this.wander(Bot.DEBUG_IT_CHOICE)
@@ -141,7 +140,7 @@ export default class Bot extends Character {
             void new DebugLine({ start, end: this.alertPath[0], color: 'orange' })
             console.log('picking path...')
           }
-          const target = this.getPath({ end: this.alertPath[0] })
+          const target = this.pathfind({ end: this.alertPath[0] })
           const debugColor = Bot.DEBUG_IT_CHOICE ? 'green' : undefined
           return this.getDirection({ end: target, debugColor })
         }
@@ -153,41 +152,6 @@ export default class Bot extends Character {
 
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
-  }
-
-  getPath ({ end }: {
-    end: Matter.Vector
-  }): Matter.Vector {
-    const point = vectorToPoint(end)
-    if (this.isPointWallVisible({ point: end })) {
-      this.alertPath = [point]
-
-      return point
-    }
-    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position })
-    })
-    const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isClear({ start: waypoint.position, end: point })
-    })
-    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
-    const distances = pairs.map(pair => {
-      const first = pair[0]
-      const last = pair[1]
-      const startToFirst = this.getDistance(first.position)
-      const firstToLast = first.distances[last.id]
-      const lastToEnd = getDistance(last.position, point)
-      return startToFirst + firstToLast + lastToEnd
-    })
-    const pair = whichMin(pairs, distances)
-    const waypointPath = pair[0].paths[pair[1].id]
-    const reversed = [...waypointPath].reverse()
-    reversed.unshift(point)
-    this.alertPath = reversed
-    const target = this.alertPath.find(point => this.isPointWallVisible({ point }))
-    if (target == null) throw new Error('No path target for new path')
-
-    return target
   }
 
   getUnblockPoint (): Matter.Vector | undefined {
@@ -295,6 +259,41 @@ export default class Bot extends Character {
     if (!inRange) return false
     const clear = this.isPointWallClear({ point, debug })
     return clear
+  }
+
+  pathfind ({ end }: {
+    end: Matter.Vector
+  }): Matter.Vector {
+    const point = vectorToPoint(end)
+    if (this.isPointWallVisible({ point: end })) {
+      this.alertPath = [point]
+
+      return point
+    }
+    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointWallVisible({ point: waypoint.position })
+    })
+    const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
+      return Wall.isClear({ start: waypoint.position, end: point })
+    })
+    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
+    const distances = pairs.map(pair => {
+      const first = pair[0]
+      const last = pair[1]
+      const startToFirst = this.getDistance(first.position)
+      const firstToLast = first.distances[last.id]
+      const lastToEnd = getDistance(last.position, point)
+      return startToFirst + firstToLast + lastToEnd
+    })
+    const pair = whichMin(pairs, distances)
+    const waypointPath = pair[0].paths[pair[1].id]
+    const reversed = [...waypointPath].reverse()
+    reversed.unshift(point)
+    this.alertPath = reversed
+    const target = this.alertPath.find(point => this.isPointWallVisible({ point }))
+    if (target == null) throw new Error('No path target for new path')
+
+    return target
   }
 
   wander (debug = Bot.DEBUG_WANDER): Direction | null {
