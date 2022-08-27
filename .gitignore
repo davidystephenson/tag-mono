@@ -2,4 +2,5 @@
 /dist/
 /.parcel-cache/
 /build/
+/src/server/config.json
 *.pem

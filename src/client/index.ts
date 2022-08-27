@@ -129,7 +129,7 @@ const draw = function (): void {
 draw()
 
 function tick (): void {
-  const lerp = 1
+  const lerp = 0.7
   state.shapes.forEach(shape => {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
       shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
