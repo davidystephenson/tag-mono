@@ -75,12 +75,16 @@ export default class Character extends Actor {
     return visibleFeatures
   }
 
+  loseIt (): void {
+    this.feature.body.render.fillStyle = 'green'
+  }
+
   makeIt (): void {
     if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    if (Character.it != null) Character.it.feature.body.render.fillStyle = 'green'
+    if (Character.it != null) Character.it.loseIt()
     Character.it = this
     this.controllable = false
     this.feature.body.render.fillStyle = 'white'

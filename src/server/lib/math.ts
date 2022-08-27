@@ -80,6 +80,11 @@ export function getRadiansControls (radians: number): Partial<Controls> {
 export function whichMin <Element> (array: Element[], numbers: number[]): Element {
   const minimum = Math.min(...numbers)
   const index = numbers.indexOf(minimum)
+  if (array.length <= index) {
+    console.log('array', array)
+    console.log('numbers', numbers)
+    throw new Error(`Invalid index: ${index}`)
+  }
   const element = array[index]
 
   return element

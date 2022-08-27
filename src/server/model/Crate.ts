@@ -9,7 +9,7 @@ export default class Crate extends RectangleFeature {
     height = 10,
     angle = 0,
     color = 'aqua',
-    density = 0.00001
+    density = 0.00005
   }: {
     x: number
     y: number
