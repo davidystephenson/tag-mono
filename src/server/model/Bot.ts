@@ -15,7 +15,7 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = true
-  static DEBUG_IT_CHOICE = false
+  static DEBUG_IT_CHOICE = true
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
