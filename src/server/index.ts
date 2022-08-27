@@ -108,7 +108,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-void new Wall({ x: 1000, y: -1100, width: 850, height: 500 })
+void new Wall({ x: 1000, y: -1100, width: 820, height: 500 })
 void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
 void new Wall({ x: 0, y: -900, width: 50, height: 800 })
 void new Wall({ x: -500, y: -1300, width: 100, height: 100 })
@@ -175,13 +175,10 @@ Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
 console.log('debugging waypoints...')
 Waypoint.waypoints.forEach(waypoint => {
   if (DebugLabel.WAYPOINTS) {
+    const y = DebugCircle.WAYPOINTS ? waypoint.y + 50 : waypoint.y
     void new DebugLabel({
-      x: waypoint.x, y: waypoint.y, text: waypoint.id.toString(), color: 'white'
+      x: waypoint.x, y, text: waypoint.label.toString(), color: 'white'
     })
-  }
-
-  if (DebugCircle.WAYPOINTS) {
-    void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'white' })
   }
 })
 
@@ -331,6 +328,11 @@ Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
   DebugLine.lines = []
   DebugCircle.circles = []
+  if (DebugCircle.WAYPOINTS) {
+    Waypoint.waypoints.forEach(waypoint => {
+      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'white' })
+    })
+  }
   Actor.actors.forEach(actor => actor.act())
 })
 

@@ -5,12 +5,13 @@ import Wall from './Wall'
 export default class Waypoint {
   static waypoints: Waypoint[] = []
   static positions: Vector[] = []
-  static id = 0
+  static label = 0
   static ids: number[] = []
   readonly x: number
   readonly y: number
   readonly position: Matter.Vector
   readonly id: number
+  readonly label: number
   neighbors: Waypoint[] = []
   distances: number[] = []
   paths: Vector[][] = []
@@ -23,20 +24,37 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = Waypoint.waypoints.length
+    this.label = Waypoint.label
+    Waypoint.label = Waypoint.label + 1
     let obstacle
     Wall.walls.forEach(wall => {
       const x = Math.abs(this.x - wall.x)
       const y = Math.abs(this.y - wall.y)
-      const xBuffer = wall.width / 2 + Wall.BUFFER
-      const yBuffer = wall.height / 2 + Wall.BUFFER
-      if (x < xBuffer && y < yBuffer) obstacle = wall
+      const overX = x > wall.halfWidth
+      const overY = y > wall.halfHeight
+
+      if (overX && overY) {
+        const wallPosition = { x: wall.x, y: wall.y }
+        const wallVector = Matter.Vector.sub(wallPosition, this.position)
+        const wallMagnitude = Matter.Vector.magnitude(wallVector)
+        if (wallMagnitude < Wall.BUFFER) {
+          obstacle = wall
+        }
+      } else {
+        const xBuffer = wall.halfWidth + Wall.BUFFER - 1
+        const yBuffer = wall.halfHeight + Wall.BUFFER - 1
+        if (x < xBuffer && y < yBuffer) {
+          obstacle = wall
+          // const open = Matter.Query.point(Wall.wallObstacles, this.position).length === 0
+          // if (open !== clear) {
+          //   console.log('x test:', xBuffer - x)
+          //   console.log('y test:', yBuffer - y)
+          //   console.log(this.idx, 'open:', open, 'clear:', clear)
+          // }
+        }
+      }
     })
-    const clear = obstacle == null
-    const open = Matter.Query.point(Wall.wallObstacles, this.position).length === 0
-    if (open !== clear) {
-      console.error(this.id, 'open:', open, 'clear:', clear)
-    }
-    if (open) {
+    if (obstacle == null) {
       Waypoint.waypoints.push(this)
       Waypoint.positions.push(this.position)
       Waypoint.ids.push(this.id)

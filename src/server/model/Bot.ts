@@ -338,7 +338,9 @@ export default class Bot extends Character {
       return startToFirst + firstToLast + lastToEnd
     })
     const pair = whichMin(pairs, distances)
-    const waypointPath = pair[0].paths[pair[1].id]
+    const last = pair[1]
+    const first = pair[0]
+    const waypointPath = first.paths[last.id]
     if (waypointPath.length === 0) throw new Error('waypoint path is empty')
     const reversed = [...waypointPath].reverse()
     reversed.unshift(goalPoint)

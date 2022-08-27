@@ -78,6 +78,16 @@ export function getRadiansControls (radians: number): Partial<Controls> {
 }
 
 export function whichMin <Element> (array: Element[], numbers: number[]): Element {
+  if (array.length === 0) {
+    console.log('array', array)
+    console.log('numbers', numbers)
+    throw new Error('Empty array')
+  }
+  if (array.length !== numbers.length) {
+    console.log('array', array)
+    console.log('numbers', numbers)
+    throw new Error('Array and numbers length mismatch')
+  }
   const minimum = Math.min(...numbers)
   const index = numbers.indexOf(minimum)
   if (array.length <= index) {

@@ -27,7 +27,7 @@ export default class Crate extends RectangleFeature {
   }
 
   dent (): void {
-    this.health = this.health - 0.001
+    this.health = this.health - 0.01
     if (this.health <= 0) {
       this.destroy()
     } else {

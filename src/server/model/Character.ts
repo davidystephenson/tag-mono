@@ -3,6 +3,7 @@ import Input from '../../shared/Input'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
+import Crate from './Crate'
 import Direction from './Direction'
 import Feature from './Feature'
 
@@ -104,6 +105,7 @@ export default class Character extends Actor {
     Character.it = this
     this.controllable = false
     this.feature.body.render.fillStyle = 'white'
+    void new Crate({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: 30, width: 30 })
     setTimeout(() => {
       this.controllable = true
 
