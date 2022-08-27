@@ -99,7 +99,7 @@ const draw = function (): void {
       context.arc(shape.ix - camera.x, shape.iy - camera.y, shape.circleRadius, 0, 2 * Math.PI)
     }
     context.fill()
-    context.lineWidth = 5
+    context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
       const label = context.fillStyle.slice(1)

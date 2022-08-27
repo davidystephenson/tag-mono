@@ -163,10 +163,16 @@ for (let i = 0; i <= xFactor; i++) {
 // }
 // }
 
+console.log('begin navigation')
+
 Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
+console.log('setting neighbors...')
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
+console.log('updating distances...')
 Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
+console.log('setting paths...')
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
+console.log('debugging waypoints...')
 Waypoint.waypoints.forEach(waypoint => {
   if (DebugLabel.WAYPOINTS) {
     void new DebugLabel({
@@ -285,9 +291,9 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   force: 0.1
 // })
 
-// Waypoint.waypoints.forEach(waypoint => {
-//   void new Bot({ x: waypoint.x, y: waypoint.y })
-// })
+Waypoint.waypoints.forEach(waypoint => {
+  void new Bot({ x: waypoint.x, y: waypoint.y })
+})
 void new Bot({ x: 100, y: -100 })
 // void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })

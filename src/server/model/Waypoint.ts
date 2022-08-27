@@ -5,6 +5,7 @@ import Wall from './Wall'
 export default class Waypoint {
   static waypoints: Waypoint[] = []
   static positions: Vector[] = []
+  static id = 0
   static ids: number[] = []
   readonly x: number
   readonly y: number
@@ -22,7 +23,20 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = Waypoint.waypoints.length
-    if (Matter.Query.point(Wall.wallObstacles, this.position).length === 0) {
+    let obstacle
+    Wall.walls.forEach(wall => {
+      const x = Math.abs(this.x - wall.x)
+      const y = Math.abs(this.y - wall.y)
+      const xBuffer = wall.width / 2 + Wall.BUFFER
+      const yBuffer = wall.height / 2 + Wall.BUFFER
+      if (x < xBuffer && y < yBuffer) obstacle = wall
+    })
+    const clear = obstacle == null
+    const open = Matter.Query.point(Wall.wallObstacles, this.position).length === 0
+    if (open !== clear) {
+      console.error(this.id, 'open:', open, 'clear:', clear)
+    }
+    if (open) {
       Waypoint.waypoints.push(this)
       Waypoint.positions.push(this.position)
       Waypoint.ids.push(this.id)
@@ -59,6 +73,7 @@ export default class Waypoint {
     this.paths[this.id] = [this.position]
     Waypoint.waypoints.forEach(other => {
       if (other.id !== this.id) {
+        // console.log('setting path from', this.id, 'to', other.id)
         const waypointPath = this.getWaypointPath(other)
         const vectorPath = waypointPath.map(waypoint => waypoint.position)
         this.paths[other.id] = vectorPath
