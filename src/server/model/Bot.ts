@@ -15,8 +15,8 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = true
-  static DEBUG_IT_CHOICE = true
-  static DEBUG_NOT_IT_CHOICE = true
+  static DEBUG_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
   static lostPoints: Matter.Vector[] = []
@@ -139,9 +139,9 @@ export default class Bot extends Character {
         this.path = []
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
-        const target = this.pathfind({ goal: close.feature.body.position })
+        this.path = [close.feature.body.position]
         const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_IT_CHASE ? 'yellow' : undefined
-        return this.getDirection({ end: target, debugColor })
+        return this.getDirection({ end: this.path[0], velocity: close.feature.body.velocity, debugColor })
       } else if (this.path.length === 0) {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
         return this.wander(Bot.DEBUG_IT_CHOICE)
