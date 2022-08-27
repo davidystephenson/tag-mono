@@ -15,8 +15,8 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_IT_CHASE = true
-  static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = false
+  static DEBUG_IT_CHOICE = true
+  static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
   static lostPoints: Matter.Vector[] = []
@@ -79,10 +79,9 @@ export default class Bot extends Character {
         if (blocked) {
           if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
             const unblockPoint = this.getUnblockPoint()
-
-            const target = this.pathfind({ end: unblockPoint })
+            this.path = [unblockPoint]
             const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'black' : undefined
-            return this.getDirection({ end: target, debugColor })
+            return this.getDirection({ end: this.path[0], debugColor })
           }
           if (Bot.DEBUG_NOT_IT_CHOICE) {
             this.path.slice(0, this.path.length - 1).forEach((point, i) => {
@@ -94,10 +93,9 @@ export default class Bot extends Character {
           const target = this.getTarget({ path: this.path })
           if (target == null) {
             const unblockPoint = this.getUnblockPoint()
-
-            const target = this.pathfind({ end: unblockPoint })
+            this.path = [unblockPoint]
             const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'black' : undefined
-            return this.getDirection({ end: target, debugColor })
+            return this.getDirection({ end: this.path[0], debugColor })
           }
 
           const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'green' : undefined
@@ -120,7 +118,7 @@ export default class Bot extends Character {
 
           const target = this.getTarget({ path: this.path })
           if (target == null) {
-            const target = this.pathfind({ end: this.path[0] })
+            const target = this.pathfind({ goal: this.path[0] })
             const debugColor = Bot.DEBUG_NOT_IT_CHOICE ? 'pink' : undefined
             return this.getDirection({ end: target, debugColor })
           }
@@ -141,7 +139,7 @@ export default class Bot extends Character {
         this.path = []
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
-        const target = this.pathfind({ end: close.feature.body.position })
+        const target = this.pathfind({ goal: close.feature.body.position })
         const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_IT_CHASE ? 'yellow' : undefined
         return this.getDirection({ end: target, debugColor })
       } else if (this.path.length === 0) {
@@ -166,7 +164,7 @@ export default class Bot extends Character {
             void new DebugLine({ start, end: this.path[0], color: 'orange' })
             console.log('picking path...')
           }
-          const target = this.pathfind({ end: this.path[0] })
+          const target = this.pathfind({ goal: this.path[0] })
           const debugColor = Bot.DEBUG_IT_CHOICE ? 'green' : undefined
           return this.getDirection({ end: target, debugColor })
         }
@@ -311,20 +309,20 @@ export default class Bot extends Character {
     this.path = []
   }
 
-  pathfind ({ end }: {
-    end: Matter.Vector
+  pathfind ({ goal }: {
+    goal: Matter.Vector
   }): Matter.Vector {
-    const point = vectorToPoint(end)
-    if (this.isPointWallVisible({ point: end })) {
-      this.path = [point]
+    const goalPoint = vectorToPoint(goal)
+    if (this.isPointWallVisible({ point: goalPoint })) {
+      this.path = [goalPoint]
 
-      return point
+      return goalPoint
     }
     const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
       return this.isPointWallVisible({ point: waypoint.position })
     })
     const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isClear({ start: waypoint.position, end: point })
+      return Wall.isClear({ start: waypoint.position, end: goalPoint })
     })
     const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
     const distances = pairs.map(pair => {
@@ -332,16 +330,16 @@ export default class Bot extends Character {
       const last = pair[1]
       const startToFirst = this.getDistance(first.position)
       const firstToLast = first.distances[last.id]
-      const lastToEnd = getDistance(last.position, point)
+      const lastToEnd = getDistance(last.position, goalPoint)
       return startToFirst + firstToLast + lastToEnd
     })
     const pair = whichMin(pairs, distances)
     const waypointPath = pair[0].paths[pair[1].id]
+    if (waypointPath.length === 0) throw new Error('waypoint path is empty')
     const reversed = [...waypointPath].reverse()
-    reversed.unshift(point)
+    reversed.unshift(goalPoint)
     this.path = reversed
-    const target = this.getTarget({ path: this.path })
-    if (target == null) throw new Error('No path target for new path')
+    const target = this.path[this.path.length - 1]
 
     return target
   }
