@@ -14,15 +14,17 @@ import Player from './Player'
 
 export default class Bot extends Character {
   static oldest: Bot
-  static DEBUG_IT_CHASE = true
+  static DEBUG_CHASE = true
   static DEBUG_IT_CHOICE = true
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
+  static WANDER_TIME = 15000
   static lostPoints: Matter.Vector[] = []
   searchTimes: number[] = []
   path: Matter.Vector[] = []
   searchPoint?: Matter.Vector
+  wanderTime?: number
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -75,7 +77,7 @@ export default class Bot extends Character {
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
         const blockPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
-        const blocked = !this.isPointWallClear({ point: blockPoint, debug: true })
+        const blocked = !this.isPointWallClear({ point: blockPoint, debug: Bot.DEBUG_CHASE })
         if (blocked) {
           if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
             const unblockPoint = this.getUnblockPoint()
@@ -139,8 +141,9 @@ export default class Bot extends Character {
         this.path = []
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
+        close.pursuer = this
         this.path = [close.feature.body.position]
-        const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_IT_CHASE ? 'yellow' : undefined
+        const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_CHASE ? 'yellow' : undefined
         return this.getDirection({ end: this.path[0], velocity: close.feature.body.velocity, debugColor })
       } else if (this.path.length === 0) {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
@@ -346,7 +349,8 @@ export default class Bot extends Character {
 
   wander (debug = Bot.DEBUG_WANDER): Direction | null {
     let debugColor = debug ? 'white' : undefined
-    if (this.searchPoint == null || this.isPointBoring({ point: this.searchPoint })) {
+    if (this.searchPoint == null || this.isPointBoring({ point: this.searchPoint }) || (this.wanderTime != null && (Date.now() - this.wanderTime) > Bot.WANDER_TIME)) {
+      this.wanderTime = Date.now()
       if (debug) debugColor = 'gray'
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible({ point: Waypoint.waypoints[index].position }))
       if (visibleTimes.length === 0) {

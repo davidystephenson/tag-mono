@@ -1,6 +1,7 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
 import Actor from './Actor'
+import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
@@ -14,6 +15,7 @@ export default class Character extends Actor {
   force = 0.0001
   controls = new Input().controls
   controllable = true
+  pursuer?: Bot
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -41,6 +43,15 @@ export default class Character extends Actor {
       const direction = Matter.Vector.normalise(vector)
       const multiplied = Matter.Vector.mult(direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    }
+  }
+
+  destroy (): void {
+    super.destroy()
+    Character.characters.delete(this.feature.body.id)
+    if (this.pursuer != null) {
+      console.log('pursuer:', this.pursuer.feature.body.id)
+      this.pursuer.path = []
     }
   }
 

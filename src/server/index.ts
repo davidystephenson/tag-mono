@@ -19,6 +19,7 @@ import Waypoint from './model/Waypoint'
 import DebugLabel from '../shared/DebugLabel'
 import DebugCircle from '../shared/DebugCircle'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
+import Feature from './model/Feature'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -284,10 +285,10 @@ void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
 //   force: 0.1
 // })
 
-Waypoint.waypoints.forEach(waypoint => {
-  void new Bot({ x: waypoint.x, y: waypoint.y })
-})
-// void new Bot({ x: 100, y: -100 })
+// Waypoint.waypoints.forEach(waypoint => {
+//   void new Bot({ x: waypoint.x, y: waypoint.y })
+// })
+void new Bot({ x: 100, y: -100 })
 // void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
@@ -330,18 +331,34 @@ Matter.Events.on(engine, 'afterUpdate', () => {
 Matter.Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(pair => {
     // console.log('collide', pair.bodyA.label, pair.bodyB.label)
-    if (pair.bodyA.label === 'character' && pair.bodyB.label === 'character') {
-      // pair.isActive = false
-      // state.paused = true
-      const actorA = Actor.actors.get(pair.bodyA.id) as Character
-      const actorB = Actor.actors.get(pair.bodyB.id) as Character
-      // const bodyA = actorA.feature.body
-      // const bodyB = actorB.feature.body
-      // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
-      if (Character.it === actorA && actorA.controllable) {
-        actorB.makeIt()
-      } else if (Character.it === actorB && actorB.controllable) {
-        actorA.makeIt()
+    if (pair.bodyA.label === 'character') {
+      if (pair.bodyB.label === 'character') {
+        // pair.isActive = false
+        // state.paused = true
+        const actorA = Actor.actors.get(pair.bodyA.id) as Character
+        const actorB = Actor.actors.get(pair.bodyB.id) as Character
+        // const bodyA = actorA.feature.body
+        // const bodyB = actorB.feature.body
+        // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
+        if (Character.it === actorA && actorA.controllable) {
+          actorB.makeIt()
+        } else if (Character.it === actorB && actorB.controllable) {
+          actorA.makeIt()
+        }
+      }
+
+      if (pair.bodyB.label === 'crate') {
+        const feature = Feature.features.get(pair.bodyB.id) as Crate
+        if (feature != null) {
+          feature.dent()
+        }
+      }
+    }
+
+    if (pair.bodyA.label === 'crate' && pair.bodyB.label === 'character') {
+      const feature = Feature.features.get(pair.bodyA.id) as Crate
+      if (feature != null) {
+        feature.dent()
       }
     }
   })

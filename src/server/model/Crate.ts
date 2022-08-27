@@ -2,6 +2,7 @@ import Matter from 'matter-js'
 import RectangleFeature from './RectangleFeature'
 
 export default class Crate extends RectangleFeature {
+  health = 1
   constructor ({
     x = 0,
     y = 0,
@@ -23,5 +24,14 @@ export default class Crate extends RectangleFeature {
     this.body.render.fillStyle = color
     this.body.label = 'crate'
     Matter.Body.setAngle(this.body, angle)
+  }
+
+  dent (): void {
+    this.health = this.health - 0.01
+    if (this.health <= 0) {
+      this.destroy()
+    } else {
+      this.body.render.fillStyle = `rgba(0, 255, 255, ${this.health})`
+    }
   }
 }

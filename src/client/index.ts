@@ -15,7 +15,12 @@ const input = new Input()
 const state = new State()
 const camera = new Camera()
 
+let oldTime = Date.now()
 window.onclick = function () {
+  const newTime = Date.now()
+  const dt = newTime - oldTime
+  console.log('dt:', dt)
+  oldTime = newTime
   console.log('state:', state)
   console.log('camera:', camera)
 }
@@ -81,7 +86,7 @@ const draw = function (): void {
   const w = canvas.width / camera.scale * 100
   const h = canvas.height / camera.scale * 100
   context.clearRect(-w / 2, -h / 2, w, h)
-  context.strokeStyle = 'rgba(0,0,0,0.25)'
+  context.strokeStyle = 'rgba(0,0,0)'
   context.fillStyle = 'Gray'
   context.fillRect(-VISION.width, -VISION.height, 2 * VISION.width, 2 * VISION.height)
   state.shapes.forEach(shape => {
@@ -94,7 +99,7 @@ const draw = function (): void {
       context.arc(shape.ix - camera.x, shape.iy - camera.y, shape.circleRadius, 0, 2 * Math.PI)
     }
     context.fill()
-    context.lineWidth = 1
+    context.lineWidth = 5
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
       const label = context.fillStyle.slice(1)
