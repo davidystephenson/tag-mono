@@ -1,16 +1,19 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
-import { engine } from '../lib/engine'
 import Actor from './Actor'
 import CircleFeature from './CircleFeature'
+import Direction from './Direction'
 import Feature from './Feature'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
+  static DEBUG_MAKE_IT = false
   readonly radius: number
+  force = 0.0001
   controls = new Input().controls
+  controllable = true
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -29,38 +32,62 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    const vector = { x: 0, y: 0 }
-    if (this.controls.up) vector.y += -1
-    if (this.controls.down) vector.y += 1
-    if (this.controls.left) vector.x += -1
-    if (this.controls.right) vector.x += 1
-    const direction = Matter.Vector.normalise(vector)
-    const force = Matter.Vector.mult(direction, 0.00005)
-    Matter.Body.applyForce(this.feature.body, this.feature.body.position, force)
+    if (this.controllable) {
+      const vector = { x: 0, y: 0 }
+      if (this.controls.up) vector.y += -1
+      if (this.controls.down) vector.y += 1
+      if (this.controls.left) vector.x += -1
+      if (this.controls.right) vector.x += 1
+      const direction = Matter.Vector.normalise(vector)
+      const multiplied = Matter.Vector.mult(direction, this.force)
+      Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    }
+  }
+
+  getDirection ({ end, debugColor }: { end: Matter.Vector, debugColor?: string }): Direction {
+    return new Direction({ start: this.feature.body.position, end, debugColor })
+  }
+
+  getSides (point: Matter.Vector): Matter.Vector[] {
+    const arrow = Matter.Vector.sub(point, this.feature.body.position)
+    const direction = Matter.Vector.normalise(arrow)
+    const perp = Matter.Vector.perp(direction)
+    const startPerp = Matter.Vector.mult(perp, this.radius)
+    const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
+    const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
+    return [leftSide, rightSide]
+  }
+
+  isFeatureVisible (feature: Feature): boolean {
+    const sides = this.getSides(feature.body.position)
+    const viewpoints = [this.feature.body.position, ...sides]
+    const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
+
+    return isVisible
   }
 
   getVisibleFeatures (): Feature[] {
-    const obstacles = Array.from(Feature.obstacles.values())
     const visibleFeatures: Feature[] = []
     Feature.features.forEach(feature => {
-      const arrow = Matter.Vector.sub(feature.body.position, this.feature.body.position)
-      const direction = Matter.Vector.normalise(arrow)
-      const perp = Matter.Vector.perp(direction)
-      const startPerp = Matter.Vector.mult(perp, this.radius)
-      const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
-      const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-      const viewpoints = [this.feature.body.position, leftSide, rightSide]
-      const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles })
+      const isVisible = this.isFeatureVisible(feature)
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
   }
 
   makeIt (): void {
-    console.log('How many bodies?', Matter.Composite.allBodies(engine.world).length)
-    console.log('makeIt', this.feature.body.id)
-    this.feature.body.render.fillStyle = 'red'
+    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
+    if (Character.it === this) {
+      throw new Error('Already it')
+    }
     if (Character.it != null) Character.it.feature.body.render.fillStyle = 'green'
     Character.it = this
+    this.controllable = false
+    this.feature.body.render.fillStyle = 'white'
+    setTimeout(() => {
+      this.controllable = true
+
+      this.feature.body.render.fillStyle = 'red'
+    }, 5000)
   }
 }

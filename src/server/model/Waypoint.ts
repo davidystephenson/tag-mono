@@ -1,15 +1,18 @@
-import Matter from 'matter-js'
-import isClear from '../lib/raycast'
+import Matter, { Vector } from 'matter-js'
+import isClear from '../lib/isClear'
 import Wall from './Wall'
 
 export default class Waypoint {
   static waypoints: Waypoint[] = []
+  static positions: Vector[] = []
+  static ids: number[] = []
   readonly x: number
   readonly y: number
   readonly position: Matter.Vector
   readonly id: number
   neighbors: Waypoint[] = []
   distances: number[] = []
+  paths: Vector[][] = []
 
   constructor ({ x, y }: {
     x: number
@@ -21,6 +24,8 @@ export default class Waypoint {
     this.id = Waypoint.waypoints.length
     if (Matter.Query.point(Wall.wallObstacles, this.position).length === 0) {
       Waypoint.waypoints.push(this)
+      Waypoint.positions.push(this.position)
+      Waypoint.ids.push(this.id)
     }
   }
 
@@ -50,6 +55,17 @@ export default class Waypoint {
     })
   }
 
+  setPaths (): void {
+    this.paths[this.id] = [this.position]
+    Waypoint.waypoints.forEach(other => {
+      if (other.id !== this.id) {
+        const waypointPath = this.getWaypointPath(other)
+        const vectorPath = waypointPath.map(waypoint => waypoint.position)
+        this.paths[other.id] = vectorPath
+      }
+    })
+  }
+
   getWaypointPath (goal: Waypoint): Waypoint[] {
     const path: Waypoint[] = [this]
     let pathComplete = false
@@ -73,7 +89,7 @@ export default class Waypoint {
     return path
   }
 
-  getDistance (goal: Matter.Vector): number {
+  getPathDistance (goal: Matter.Vector): number {
     const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
       start: goal,
       end: waypoint.position,
@@ -86,20 +102,18 @@ export default class Waypoint {
     return Math.min(...distances)
   }
 
-  getVectorPath (goal: Matter.Vector): Matter.Vector[] {
+  getVectorPath (point: Matter.Vector): Matter.Vector[] {
     const visibleFromGoal = Waypoint.waypoints.filter(waypoint => isClear({
-      start: goal,
+      start: point,
       end: waypoint.position,
       obstacles: Wall.wallObstacles
     }))
     const distances = visibleFromGoal.map(visbleWaypoint => {
-      const vector = Matter.Vector.sub(goal, visbleWaypoint.position)
+      const vector = Matter.Vector.sub(point, visbleWaypoint.position)
       return this.distances[visbleWaypoint.id] + Matter.Vector.magnitude(vector)
     })
     const finalWaypoint = visibleFromGoal[distances.indexOf(Math.min(...distances))]
-    const waypointPath = this.getWaypointPath(finalWaypoint)
-    const vectorPath = waypointPath.map(waypoint => waypoint.position)
-    vectorPath.push(goal)
-    return vectorPath
+    const path = this.paths[finalWaypoint.id]
+    return path
   }
 }

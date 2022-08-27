@@ -1,7 +1,7 @@
 
 export default class DebugLabel {
   static labels: DebugLabel[] = []
-  static debug = false
+  static WAYPOINTS = true
   readonly x: number
   readonly y: number
   readonly text: string

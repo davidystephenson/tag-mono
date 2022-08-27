@@ -1,3 +1,4 @@
+import Matter from 'matter-js'
 import Controls, { UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT } from '../../shared/controls'
 import { FIVE_8, ONE_8, SEVEN_8, THREE_8, ONE_4, ONE_2, THREE_4 } from './fractions'
 
@@ -21,6 +22,10 @@ export const WEST_RADIANS = Math.PI // -Math.PI
 export const WEST_NW_RADIANS = -SEVEN_8_PI
 export const NORTH_NW_RADIANS = -FIVE_8_PI
 export const NORTH_RADIANS = -ONE_2_PI
+
+export function getRadians ({ from, to }: { from: Matter.Vector, to: Matter.Vector }): number {
+  return Matter.Vector.angle(from, to)
+}
 
 export function areRadiansUp (radians: number): boolean {
   return NORTH_NW_RADIANS <= radians && radians < NORTH_NE_RADIANS
@@ -47,16 +52,16 @@ export function areRadiansDownLeft (radians: number): boolean {
 }
 
 export function areRadiansLeft (radians: number): boolean {
-  const positive = WEST_SW_RADIANS <= radians && radians < WEST_RADIANS
+  const positive = WEST_SW_RADIANS <= radians && radians <= WEST_RADIANS
 
-  return positive || (-WEST_RADIANS <= radians && radians < WEST_NW_RADIANS)
+  return positive || (-WEST_RADIANS <= radians && radians <= WEST_NW_RADIANS)
 }
 
 export function areRadiansUpLeft (radians: number): boolean {
   return WEST_NW_RADIANS <= radians && radians < NORTH_NW_RADIANS
 }
 
-export function getRadiansInput (radians: number): Partial<Controls> {
+export function getRadiansControls (radians: number): Partial<Controls> {
   if (areRadiansUp(radians)) {
     return UP
   }
@@ -70,4 +75,38 @@ export function getRadiansInput (radians: number): Partial<Controls> {
 
   const string = String(radians)
   throw new Error(`Invalid radians: ${string}`)
+}
+
+export function whichMin <Element> (array: Element[], numbers: number[]): Element {
+  const minimum = Math.min(...numbers)
+  const index = numbers.indexOf(minimum)
+  const element = array[index]
+
+  return element
+}
+
+export function whichMax <Element> (array: Element[], numbers: number[]): Element {
+  const minimum = Math.max(...numbers)
+  const index = numbers.indexOf(minimum)
+  const element = array[index]
+
+  return element
+}
+
+export function getAnglePercentage (from: Matter.Vector, to: Matter.Vector): number {
+  const angle = (Matter.Vector.angle(from, to) / Math.PI + 1) / 2
+
+  return angle
+}
+
+export function getAnglePercentageDifference (a: number, b: number): number {
+  // 1) Take |𝐴−𝐵|.
+  const difference = a - b
+  const absoluteDifference = Math.abs(difference)
+  // 2) If |𝐴−𝐵|≤180 you are done. That's your answer. other wise
+  if (absoluteDifference <= 0.5) {
+    return absoluteDifference
+  }
+  // 3) If |𝐴−𝐵|>180, take 360−|𝐴−𝐵|. You are done.
+  return 1 - absoluteDifference
 }

@@ -14,9 +14,9 @@ export default class Puppet extends Actor {
     vertices,
     density = 0.0001,
     targetSpeed = 0.5,
-    force = 0.00001,
+    force = 0.01,
     direction = EAST_VECTOR,
-    color = 'green'
+    color = 'aqua'
   }: {
     x: number
     y: number
@@ -27,11 +27,10 @@ export default class Puppet extends Actor {
     direction?: Matter.Vector
     color?: string
   }) {
-    const feature = new VerticesFeature({ x, y, vertices })
+    const feature = new VerticesFeature({ x, y, vertices, density })
     super({ feature })
     this.feature.body.render.fillStyle = color
     this.feature.body.label = 'rock'
-    Matter.Body.setDensity(this.feature.body, density)
     this.direction = direction
     this.targetSpeed = targetSpeed
     this.force = force

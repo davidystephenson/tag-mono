@@ -7,6 +7,7 @@ import DebugLabel from '../../shared/DebugLabel'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
+  static LOG_POSITION = false
   readonly socket: Socket
 
   constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
@@ -34,5 +35,12 @@ export default class Player extends Character {
       torsoId: this.feature.body.id
     }
     this.socket.emit('updateClient', message)
+  }
+
+  act (): void {
+    super.act()
+    if (Player.LOG_POSITION) {
+      console.log('player position', this.feature.body.position)
+    }
   }
 }

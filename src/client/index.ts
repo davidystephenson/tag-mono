@@ -97,11 +97,11 @@ const draw = function (): void {
     context.lineWidth = 1
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const label = context.fillStyle
+      const label = context.fillStyle.slice(1)
       context.fillStyle = 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = '20px sans'
+      context.font = '8px sans'
       context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
     }
   })
@@ -113,7 +113,7 @@ const draw = function (): void {
   })
   state.debugLines.forEach(line => {
     context.strokeStyle = line.color
-    context.lineWidth = 4
+    context.lineWidth = 8
     context.beginPath()
     context.moveTo(line.start.x - camera.x, line.start.y - camera.y)
     context.lineTo(line.end.x - camera.x, line.end.y - camera.y)
@@ -129,7 +129,7 @@ const draw = function (): void {
 draw()
 
 function tick (): void {
-  const lerp = 0.1
+  const lerp = 1
   state.shapes.forEach(shape => {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
       shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
