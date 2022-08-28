@@ -133,7 +133,7 @@ const draw = function (): void {
 }
 draw()
 
-const lerp = 0.7
+const lerp = 0.6
 const lerpLess = 1 - lerp
 function tick (): void {
   state.shapes.forEach(shape => {

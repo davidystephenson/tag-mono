@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../lib/directions'
 import Actor from './Actor'
-import VerticesFeature from './VerticesFeature'
+import Figure from './Figure'
 
 export default class Puppet extends Actor {
   readonly direction: Matter.Vector
@@ -27,10 +27,8 @@ export default class Puppet extends Actor {
     direction?: Matter.Vector
     color?: string
   }) {
-    const feature = new VerticesFeature({ x, y, vertices, density })
-    super({ feature })
-    this.feature.body.render.fillStyle = color
-    this.feature.body.label = 'rock'
+    const figure = new Figure({ x, y, vertices, density })
+    super({ feature: figure })
     this.direction = direction
     this.targetSpeed = targetSpeed
     this.force = force
@@ -42,5 +40,10 @@ export default class Puppet extends Actor {
       const magnified = Matter.Vector.mult(this.direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, magnified)
     }
+  }
+
+  characterCollide ({ actor }: { actor: Actor }): void {
+    super.characterCollide({ actor })
+    this.dent()
   }
 }

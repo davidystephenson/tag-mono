@@ -3,9 +3,9 @@ import Input from '../../shared/Input'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
-import Crate from './Crate'
 import Direction from './Direction'
 import Feature from './Feature'
+import Brick from './Brick'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -44,6 +44,15 @@ export default class Character extends Actor {
       const direction = Matter.Vector.normalise(vector)
       const multiplied = Matter.Vector.mult(direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    }
+  }
+
+  characterCollide ({ actor }: { actor: Actor }): void {
+    if (Character.it === actor) {
+      const it = actor as Character
+      if (it.controllable) {
+        this.makeIt()
+      }
     }
   }
 
@@ -105,7 +114,7 @@ export default class Character extends Actor {
     Character.it = this
     this.controllable = false
     this.feature.body.render.fillStyle = 'white'
-    void new Crate({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: 30, width: 30 })
+    void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: 30, width: 30 })
     setTimeout(() => {
       this.controllable = true
 

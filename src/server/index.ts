@@ -11,7 +11,6 @@ import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
 import Actor from './model/Actor'
-import Crate from './model/Crate'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
@@ -19,7 +18,9 @@ import Waypoint from './model/Waypoint'
 import DebugLabel from '../shared/DebugLabel'
 import DebugCircle from '../shared/DebugCircle'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
-import Feature from './model/Feature'
+import Puppet from './model/Puppet'
+import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
+import Brick from './model/Brick'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -153,18 +154,8 @@ for (let i = 0; i <= xFactor; i++) {
     void new Waypoint({ x, y })
   }
 }
-// const GRID_RATIO = 8
-// const stepSize = innerSize / GRID_RATIO
-// for (let i = 0; i < GRID_RATIO + 1; i++) {
-// for (let j = 0; j < GRID_RATIO + 1; j++) {
-// const x = -innerSize / 2 + i * stepSize
-// const y = -innerSize / 2 + j * stepSize
-// void new Waypoint({ x, y })
-// }
-// }
 
 console.log('begin navigation')
-
 Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
 console.log('setting neighbors...')
 Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
@@ -184,109 +175,109 @@ Waypoint.waypoints.forEach(waypoint => {
 
 console.log('navigation complete')
 
-// void new Crate({ x: 200, y: -1200, height: 500, width: 10 })
-// void new Crate({ x: -0, y: -900, height: 300, width: 100 })
-// void new Crate({ x: -800, y: -800, height: 10, width: 200 })
-// void new Crate({ x: -800, y: -200, height: 300, width: 10 })
-// void new Crate({ x: -500, y: -200, height: 300, width: 100 })
-// void new Crate({ x: -30, y: -30, height: 20, width: 20 })
-// void new Crate({ x: 30, y: -30, height: 20, width: 20 })
-// void new Crate({ x: 0, y: -30, height: 20, width: 20 })
-// void new Crate({ x: 0, y: -30, height: 20, width: 100 })
-// void new Crate({ x: 30, y: 0, height: 30, width: 50 })
-// void new Crate({ x: -30, y: 0, height: 50, width: 30 })
-// void new Crate({ x: -800, y: 0, height: 80, width: 30 })
-// void new Crate({ x: -900, y: 0, height: 50, width: 50 })
-// void new Crate({ x: -1000, y: 0, height: 50, width: 50 })
-// void new Crate({ x: -1100, y: 0, height: 90, width: 80 })
-// void new Crate({ x: -1200, y: 0, height: 50, width: 50 })
-// void new Crate({ x: -1300, y: 0, height: 50, width: 50 })
-// void new Crate({ x: -1400, y: 0, height: 50, width: 50 })
-// void new Crate({ x: 0, y: 30, height: 20, width: 20 })
-// void new Crate({ x: 30, y: 30, height: 20, width: 20 })
-// void new Crate({ x: -30, y: 30, height: 20, width: 20 })
-// void new Crate({ x: 800, y: 200, height: 200, width: 100 })
-// void new Crate({ x: 500, y: 1400, height: 200, width: 100 })
-// void new Crate({ x: -500, y: 1400, height: 100, width: 200 })
-// void new Crate({ x: -1300, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 750, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 800, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 850, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 900, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 950, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1000, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1050, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1100, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1150, y: 1300, height: 100, width: 10 })
-// void new Crate({ x: 1200, y: 1300, height: 200, width: 20 })
-// void new Crate({ x: 1250, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1300, y: 1300, height: 300, width: 10 })
-// void new Crate({ x: 1350, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1400, y: 1300, height: 200, width: 10 })
-// void new Crate({ x: 1450, y: 1300, height: 200, width: 10 })
-// void new Puppet({
-//   x: -685,
-//   y: -1110,
-//   vertices: [
-//     { x: 0, y: 50 },
-//     { x: -50, y: -50 },
-//     { x: 50, y: -50 }
-//   ]
-// })
-// void new Puppet({
-//   x: 1400,
-//   y: -1425,
-//   vertices: [
-//     { x: 0, y: 20 },
-//     { x: -20, y: -20 },
-//     { x: 20, y: -20 }
-//   ],
-//   direction: EAST_VECTOR,
-//   force: 0.0
-// })
-// void new Puppet({
-//   x: 750,
-//   y: 750,
-//   vertices: [
-//     { x: 0, y: 30 },
-//     { x: -30, y: -30 },
-//     { x: 30, y: -30 }
-//   ],
-//   direction: WEST_VECTOR
-// })
-// void new Puppet({
-//   x: 400,
-//   y: 200,
-//   vertices: [
-//     { x: 0, y: 100 },
-//     { x: -100, y: -100 },
-//     { x: 100, y: -100 }
-//   ],
-//   direction: NORTH_VECTOR,
-//   force: 0.1
-// })
-// void new Puppet({
-//   x: -1200,
-//   y: -200,
-//   vertices: [
-//     { x: 0, y: 100 },
-//     { x: -150, y: -50 },
-//     { x: 100, y: -100 }
-//   ],
-//   direction: EAST_VECTOR,
-//   force: 0.05
-// })
-// void new Puppet({
-//   x: -1225,
-//   y: 900,
-//   vertices: [
-//     { x: 0, y: 100 },
-//     { x: -75, y: -66 },
-//     { x: 100, y: -144 }
-//   ],
-//   direction: SOUTH_VECTOR,
-//   force: 0.1
-// })
+void new Brick({ x: 200, y: -1200, height: 500, width: 10 })
+void new Brick({ x: -0, y: -900, height: 300, width: 100 })
+void new Brick({ x: -800, y: -800, height: 10, width: 200 })
+void new Brick({ x: -800, y: -200, height: 300, width: 10 })
+void new Brick({ x: -500, y: -200, height: 300, width: 100 })
+void new Brick({ x: -30, y: -30, height: 20, width: 20 })
+void new Brick({ x: 30, y: -30, height: 20, width: 20 })
+void new Brick({ x: 0, y: -30, height: 20, width: 20 })
+void new Brick({ x: 0, y: -30, height: 20, width: 100 })
+void new Brick({ x: 30, y: 0, height: 30, width: 50 })
+void new Brick({ x: -30, y: 0, height: 50, width: 30 })
+void new Brick({ x: -800, y: 0, height: 80, width: 30 })
+void new Brick({ x: -900, y: 0, height: 50, width: 50 })
+void new Brick({ x: -1000, y: 0, height: 50, width: 50 })
+void new Brick({ x: -1100, y: 0, height: 90, width: 80 })
+void new Brick({ x: -1200, y: 0, height: 50, width: 50 })
+void new Brick({ x: -1300, y: 0, height: 50, width: 50 })
+void new Brick({ x: -1400, y: 0, height: 50, width: 50 })
+void new Brick({ x: 0, y: 30, height: 20, width: 20 })
+void new Brick({ x: 30, y: 30, height: 20, width: 20 })
+void new Brick({ x: -30, y: 30, height: 20, width: 20 })
+void new Brick({ x: 800, y: 200, height: 200, width: 100 })
+void new Brick({ x: 500, y: 1400, height: 200, width: 100 })
+void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
+void new Brick({ x: -1300, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 750, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 800, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 850, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 900, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 950, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1000, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1050, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1100, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1150, y: 1300, height: 100, width: 10 })
+void new Brick({ x: 1200, y: 1300, height: 200, width: 20 })
+void new Brick({ x: 1250, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1300, y: 1300, height: 300, width: 10 })
+void new Brick({ x: 1350, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1400, y: 1300, height: 200, width: 10 })
+void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
+void new Puppet({
+  x: -685,
+  y: -1110,
+  vertices: [
+    { x: 0, y: 50 },
+    { x: -50, y: -50 },
+    { x: 50, y: -50 }
+  ]
+})
+void new Puppet({
+  x: 1400,
+  y: -1425,
+  vertices: [
+    { x: 0, y: 20 },
+    { x: -20, y: -20 },
+    { x: 20, y: -20 }
+  ],
+  direction: EAST_VECTOR,
+  force: 0.0
+})
+void new Puppet({
+  x: 750,
+  y: 750,
+  vertices: [
+    { x: 0, y: 30 },
+    { x: -30, y: -30 },
+    { x: 30, y: -30 }
+  ],
+  direction: WEST_VECTOR
+})
+void new Puppet({
+  x: 400,
+  y: 200,
+  vertices: [
+    { x: 0, y: 100 },
+    { x: -100, y: -100 },
+    { x: 100, y: -100 }
+  ],
+  direction: NORTH_VECTOR,
+  force: 0.01
+})
+void new Puppet({
+  x: -1200,
+  y: -200,
+  vertices: [
+    { x: 0, y: 100 },
+    { x: -150, y: -50 },
+    { x: 100, y: -100 }
+  ],
+  direction: EAST_VECTOR,
+  force: 0.05
+})
+void new Puppet({
+  x: -1225,
+  y: 900,
+  vertices: [
+    { x: 0, y: 100 },
+    { x: -75, y: -66 },
+    { x: 100, y: -144 }
+  ],
+  direction: SOUTH_VECTOR,
+  force: 0.1
+})
 
 Waypoint.waypoints.forEach(waypoint => {
   void new Bot({ x: waypoint.x, y: waypoint.y })
@@ -338,36 +329,13 @@ Matter.Events.on(engine, 'afterUpdate', () => {
 
 Matter.Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach(pair => {
-    // console.log('collide', pair.bodyA.label, pair.bodyB.label)
-    if (pair.bodyA.label === 'character') {
-      if (pair.bodyB.label === 'character') {
-        // pair.isActive = false
-        // state.paused = true
-        const actorA = Actor.actors.get(pair.bodyA.id) as Character
-        const actorB = Actor.actors.get(pair.bodyB.id) as Character
-        // const bodyA = actorA.feature.body
-        // const bodyB = actorB.feature.body
-        // console.log('collide actors', bodyA.id, bodyA.label, bodyB.id, bodyB.label)
-        if (Character.it === actorA && actorA.controllable) {
-          actorB.makeIt()
-        } else if (Character.it === actorB && actorB.controllable) {
-          actorA.makeIt()
-        }
-      }
-
-      if (pair.bodyB.label === 'crate') {
-        const feature = Feature.features.get(pair.bodyB.id) as Crate
-        if (feature != null) {
-          feature.dent()
-        }
-      }
+    const actorA = Actor.actors.get(pair.bodyA.id)
+    const actorB = Actor.actors.get(pair.bodyB.id)
+    if (actorA != null) {
+      actorA.collide({ actor: actorB })
     }
-
-    if (pair.bodyA.label === 'crate' && pair.bodyB.label === 'character') {
-      const feature = Feature.features.get(pair.bodyA.id) as Crate
-      if (feature != null) {
-        feature.dent()
-      }
+    if (actorB != null) {
+      actorB.collide({ actor: actorA })
     }
   })
 })
