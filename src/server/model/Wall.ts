@@ -57,7 +57,6 @@ export default class Wall extends RectangleFeature {
           factor = factor + 1
           segment = this.height / factor
         }
-        console.log('factors test:', factor)
         for (let i = 1; i < factor; i++) {
           const left = this.x - this.width / 2 - Wall.BUFFER
           const y = this.y - this.height / 2 + (this.height / factor) * i

@@ -27,22 +27,57 @@ export default class Waypoint {
     this.label = Waypoint.label
     Waypoint.label = Waypoint.label + 1
     const obstacle = Wall.walls.find(wall => {
-      const x = Math.abs(this.x - wall.x)
-      const y = Math.abs(this.y - wall.y)
-      const overX = x > wall.halfWidth
-      const overY = y > wall.halfHeight
-
+      const dX = Math.abs(this.x - wall.x)
+      const dY = Math.abs(this.y - wall.y)
+      const overX = dX > wall.halfWidth
+      const overY = dY > wall.halfHeight
       if (overX && overY) {
-        const wallPosition = { x: wall.x, y: wall.y }
-        const wallVector = Matter.Vector.sub(wallPosition, this.position)
-        const wallMagnitude = Matter.Vector.magnitude(wallVector)
-        if (wallMagnitude < Wall.BUFFER) {
-          return true
+        const isLeft = this.x < wall.x
+        const isTop = this.y < wall.y
+        if (isLeft && isTop) {
+          const cornerX = wall.x - wall.halfWidth
+          const cornerY = wall.y - wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Wall.BUFFER - 1) {
+            return true
+          }
+        }
+        if (isLeft && !isTop) {
+          const cornerX = wall.x - wall.halfWidth
+          const cornerY = wall.y + wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Wall.BUFFER - 1) {
+            return true
+          }
+        }
+        if (!isLeft && isTop) {
+          const cornerX = wall.x + wall.halfWidth
+          const cornerY = wall.y - wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Wall.BUFFER - 1) {
+            return true
+          }
+        }
+        if (!isLeft && !isTop) {
+          const cornerX = wall.x + wall.halfWidth
+          const cornerY = wall.y + wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Wall.BUFFER - 1) {
+            return true
+          }
         }
       } else {
         const xBuffer = wall.halfWidth + Wall.BUFFER - 1
         const yBuffer = wall.halfHeight + Wall.BUFFER - 1
-        if (x < xBuffer && y < yBuffer) {
+        if (dX < xBuffer && dY < yBuffer) {
           return true
         }
       }
