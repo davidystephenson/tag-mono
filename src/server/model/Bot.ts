@@ -251,7 +251,10 @@ export default class Bot extends Character {
     const characters = Character.characters.values()
     const visibleCharacters = []
     for (const character of characters) {
-      const isVisible = character !== this && this.isFeatureVisible(character.feature)
+      const isVisible =
+        character !== this &&
+        character.controllable &&
+        this.isFeatureVisible(character.feature)
       if (isVisible) visibleCharacters.push(character)
     }
     return visibleCharacters
