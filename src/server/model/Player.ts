@@ -10,7 +10,7 @@ export default class Player extends Character {
   static LOG_POSITION = false
   readonly socket: Socket
 
-  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
+  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'white' }: {
     x: number
     y: number
     socket: Socket
@@ -19,6 +19,7 @@ export default class Player extends Character {
     radius?: number
   }) {
     super({ x, y, color })
+    this.controllable = false
 
     this.socket = socket
     Player.players.set(this.socket.id, this)

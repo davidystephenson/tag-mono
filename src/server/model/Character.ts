@@ -7,6 +7,7 @@ import Direction from './Direction'
 import Feature from './Feature'
 import Brick from './Brick'
 import Puppet from './Puppet'
+import { getRadians } from '../lib/math'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -66,7 +67,7 @@ export default class Character extends Actor {
   characterCollide ({ actor }: { actor: Actor }): void {
     if (Character.it === actor) {
       const it = actor as Character
-      if (it.controllable) {
+      if (it.controllable && this.controllable) {
         this.makeIt()
       }
     }
@@ -126,16 +127,20 @@ export default class Character extends Actor {
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    if (Character.it != null) Character.it.loseIt()
-    Character.it = this
-    this.controllable = false
-    this.feature.body.render.fillStyle = 'white'
-    if (this.moving && this.blocked) {
+
+    const struggling = this.moving && this.blocked
+    if (struggling || Character.it == null) {
       void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: this.radius * 2, width: this.radius * 2 })
     } else {
+      const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
+      const unitVector = {
+        x: Math.sin(radians),
+        y: Math.cos(radians)
+      }
       void new Puppet({
         x: this.feature.body.position.x,
         y: this.feature.body.position.y,
+        direction: unitVector,
         vertices: [
           { x: 0, y: this.radius },
           { x: -this.radius, y: -this.radius },
@@ -143,6 +148,10 @@ export default class Character extends Actor {
         ]
       })
     }
+    Character.it?.loseIt()
+    this.controllable = false
+    this.feature.body.render.fillStyle = 'white'
+    Character.it = this
     setTimeout(() => {
       this.controllable = true
 

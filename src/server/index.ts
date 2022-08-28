@@ -279,10 +279,10 @@ void new Puppet({
   force: 0.1
 })
 
+void new Bot({ x: 100, y: -100 })
 Waypoint.waypoints.forEach(waypoint => {
   void new Bot({ x: waypoint.x, y: waypoint.y })
 })
-void new Bot({ x: 100, y: -100 })
 // void new Bot({ x: 499, y: 500 })
 // void new Bot({ x: -500, y: -500 })
 // void new Bot({ x: 500, y: -500 })
@@ -306,7 +306,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       initial = false
     }
 
-    if (difference > DEBUG_STEP_TIME_LIMIT) {
+    if (difference >= DEBUG_STEP_TIME_LIMIT) {
       warningCount = warningCount + 1
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
