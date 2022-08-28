@@ -6,6 +6,7 @@ import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
 import Brick from './Brick'
+import Puppet from './Puppet'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -17,6 +18,8 @@ export default class Character extends Actor {
   controls = new Input().controls
   controllable = true
   pursuer?: Bot
+  blocked = true // Philosophical
+  moving = false
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -37,10 +40,23 @@ export default class Character extends Actor {
     super.act()
     if (this.controllable) {
       const vector = { x: 0, y: 0 }
-      if (this.controls.up) vector.y += -1
-      if (this.controls.down) vector.y += 1
-      if (this.controls.left) vector.x += -1
-      if (this.controls.right) vector.x += 1
+      this.moving = false
+      if (this.controls.up) {
+        vector.y += -1
+        this.moving = true
+      }
+      if (this.controls.down) {
+        vector.y += 1
+        this.moving = true
+      }
+      if (this.controls.left) {
+        vector.x += -1
+        this.moving = true
+      }
+      if (this.controls.right) {
+        vector.x += 1
+        this.moving = true
+      }
       const direction = Matter.Vector.normalise(vector)
       const multiplied = Matter.Vector.mult(direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
@@ -114,7 +130,19 @@ export default class Character extends Actor {
     Character.it = this
     this.controllable = false
     this.feature.body.render.fillStyle = 'white'
-    void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: 30, width: 30 })
+    if (this.moving && this.blocked) {
+      void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: this.radius * 2, width: this.radius * 2 })
+    } else {
+      void new Puppet({
+        x: this.feature.body.position.x,
+        y: this.feature.body.position.y,
+        vertices: [
+          { x: 0, y: this.radius },
+          { x: -this.radius, y: -this.radius },
+          { x: this.radius, y: -this.radius }
+        ]
+      })
+    }
     setTimeout(() => {
       this.controllable = true
 

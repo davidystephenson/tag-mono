@@ -78,8 +78,8 @@ export default class Bot extends Character {
         const vector = Matter.Vector.sub(start, itPosition)
         const direction = Matter.Vector.normalise(vector)
         const blockPoint = Matter.Vector.add(start, Matter.Vector.mult(direction, 30))
-        const blocked = !this.isPointWallClear({ point: blockPoint, debug: Bot.DEBUG_CHASE })
-        if (blocked) {
+        this.blocked = !this.isPointWallClear({ point: blockPoint, debug: Bot.DEBUG_CHASE })
+        if (this.blocked) {
           if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
             const unblockPoint = this.getUnblockPoint()
             if (unblockPoint == null) {
@@ -161,7 +161,7 @@ export default class Bot extends Character {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
         return this.wander(Bot.DEBUG_IT_CHOICE)
       } else if (this.isPointClose({ point: this.path[0], limit: 45 })) {
-        if (Bot.DEBUG_IT_CHOICE) console.log('arriving')
+        if (Bot.DEBUG_IT_CHOICE || Bot.DEBUG_PATHING) console.log('arriving')
         return this.wander(Bot.DEBUG_IT_CHOICE)
       } else {
         if (Bot.DEBUG_IT_CHOICE || Bot.DEBUG_PATHING) {
