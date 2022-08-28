@@ -5,7 +5,7 @@ import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
 export default class Wall extends RectangleFeature {
-  static walls = new Map<number, Wall>()
+  static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
   static BUFFER = 45
   static isClear ({ start, end }: {
@@ -38,7 +38,7 @@ export default class Wall extends RectangleFeature {
     this.halfHeight = this.height / 2
     this.body.render.fillStyle = 'blue'
     Matter.Body.setStatic(this.body, true)
-    Wall.walls.set(this.body.id, this)
+    Wall.walls.push(this)
     Wall.wallObstacles.push(this.body)
     if (waypoints) {
       this.body.vertices.forEach(corner => {

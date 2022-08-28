@@ -26,8 +26,7 @@ export default class Waypoint {
     this.id = Waypoint.waypoints.length
     this.label = Waypoint.label
     Waypoint.label = Waypoint.label + 1
-    let obstacle
-    Wall.walls.forEach(wall => {
+    const obstacle = Wall.walls.find(wall => {
       const x = Math.abs(this.x - wall.x)
       const y = Math.abs(this.y - wall.y)
       const overX = x > wall.halfWidth
@@ -38,21 +37,17 @@ export default class Waypoint {
         const wallVector = Matter.Vector.sub(wallPosition, this.position)
         const wallMagnitude = Matter.Vector.magnitude(wallVector)
         if (wallMagnitude < Wall.BUFFER) {
-          obstacle = wall
+          return true
         }
       } else {
         const xBuffer = wall.halfWidth + Wall.BUFFER - 1
         const yBuffer = wall.halfHeight + Wall.BUFFER - 1
         if (x < xBuffer && y < yBuffer) {
-          obstacle = wall
-          // const open = Matter.Query.point(Wall.wallObstacles, this.position).length === 0
-          // if (open !== clear) {
-          //   console.log('x test:', xBuffer - x)
-          //   console.log('y test:', yBuffer - y)
-          //   console.log(this.idx, 'open:', open, 'clear:', clear)
-          // }
+          return true
         }
       }
+
+      return false
     })
     if (obstacle == null) {
       Waypoint.waypoints.push(this)

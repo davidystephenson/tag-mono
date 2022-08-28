@@ -133,16 +133,17 @@ const draw = function (): void {
 }
 draw()
 
+const lerp = 0.7
+const lerpLess = 1 - lerp
 function tick (): void {
-  const lerp = 0.7
   state.shapes.forEach(shape => {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
-      shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
-      shape.iy = lerp * shape.y + (1 - lerp) * shape.iy
+      shape.ix = lerp * shape.x + lerpLess * shape.ix
+      shape.iy = lerp * shape.y + lerpLess * shape.iy
     } else {
       shape.vertices.forEach((vertex, i) => {
-        shape.ivertices[i].x = lerp * vertex.x + (1 - lerp) * shape.ivertices[i].x
-        shape.ivertices[i].y = lerp * vertex.y + (1 - lerp) * shape.ivertices[i].y
+        shape.ivertices[i].x = lerp * vertex.x + lerpLess * shape.ivertices[i].x
+        shape.ivertices[i].y = lerp * vertex.y + lerpLess * shape.ivertices[i].y
       })
     }
     if (shape.id === state.torsoId) {
