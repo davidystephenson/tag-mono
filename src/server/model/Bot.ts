@@ -153,9 +153,13 @@ export default class Bot extends Character {
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
-        this.path = [point]
+        const target = this.pathfind({ goal: point })
+        if (target == null) {
+          console.warn('It cannot chase visible character')
+          return null
+        }
         const debugColor = Bot.DEBUG_IT_CHOICE || Bot.DEBUG_CHASE ? 'yellow' : undefined
-        return this.getDirection({ end: this.path[0], velocity: close.feature.body.velocity, debugColor })
+        return this.getDirection({ end: target, velocity: close.feature.body.velocity, debugColor })
       } else if (this.path.length === 0) {
         if (Bot.DEBUG_IT_CHOICE) console.log('wandering')
         return this.wander(Bot.DEBUG_IT_CHOICE)
