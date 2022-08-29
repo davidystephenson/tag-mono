@@ -8,9 +8,10 @@ import DebugLabel from '../../shared/DebugLabel'
 export default class Player extends Character {
   static players = new Map<string, Player>()
   static LOG_POSITION = false
+  static OBSERVER = false
   readonly socket: Socket
 
-  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'white' }: {
+  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
     x: number
     y: number
     socket: Socket
@@ -19,8 +20,10 @@ export default class Player extends Character {
     radius?: number
   }) {
     super({ x, y, color })
-    this.controllable = false
-
+    if (Player.OBSERVER) {
+      this.controllable = false
+      this.feature.body.render.fillStyle = 'white'
+    }
     this.socket = socket
     Player.players.set(this.socket.id, this)
   }

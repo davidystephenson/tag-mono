@@ -17,7 +17,7 @@ export default class Bot extends Character {
   static DEBUG_CHASE = true
   static DEBUG_PATHING = true
   static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
   static WANDER_TIME = 15000
@@ -286,7 +286,7 @@ export default class Bot extends Character {
     const toArrow = Matter.Vector.sub(point, this.feature.body.position)
     const toDirection = Matter.Vector.normalise(toArrow)
     const toPerp = Matter.Vector.perp(toDirection)
-    const startPerp = Matter.Vector.mult(toPerp, this.radius - 2)
+    const startPerp = Matter.Vector.mult(toPerp, this.radius)
     const leftStart = Matter.Vector.add(this.feature.body.position, startPerp)
     const rightStart = Matter.Vector.sub(this.feature.body.position, startPerp)
 

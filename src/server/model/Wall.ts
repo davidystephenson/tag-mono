@@ -12,6 +12,18 @@ export default class Wall extends RectangleFeature {
     start: Matter.Vector
     end: Matter.Vector
   }): boolean {
+    //     const toArrow = Matter.Vector.sub(end, start)
+    //     const toDirection = Matter.Vector.normalise(toArrow)
+    //     const toPerp = Matter.Vector.perp(toDirection)
+    //     const startPerp = Matter.Vector.mult(toPerp, this.radius - 2)
+    //     const leftStart = Matter.Vector.add(this.feature.body.position, startPerp)
+    //     const rightStart = Matter.Vector.sub(this.feature.body.position, startPerp)
+    //
+    //     const leftEnd = Matter.Vector.add(point, startPerp)
+    //     const rightEnd = Matter.Vector.sub(point, startPerp)
+    //     const left = [leftStart, leftEnd]
+    //     const right = [rightStart, rightEnd]
+    //     const casts = [left, right]
     return isClear({ start, end, obstacles: Wall.wallObstacles })
   }
 
