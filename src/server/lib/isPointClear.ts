@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import DebugLine from '../../shared/DebugLine'
 
-export default function isClear ({ start, end, obstacles, debug }: {
+export default function isPointClear ({ start, end, obstacles, debug }: {
   start: Matter.Vector
   end: Matter.Vector
   obstacles: Matter.Body[]
@@ -18,12 +18,12 @@ export default function isClear ({ start, end, obstacles, debug }: {
   return !collide
 }
 
-export function someIsClear ({ casts, obstacles, debug }: {
+export function someCastIsClear ({ casts, obstacles, debug }: {
   casts: Matter.Vector[][]
   obstacles: Matter.Body[]
   debug?: boolean
 }): boolean {
-  const open = casts.some(cast => isClear({
+  const open = casts.some(cast => isPointClear({
     start: cast[0],
     end: cast[1],
     obstacles,
@@ -33,12 +33,12 @@ export function someIsClear ({ casts, obstacles, debug }: {
   return open
 }
 
-export function everyIsClear ({ casts, obstacles, debug }: {
+export function everyCastIsClear ({ casts, obstacles, debug }: {
   casts: Matter.Vector[][]
   obstacles: Matter.Body[]
   debug?: boolean
 }): boolean {
-  const open = casts.every(cast => isClear({
+  const open = casts.every(cast => isPointClear({
     start: cast[0],
     end: cast[1],
     obstacles,
@@ -65,7 +65,7 @@ export function someClearPoint ({ starts, end, obstacles }: {
   end: Matter.Vector
   obstacles: Matter.Body[]
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: someIsClear })
+  return casterPointClear({ starts, end, obstacles, caster: someCastIsClear })
 }
 
 export function everyClearPoint ({ starts, end, obstacles, debug }: {
@@ -74,5 +74,5 @@ export function everyClearPoint ({ starts, end, obstacles, debug }: {
   obstacles: Matter.Body[]
   debug?: boolean
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: everyIsClear, debug })
+  return casterPointClear({ starts, end, obstacles, caster: everyCastIsClear, debug })
 }

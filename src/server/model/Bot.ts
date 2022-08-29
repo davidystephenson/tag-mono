@@ -1,7 +1,6 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import { everyIsClear } from '../lib/isClear'
 import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
@@ -19,7 +18,7 @@ export default class Bot extends Character {
   static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
-  static DEBUG_LOST = false
+  static DEBUG_LOST = true
   static WANDER_TIME = 15000
   static lostPoints: Matter.Vector[] = []
   searchTimes: number[] = []
@@ -283,20 +282,7 @@ export default class Bot extends Character {
   }
 
   isPointWallClear ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    const toArrow = Matter.Vector.sub(point, this.feature.body.position)
-    const toDirection = Matter.Vector.normalise(toArrow)
-    const toPerp = Matter.Vector.perp(toDirection)
-    const startPerp = Matter.Vector.mult(toPerp, this.radius)
-    const leftStart = Matter.Vector.add(this.feature.body.position, startPerp)
-    const rightStart = Matter.Vector.sub(this.feature.body.position, startPerp)
-
-    const leftEnd = Matter.Vector.add(point, startPerp)
-    const rightEnd = Matter.Vector.sub(point, startPerp)
-    const left = [leftStart, leftEnd]
-    const right = [rightStart, rightEnd]
-    const casts = [left, right]
-
-    return everyIsClear({ casts, obstacles: Wall.wallObstacles, debug })
+    return Wall.isClear({ start: this.feature.body.position, end: point, radius: this.radius, debug })
   }
 
   isPointWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
@@ -345,7 +331,7 @@ export default class Bot extends Character {
     }
 
     const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isClear({ start: waypoint.position, end: goalPoint })
+      return Wall.isClear({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
       throw new Error('Invisible goal')

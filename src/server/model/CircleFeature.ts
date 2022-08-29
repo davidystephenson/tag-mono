@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
-import { someClearPoint } from '../lib/isClear'
+import { someClearPoint } from '../lib/isPointClear'
 import Feature from './Feature'
 
 export default class CircleFeature extends Feature {

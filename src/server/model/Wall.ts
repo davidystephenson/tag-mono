@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import isClear from '../lib/isClear'
+import { everyCastIsClear } from '../lib/isPointClear'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
@@ -8,23 +8,26 @@ export default class Wall extends RectangleFeature {
   static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
   static BUFFER = 45
-  static isClear ({ start, end }: {
+  static isClear ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
+    radius: number
+    debug?: boolean
   }): boolean {
-    //     const toArrow = Matter.Vector.sub(end, start)
-    //     const toDirection = Matter.Vector.normalise(toArrow)
-    //     const toPerp = Matter.Vector.perp(toDirection)
-    //     const startPerp = Matter.Vector.mult(toPerp, this.radius - 2)
-    //     const leftStart = Matter.Vector.add(this.feature.body.position, startPerp)
-    //     const rightStart = Matter.Vector.sub(this.feature.body.position, startPerp)
-    //
-    //     const leftEnd = Matter.Vector.add(point, startPerp)
-    //     const rightEnd = Matter.Vector.sub(point, startPerp)
-    //     const left = [leftStart, leftEnd]
-    //     const right = [rightStart, rightEnd]
-    //     const casts = [left, right]
-    return isClear({ start, end, obstacles: Wall.wallObstacles })
+    const toArrow = Matter.Vector.sub(end, start)
+    const toDirection = Matter.Vector.normalise(toArrow)
+    const toPerp = Matter.Vector.perp(toDirection)
+    const startPerp = Matter.Vector.mult(toPerp, radius - 1)
+    const leftStart = Matter.Vector.add(start, startPerp)
+    const rightStart = Matter.Vector.sub(start, startPerp)
+
+    const leftEnd = Matter.Vector.add(end, startPerp)
+    const rightEnd = Matter.Vector.sub(end, startPerp)
+    const left = [leftStart, leftEnd]
+    const right = [rightStart, rightEnd]
+    const casts = [left, right]
+
+    return everyCastIsClear({ casts, obstacles: Wall.wallObstacles, debug })
   }
 
   readonly x: number
@@ -85,7 +88,6 @@ export default class Wall extends RectangleFeature {
           factor = factor + 1
           segment = this.width / factor
         }
-        console.log('width factor test:', factor)
         for (let i = 1; i < factor; i++) {
           const x = this.x - this.width / 2 + (this.width / factor) * i
           const top = this.y - this.height / 2 - Wall.BUFFER

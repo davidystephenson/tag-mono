@@ -21,6 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
+import { INITIAL_MANY_BOTS, INITIAL_ONE_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS } from './lib/world'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -215,80 +216,88 @@ void new Brick({ x: 1300, y: 1300, height: 300, width: 10 })
 void new Brick({ x: 1350, y: 1300, height: 200, width: 10 })
 void new Brick({ x: 1400, y: 1300, height: 200, width: 10 })
 void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
-void new Puppet({
-  x: -685,
-  y: -1110,
-  vertices: [
-    { x: 0, y: 50 },
-    { x: -50, y: -50 },
-    { x: 50, y: -50 }
-  ]
-})
-void new Puppet({
-  x: 1400,
-  y: -1425,
-  vertices: [
-    { x: 0, y: 20 },
-    { x: -20, y: -20 },
-    { x: 20, y: -20 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.0
-})
-void new Puppet({
-  x: 750,
-  y: 750,
-  vertices: [
-    { x: 0, y: 30 },
-    { x: -30, y: -30 },
-    { x: 30, y: -30 }
-  ],
-  direction: WEST_VECTOR
-})
-void new Puppet({
-  x: 400,
-  y: 200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -100, y: -100 },
-    { x: 100, y: -100 }
-  ],
-  direction: NORTH_VECTOR,
-  force: 0.01
-})
-void new Puppet({
-  x: -1200,
-  y: -200,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -150, y: -50 },
-    { x: 100, y: -100 }
-  ],
-  direction: EAST_VECTOR,
-  force: 0.05
-})
-void new Puppet({
-  x: -1225,
-  y: 900,
-  vertices: [
-    { x: 0, y: 100 },
-    { x: -75, y: -66 },
-    { x: 100, y: -144 }
-  ],
-  direction: SOUTH_VECTOR,
-  force: 0.1
-})
+if (INITIAL_PUPPETS) {
+  void new Puppet({
+    x: -685,
+    y: -1110,
+    vertices: [
+      { x: 0, y: 50 },
+      { x: -50, y: -50 },
+      { x: 50, y: -50 }
+    ]
+  })
+  void new Puppet({
+    x: 1400,
+    y: -1425,
+    vertices: [
+      { x: 0, y: 20 },
+      { x: -20, y: -20 },
+      { x: 20, y: -20 }
+    ],
+    direction: EAST_VECTOR,
+    force: 0.0
+  })
+  void new Puppet({
+    x: 750,
+    y: 750,
+    vertices: [
+      { x: 0, y: 30 },
+      { x: -30, y: -30 },
+      { x: 30, y: -30 }
+    ],
+    direction: WEST_VECTOR
+  })
+  void new Puppet({
+    x: 400,
+    y: 200,
+    vertices: [
+      { x: 0, y: 100 },
+      { x: -100, y: -100 },
+      { x: 100, y: -100 }
+    ],
+    direction: NORTH_VECTOR,
+    force: 0.01
+  })
+  void new Puppet({
+    x: -1200,
+    y: -200,
+    vertices: [
+      { x: 0, y: 100 },
+      { x: -150, y: -50 },
+      { x: 100, y: -100 }
+    ],
+    direction: EAST_VECTOR,
+    force: 0.05
+  })
+  void new Puppet({
+    x: -1225,
+    y: 900,
+    vertices: [
+      { x: 0, y: 100 },
+      { x: -75, y: -66 },
+      { x: 100, y: -144 }
+    ],
+    direction: SOUTH_VECTOR,
+    force: 0.1
+  })
+}
 
-void new Bot({ x: 100, y: -100 })
-// Waypoint.waypoints.forEach(waypoint => {
-//   void new Bot({ x: waypoint.x, y: waypoint.y })
-// })
-// void new Bot({ x: 499, y: 500 })
-// void new Bot({ x: -500, y: -500 })
-// void new Bot({ x: 500, y: -500 })
-// void new Bot({ x: -500, y: 500 })
-// void new Bot({ x: 800, y: 800 })
-// void new Bot({ x: -800, y: -800 })
+if (INITIAL_ONE_BOT) {
+  void new Bot({ x: 100, y: -100 })
+}
+if (INITIAL_WAYPOINT_BOTS) {
+  Waypoint.waypoints.forEach(waypoint => {
+    void new Bot({ x: waypoint.x, y: waypoint.y })
+  })
+}
+if (INITIAL_MANY_BOTS) {
+  void new Bot({ x: 499, y: 500 })
+  void new Bot({ x: -500, y: -500 })
+  void new Bot({ x: 500, y: -500 })
+  void new Bot({ x: -500, y: 500 })
+  void new Bot({ x: 800, y: 800 })
+  void new Bot({ x: -800, y: -800 })
+}
 
 Matter.Runner.run(runner, engine)
 
