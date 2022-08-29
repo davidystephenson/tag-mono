@@ -13,6 +13,7 @@ export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
+  static MAXIMUM_RADIUS = 15
   static DEBUG_MAKE_IT = false
   readonly radius: number
   force = 0.0001

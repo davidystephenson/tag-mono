@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
-import { someClearPoint } from '../lib/isPointClear'
+import { isSomeStartClear } from '../lib/raycast'
 import Feature from './Feature'
 
 export default class PolygonFeature extends Feature {
@@ -15,6 +15,6 @@ export default class PolygonFeature extends Feature {
     }))
     if (!inRange) return false
     const otherObstacles = obstacles.filter(obstacle => this.body.id !== obstacle.id)
-    return this.body.vertices.some(vertex => someClearPoint({ starts: viewpoints, end: vertex, obstacles: otherObstacles }))
+    return this.body.vertices.some(vertex => isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherObstacles }))
   }
 }

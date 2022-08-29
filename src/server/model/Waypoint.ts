@@ -1,5 +1,5 @@
 import Matter, { Vector } from 'matter-js'
-import isPointClear from '../lib/isPointClear'
+import Character from './Character'
 import Wall from './Wall'
 
 export default class Waypoint {
@@ -94,10 +94,10 @@ export default class Waypoint {
   setNeighbors (): void {
     this.neighbors = Waypoint.waypoints.filter(other => {
       if (other.id === this.id) return false
-      return isPointClear({
+      return Wall.isPointClear({
         start: this.position,
         end: other.position,
-        obstacles: Wall.wallObstacles
+        radius: Character.MAXIMUM_RADIUS
       })
     })
     this.neighbors.forEach(neighbor => {
@@ -134,10 +134,10 @@ export default class Waypoint {
     let pathComplete = false
     while (!pathComplete) {
       const currentPoint = path[path.length - 1]
-      const clear = isPointClear({
+      const clear = Wall.isPointClear({
         start: currentPoint.position,
         end: goal.position,
-        obstacles: Wall.wallObstacles
+        radius: Character.MAXIMUM_RADIUS
       })
       if (clear) pathComplete = true
       else {

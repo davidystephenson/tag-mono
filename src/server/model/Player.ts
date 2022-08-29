@@ -8,11 +8,11 @@ import Wall from './Wall'
 import Waypoint from './Waypoint'
 
 export default class Player extends Character {
-  static players = new Map<string, Player>()
-  static LOG_POSITION = false
-  static LOG_SPEED = true
-  static OBSERVER = false
+  static DEBUG_POSITION = false
+  static DEBUG_SPEED = false
   static DEBUG_CLEAR_WAYPOINTS = false
+  static OBSERVER = false
+  static players = new Map<string, Player>()
   readonly socket: Socket
 
   constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
@@ -23,7 +23,7 @@ export default class Player extends Character {
     color?: string
     radius?: number
   }) {
-    super({ x, y, color })
+    super({ x, y, color, radius })
     if (Player.OBSERVER) {
       this.controllable = false
       this.feature.body.render.fillStyle = 'white'
@@ -49,16 +49,16 @@ export default class Player extends Character {
     super.act()
     if (Player.DEBUG_CLEAR_WAYPOINTS) {
       const visible = Waypoint.waypoints.filter(waypoint => {
-        return Wall.isClear({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
+        return Wall.isPointClear({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
       })
       visible.forEach(waypoint => {
         void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'white' })
       })
     }
-    if (Player.LOG_POSITION) {
+    if (Player.DEBUG_POSITION) {
       console.log('player position', this.feature.body.position)
     }
-    if (Player.LOG_SPEED) {
+    if (Player.DEBUG_SPEED) {
       console.log('player speed', this.feature.body.speed)
     }
   }

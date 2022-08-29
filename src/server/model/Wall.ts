@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { everyCastIsClear } from '../lib/isPointClear'
+import { isEveryCastClear } from '../lib/raycast'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
@@ -8,7 +8,7 @@ export default class Wall extends RectangleFeature {
   static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
   static BUFFER = 45
-  static isClear ({ start, end, radius, debug }: {
+  static isPointClear ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     radius: number
@@ -27,7 +27,7 @@ export default class Wall extends RectangleFeature {
     const right = [rightStart, rightEnd]
     const casts = [left, right]
 
-    return everyCastIsClear({ casts, obstacles: Wall.wallObstacles, debug })
+    return isEveryCastClear({ casts, obstacles: Wall.wallObstacles, debug })
   }
 
   readonly x: number

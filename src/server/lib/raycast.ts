@@ -18,7 +18,7 @@ export default function isPointClear ({ start, end, obstacles, debug }: {
   return !collide
 }
 
-export function someCastIsClear ({ casts, obstacles, debug }: {
+export function isSomeCastClear ({ casts, obstacles, debug }: {
   casts: Matter.Vector[][]
   obstacles: Matter.Body[]
   debug?: boolean
@@ -33,7 +33,7 @@ export function someCastIsClear ({ casts, obstacles, debug }: {
   return open
 }
 
-export function everyCastIsClear ({ casts, obstacles, debug }: {
+export function isEveryCastClear ({ casts, obstacles, debug }: {
   casts: Matter.Vector[][]
   obstacles: Matter.Body[]
   debug?: boolean
@@ -60,19 +60,19 @@ export function casterPointClear ({ starts, end, obstacles, caster, debug }: {
   return caster({ casts, obstacles, debug })
 }
 
-export function someClearPoint ({ starts, end, obstacles }: {
+export function isSomeStartClear ({ starts, end, obstacles }: {
   starts: Matter.Vector[]
   end: Matter.Vector
   obstacles: Matter.Body[]
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: someCastIsClear })
+  return casterPointClear({ starts, end, obstacles, caster: isSomeCastClear })
 }
 
-export function everyClearPoint ({ starts, end, obstacles, debug }: {
+export function isEveryStartClear ({ starts, end, obstacles, debug }: {
   starts: Matter.Vector[]
   end: Matter.Vector
   obstacles: Matter.Body[]
   debug?: boolean
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: everyCastIsClear, debug })
+  return casterPointClear({ starts, end, obstacles, caster: isEveryCastClear, debug })
 }
