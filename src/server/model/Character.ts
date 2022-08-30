@@ -5,9 +5,6 @@ import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
-import Brick from './Brick'
-import Puppet from './Puppet'
-import { getRadians } from '../lib/math'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']

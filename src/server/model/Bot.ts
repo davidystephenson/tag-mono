@@ -252,6 +252,20 @@ export default class Bot extends Character {
     return mostDifferent.waypoint.position
   }
 
+  getWanderWaypoint (): Waypoint | null {
+    const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible({ point: Waypoint.waypoints[index].position }))
+    if (visibleTimes.length === 0) {
+      return this.loseWay()
+    }
+    const earlyTime = Math.min(...visibleTimes)
+    const earlyIds = Waypoint.ids.filter(id => this.searchTimes[id] === earlyTime)
+    const earlyDistances = earlyIds.map(id => this.getDistance(this.feature.body.position))
+    const earlyFarId = whichMax(earlyIds, earlyDistances)
+    const earlyFarWaypoint = Waypoint.waypoints[earlyFarId]
+
+    return earlyFarWaypoint
+  }
+
   getVisibleCharacters (): Character[] {
     const characters = Character.characters.values()
     const visibleCharacters = []
@@ -375,16 +389,13 @@ export default class Bot extends Character {
     if (this.searchPoint == null || this.isPointBoring({ point: this.searchPoint }) || (this.wanderTime != null && (Date.now() - this.wanderTime) > Bot.WANDER_TIME)) {
       this.wanderTime = Date.now()
       if (debug) debugColor = 'tan'
-      const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible({ point: Waypoint.waypoints[index].position }))
-      if (visibleTimes.length === 0) {
-        return this.loseWay()
+      const waypoint = this.getWanderWaypoint()
+      if (waypoint == null) {
+        return this.getDirection({ end: this.feature.body.position })
       }
-      const earlyTime = Math.min(...visibleTimes)
-      const earlyIds = Waypoint.ids.filter(id => this.searchTimes[id] === earlyTime)
-      const earlyDistances = earlyIds.map(id => this.getDistance(this.feature.body.position))
-      const earlyFarId = whichMax(earlyIds, earlyDistances)
-      this.searchPoint = Waypoint.waypoints[earlyFarId].position
-      this.searchTimes[earlyFarId] = Date.now()
+
+      this.searchPoint = waypoint.position
+      this.searchTimes[waypoint.id] = Date.now()
     }
     return this.getDirection({ end: this.searchPoint, debugColor })
   }
