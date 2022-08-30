@@ -21,7 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
-import { INITIAL_5_BOTS, INITIAL_1_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, MARGIN, INITIAL_BRICKS } from './lib/world'
+import { INITIAL_CORNER_BOTS, INITIAL_CENTER_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, MARGIN, INITIAL_BRICKS } from './lib/world'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -284,7 +284,7 @@ if (INITIAL_PUPPETS) {
   })
 }
 
-if (INITIAL_1_BOT) {
+if (INITIAL_CENTER_BOT) {
   void new Bot({ x: 100, y: -100 })
 }
 if (INITIAL_WAYPOINT_BOTS) {
@@ -292,12 +292,11 @@ if (INITIAL_WAYPOINT_BOTS) {
     void new Bot({ x: waypoint.x, y: waypoint.y })
   })
 }
-if (INITIAL_5_BOTS) {
-  void new Bot({ x: 499, y: 500 })
-  void new Bot({ x: 500, y: -500 })
-  void new Bot({ x: -500, y: 500 })
-  void new Bot({ x: 800, y: 800 })
-  void new Bot({ x: -800, y: -800 })
+if (INITIAL_CORNER_BOTS) {
+  void new Bot({ x: -1485, y: -1485 })
+  void new Bot({ x: 1485, y: -1485 })
+  void new Bot({ x: -1485, y: 1485 })
+  void new Bot({ x: 1485, y: 1485 })
 }
 
 Matter.Runner.run(runner, engine)

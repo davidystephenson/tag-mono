@@ -6,7 +6,7 @@ import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
-import Controls, { Control } from '../../shared/controls'
+import Controls, { Control, controlValues } from '../../shared/controls'
 
 export default class Player extends Character {
   static DEBUG_POSITION = false
@@ -36,14 +36,12 @@ export default class Player extends Character {
   updateControls (controls: Controls): void {
     let key: Control
     for (key in controls) {
+      const isControl = controlValues.has(key)
+      if (!isControl) return console.warn('Control is not a value:', key)
       const control = controls[key]
       const isBoolean = typeof control === 'boolean'
-
-      if (!isBoolean) {
-        console.warn('Control is not a boolean:', this.feature.body.id, control)
-      } else {
-        this.controls[key] = control
-      }
+      if (!isBoolean) return console.warn('Control is not a boolean:', this.feature.body.id, control)
+      this.controls[key] = control
     }
   }
 

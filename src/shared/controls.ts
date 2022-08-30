@@ -14,6 +14,7 @@ export const keyToControl = {
   Enter: 'select',
   ' ': 'select'
 } as const
+export const controlValues = new Set(Object.values(keyToControl))
 
 export type ControlKey = keyof typeof keyToControl
 export function isControlKey (key: string): key is ControlKey {
