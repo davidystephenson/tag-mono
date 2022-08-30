@@ -19,8 +19,7 @@ export default class Crate extends RectangleFeature {
     color?: string
     density?: number
   }) {
-    super({ x, y, width, height, density })
-    this.body.render.fillStyle = color
+    super({ x, y, width, height, density, color })
     this.body.label = 'brick'
     Matter.Body.setAngle(this.body, angle)
   }

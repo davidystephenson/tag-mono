@@ -332,7 +332,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
   DebugCircle.circles = []
   if (DebugCircle.WAYPOINTS) {
     Waypoint.waypoints.forEach(waypoint => {
-      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'aqua' })
+      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
     })
   }
   Actor.actors.forEach(actor => actor.act())
