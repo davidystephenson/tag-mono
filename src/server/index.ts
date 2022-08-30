@@ -322,7 +322,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
       const average = Math.floor(warningDifferenceTotal / warningCount)
-      console.log(`Warning ${warningCount}: ${difference} (${warningDifference}) [${average}]`)
+      console.log(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
       warningTime = newTime
     }
     oldTime = newTime

@@ -19,8 +19,9 @@ export default class Bot extends Character {
   static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST = true
-  static WANDER_TIME = 1000
+  static WANDER_TIME = 15000
   static lostPoints: Matter.Vector[] = []
+  static botCount = 0
   searchTimes: number[] = []
   path: Matter.Vector[] = []
   searchPoint?: Matter.Vector
@@ -34,6 +35,7 @@ export default class Bot extends Character {
   }) {
     super({ x, y, color, radius })
     this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
+    Bot.botCount = Bot.botCount + 1
     if (Bot.oldest == null) Bot.oldest = this
   }
 
