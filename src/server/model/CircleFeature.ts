@@ -7,15 +7,16 @@ import Feature from './Feature'
 export default class CircleFeature extends Feature {
   static circleFeatures = new Map<number, CircleFeature>()
   readonly radius: number
-  constructor ({ x, y, radius, isObstacle = false, density = 0.001 }: {
+  constructor ({ x, y, radius, isObstacle = false, density = 0.001, color = 'gray' }: {
     x: number
     y: number
     radius: number
     isObstacle?: boolean
     density?: number
+    color?: string
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, isObstacle, density })
+    super({ body, isObstacle, density, color })
     this.radius = radius
     CircleFeature.circleFeatures.set(this.body.id, this)
   }

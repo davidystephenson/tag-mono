@@ -80,16 +80,20 @@ const setupCamera = function (): void {
   context.setTransform(yScale, 0, 0, xScale, xTranslate, yTranslate)
 }
 
+const BACKGROUND_COLOR = '#0E0E10'
+const FOREGROUND_COLOR = '#343434'
+
 const draw = function (): void {
   window.requestAnimationFrame(draw)
   setupCamera()
   const w = canvas.width / camera.scale * 100
   const h = canvas.height / camera.scale * 100
-  context.clearRect(-w / 2, -h / 2, w, h)
-  context.strokeStyle = 'rgba(0,0,0)'
-  context.fillStyle = 'Gray'
+  context.fillStyle = BACKGROUND_COLOR
+  context.fillRect(-w / 2, -h / 2, w, h)
+  context.fillStyle = FOREGROUND_COLOR
   context.fillRect(-VISION.width, -VISION.height, 2 * VISION.width, 2 * VISION.height)
   state.shapes.forEach(shape => {
+    context.strokeStyle = shape.render.strokeStyle ?? 'black'
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
     if (shape.circleRadius == null || shape.circleRadius === 0) {

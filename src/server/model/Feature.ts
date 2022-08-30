@@ -9,12 +9,15 @@ export default class Feature {
   readonly isObstacle: boolean
   actor?: Actor
 
-  constructor ({ body, isObstacle = true, density = 0.001 }: {
+  constructor ({ body, isObstacle = true, density = 0.001, color = 'gray' }: {
     body: Matter.Body
     isObstacle?: boolean
     density?: number
+    color?: string
   }) {
     this.body = body
+    this.body.render.fillStyle = color
+    this.body.render.strokeStyle = color
     this.isObstacle = isObstacle
     Matter.Composite.add(engine.world, this.body)
     this.body.restitution = 1

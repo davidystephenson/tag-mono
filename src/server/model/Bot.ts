@@ -16,10 +16,10 @@ export default class Bot extends Character {
   static DEBUG_CHASE = true
   static DEBUG_PATHING = true
   static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST = true
-  static WANDER_TIME = 5000
+  static WANDER_TIME = 1000
   static lostPoints: Matter.Vector[] = []
   searchTimes: number[] = []
   path: Matter.Vector[] = []
@@ -369,10 +369,10 @@ export default class Bot extends Character {
   wander (debug = Bot.DEBUG_WANDER): Direction | null {
     this.path = []
 
-    let debugColor = debug ? 'white' : undefined
+    let debugColor = debug ? 'peru' : undefined
     if (this.searchPoint == null || this.isPointBoring({ point: this.searchPoint }) || (this.wanderTime != null && (Date.now() - this.wanderTime) > Bot.WANDER_TIME)) {
       this.wanderTime = Date.now()
-      if (debug) debugColor = 'gray'
+      if (debug) debugColor = 'tan'
       const visibleTimes = this.searchTimes.filter((time, index) => this.isPointWallVisible({ point: Waypoint.waypoints[index].position }))
       if (visibleTimes.length === 0) {
         return this.loseWay()

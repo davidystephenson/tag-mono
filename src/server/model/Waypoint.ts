@@ -1,5 +1,5 @@
 import Matter, { Vector } from 'matter-js'
-import { BUFFER } from '../lib/world'
+import { MARGIN } from '../lib/world'
 import Character from './Character'
 import Wall from './Wall'
 
@@ -41,7 +41,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < BUFFER - 1) {
+          if (cornerMagnitude < MARGIN - 1) {
             return true
           }
         }
@@ -51,7 +51,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < BUFFER - 1) {
+          if (cornerMagnitude < MARGIN - 1) {
             return true
           }
         }
@@ -61,7 +61,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < BUFFER - 1) {
+          if (cornerMagnitude < MARGIN - 1) {
             return true
           }
         }
@@ -71,13 +71,13 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < BUFFER - 1) {
+          if (cornerMagnitude < MARGIN - 1) {
             return true
           }
         }
       } else {
-        const xBuffer = wall.halfWidth + BUFFER - 1
-        const yBuffer = wall.halfHeight + BUFFER - 1
+        const xBuffer = wall.halfWidth + MARGIN - 1
+        const yBuffer = wall.halfHeight + MARGIN - 1
         if (dX < xBuffer && dY < yBuffer) {
           return true
         }

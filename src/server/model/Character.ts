@@ -29,7 +29,7 @@ export default class Character extends Actor {
     color?: string
     radius?: number
   }) {
-    const feature = new CircleFeature({ x, y, radius })
+    const feature = new CircleFeature({ x, y, radius, color })
     super({ feature })
     this.radius = radius
     this.feature.body.render.fillStyle = color

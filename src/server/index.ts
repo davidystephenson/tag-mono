@@ -21,7 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
-import { INITIAL_5_BOTS, INITIAL_1_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, BUFFER, INITIAL_BRICKS } from './lib/world'
+import { INITIAL_5_BOTS, INITIAL_1_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, MARGIN, INITIAL_BRICKS } from './lib/world'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -133,7 +133,7 @@ void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
 void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
 void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const EDGE_PADDING = BUFFER
+const EDGE_PADDING = MARGIN
 const innerSize = MAP_SIZE - EDGE_PADDING * 2
 let xFactor = 2
 let xSegment = innerSize / xFactor
@@ -169,7 +169,7 @@ Waypoint.waypoints.forEach(waypoint => {
   if (DebugLabel.WAYPOINTS) {
     const y = DebugCircle.WAYPOINTS ? waypoint.y + 50 : waypoint.y
     void new DebugLabel({
-      x: waypoint.x, y, text: waypoint.label.toString(), color: 'white'
+      x: waypoint.x, y, text: waypoint.label.toString(), color: 'aqua'
     })
   }
 })
@@ -332,7 +332,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
   DebugCircle.circles = []
   if (DebugCircle.WAYPOINTS) {
     Waypoint.waypoints.forEach(waypoint => {
-      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'white' })
+      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'aqua' })
     })
   }
   Actor.actors.forEach(actor => actor.act())

@@ -2,7 +2,7 @@ import Feature from './Feature'
 
 export default class Actor {
   static SCENERY_DENSITY = 0.00001
-  static SCENERY_COLOR = 'blue'
+  static SCENERY_COLOR = 'aqua'
   static paused = false
   static actors = new Map<number, Actor>()
   readonly feature: Feature

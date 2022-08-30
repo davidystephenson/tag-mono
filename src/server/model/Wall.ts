@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { isEveryCastClear } from '../lib/raycast'
-import { BUFFER } from '../lib/world'
+import { MARGIN } from '../lib/world'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
@@ -51,7 +51,7 @@ export default class Wall extends RectangleFeature {
     this.height = height
     this.halfWidth = this.width / 2
     this.halfHeight = this.height / 2
-    this.body.render.fillStyle = 'aqua'
+    this.body.render.fillStyle = 'blue'
     Matter.Body.setStatic(this.body, true)
     Wall.walls.push(this)
     Wall.wallObstacles.push(this.body)
@@ -61,7 +61,7 @@ export default class Wall extends RectangleFeature {
           x: Math.sign(corner.x - this.body.position.x),
           y: Math.sign(corner.y - this.body.position.y)
         })
-        const away = Matter.Vector.mult(direction, BUFFER)
+        const away = Matter.Vector.mult(direction, MARGIN)
         const location = Matter.Vector.add(corner, away)
         void new Waypoint({ x: location.x, y: location.y })
       })
@@ -73,11 +73,11 @@ export default class Wall extends RectangleFeature {
           segment = this.height / factor
         }
         for (let i = 1; i < factor; i++) {
-          const left = this.x - this.width / 2 - BUFFER
+          const left = this.x - this.width / 2 - MARGIN
           const y = this.y - this.height / 2 + (this.height / factor) * i
           void new Waypoint({ x: left, y })
 
-          const right = this.x + this.width / 2 + BUFFER
+          const right = this.x + this.width / 2 + MARGIN
           void new Waypoint({ x: right, y })
         }
       }
@@ -90,10 +90,10 @@ export default class Wall extends RectangleFeature {
         }
         for (let i = 1; i < factor; i++) {
           const x = this.x - this.width / 2 + (this.width / factor) * i
-          const top = this.y - this.height / 2 - BUFFER
+          const top = this.y - this.height / 2 - MARGIN
           void new Waypoint({ x, y: top })
 
-          const bottom = this.y + this.height / 2 + BUFFER
+          const bottom = this.y + this.height / 2 + MARGIN
           void new Waypoint({ x, y: bottom })
         }
       }
