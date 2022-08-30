@@ -4,8 +4,8 @@ import Crate from './Crate'
 export default class Brick extends Actor {
   constructor ({
     angle = 0,
-    color = 'aqua',
-    density = 0.00005,
+    color = Actor.SCENERY_COLOR,
+    density = Actor.SCENERY_DENSITY,
     height = 10,
     width = 10,
     x = 0,

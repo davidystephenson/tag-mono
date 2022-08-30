@@ -1,4 +1,5 @@
 import Matter, { Vector } from 'matter-js'
+import { BUFFER } from '../lib/world'
 import Character from './Character'
 import Wall from './Wall'
 
@@ -40,7 +41,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < Wall.BUFFER - 1) {
+          if (cornerMagnitude < BUFFER - 1) {
             return true
           }
         }
@@ -50,7 +51,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < Wall.BUFFER - 1) {
+          if (cornerMagnitude < BUFFER - 1) {
             return true
           }
         }
@@ -60,7 +61,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < Wall.BUFFER - 1) {
+          if (cornerMagnitude < BUFFER - 1) {
             return true
           }
         }
@@ -70,13 +71,13 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < Wall.BUFFER - 1) {
+          if (cornerMagnitude < BUFFER - 1) {
             return true
           }
         }
       } else {
-        const xBuffer = wall.halfWidth + Wall.BUFFER - 1
-        const yBuffer = wall.halfHeight + Wall.BUFFER - 1
+        const xBuffer = wall.halfWidth + BUFFER - 1
+        const yBuffer = wall.halfHeight + BUFFER - 1
         if (dX < xBuffer && dY < yBuffer) {
           return true
         }

@@ -21,7 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
-import { INITIAL_MANY_BOTS, INITIAL_ONE_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS } from './lib/world'
+import { INITIAL_5_BOTS, INITIAL_1_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, BUFFER, INITIAL_BRICKS } from './lib/world'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -110,30 +110,30 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-void new Wall({ x: 1000, y: -1100, width: 820, height: 500 })
+void new Wall({ x: 1000, y: -1000, width: 910, height: 910 })
 void new Wall({ x: -1000, y: -1100, width: 400, height: 200 })
-void new Wall({ x: 0, y: -900, width: 50, height: 800 })
+void new Wall({ x: 100, y: -900, width: 10, height: 50 })
 void new Wall({ x: -500, y: -1300, width: 100, height: 100 })
 void new Wall({ x: -500, y: -1100, width: 100, height: 100 })
-void new Wall({ x: -500, y: -900, width: 100, height: 100 })
-void new Wall({ x: -500, y: -700, width: 100, height: 100 })
+void new Wall({ x: -400, y: -900, width: 700, height: 100 })
+void new Wall({ x: -375, y: -700, width: 750, height: 210 })
 void new Wall({ x: -1300, y: -500, width: 100, height: 100 })
-void new Wall({ x: -1100, y: -500, width: 100, height: 100 })
-void new Wall({ x: -900, y: -500, width: 100, height: 100 })
+void new Wall({ x: -1100, y: -500, width: 100, height: 700 })
+void new Wall({ x: -845, y: -500, width: 100, height: 700 })
 void new Wall({ x: -700, y: -500, width: 100, height: 100 })
 void new Wall({ x: -500, y: -500, width: 100, height: 100 })
 void new Wall({ x: -240, y: -500, width: 220, height: 100 })
 void new Wall({ x: 400, y: -500, width: 200, height: 500 })
 void new Wall({ x: -1100, y: 400, width: 200, height: 500 })
 void new Wall({ x: 0, y: -200, width: 100, height: 100 })
-void new Wall({ x: 1000, y: 200, width: 200, height: 1500 })
+void new Wall({ x: 1000, y: 200, width: 200, height: 1000 })
 void new Wall({ x: -400, y: 600, width: 1000, height: 1000 })
 void new Wall({ x: 450, y: 700, width: 200, height: 800 })
 void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
 void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
 void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const EDGE_PADDING = 45
+const EDGE_PADDING = BUFFER
 const innerSize = MAP_SIZE - EDGE_PADDING * 2
 let xFactor = 2
 let xSegment = innerSize / xFactor
@@ -176,46 +176,49 @@ Waypoint.waypoints.forEach(waypoint => {
 
 console.log('navigation complete')
 
-void new Brick({ x: 200, y: -1200, height: 500, width: 10 })
-void new Brick({ x: -0, y: -900, height: 300, width: 100 })
-void new Brick({ x: -800, y: -800, height: 10, width: 200 })
-void new Brick({ x: -800, y: -200, height: 300, width: 10 })
-void new Brick({ x: -500, y: -200, height: 300, width: 100 })
-void new Brick({ x: -30, y: -30, height: 20, width: 20 })
-void new Brick({ x: 30, y: -30, height: 20, width: 20 })
-void new Brick({ x: 0, y: -30, height: 20, width: 20 })
-void new Brick({ x: 0, y: -30, height: 20, width: 100 })
-void new Brick({ x: 30, y: 0, height: 30, width: 50 })
-void new Brick({ x: -30, y: 0, height: 50, width: 30 })
-void new Brick({ x: -800, y: 0, height: 80, width: 30 })
-void new Brick({ x: -900, y: 0, height: 50, width: 50 })
-void new Brick({ x: -1000, y: 0, height: 50, width: 50 })
-void new Brick({ x: -1100, y: 0, height: 90, width: 80 })
-void new Brick({ x: -1200, y: 0, height: 50, width: 50 })
-void new Brick({ x: -1300, y: 0, height: 50, width: 50 })
-void new Brick({ x: -1400, y: 0, height: 50, width: 50 })
-void new Brick({ x: 0, y: 30, height: 20, width: 20 })
-void new Brick({ x: 30, y: 30, height: 20, width: 20 })
-void new Brick({ x: -30, y: 30, height: 20, width: 20 })
-void new Brick({ x: 800, y: 200, height: 200, width: 100 })
-void new Brick({ x: 500, y: 1400, height: 200, width: 100 })
-void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
-void new Brick({ x: -1300, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 750, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 800, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 850, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 900, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 950, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1000, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1050, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1100, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1150, y: 1300, height: 100, width: 10 })
-void new Brick({ x: 1200, y: 1300, height: 200, width: 20 })
-void new Brick({ x: 1250, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1300, y: 1300, height: 300, width: 10 })
-void new Brick({ x: 1350, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1400, y: 1300, height: 200, width: 10 })
-void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
+if (INITIAL_BRICKS) {
+  void new Brick({ x: 200, y: -1200, height: 500, width: 10 })
+  void new Brick({ x: -0, y: -900, height: 300, width: 100 })
+  void new Brick({ x: -800, y: -800, height: 10, width: 200 })
+  void new Brick({ x: -800, y: -200, height: 300, width: 10 })
+  void new Brick({ x: -500, y: -200, height: 300, width: 100 })
+  void new Brick({ x: -30, y: -30, height: 20, width: 20 })
+  void new Brick({ x: 30, y: -30, height: 20, width: 20 })
+  void new Brick({ x: 0, y: -30, height: 20, width: 20 })
+  void new Brick({ x: 0, y: -30, height: 20, width: 100 })
+  void new Brick({ x: 30, y: 0, height: 30, width: 50 })
+  void new Brick({ x: -30, y: 0, height: 50, width: 30 })
+  void new Brick({ x: -800, y: 0, height: 80, width: 30 })
+  void new Brick({ x: -900, y: 0, height: 50, width: 50 })
+  void new Brick({ x: -1000, y: 0, height: 50, width: 50 })
+  void new Brick({ x: -1100, y: 0, height: 90, width: 80 })
+  void new Brick({ x: -1200, y: 0, height: 50, width: 50 })
+  void new Brick({ x: -1300, y: 0, height: 50, width: 50 })
+  void new Brick({ x: -1400, y: 0, height: 50, width: 50 })
+  void new Brick({ x: 0, y: 30, height: 20, width: 20 })
+  void new Brick({ x: 30, y: 30, height: 20, width: 20 })
+  void new Brick({ x: -30, y: 30, height: 20, width: 20 })
+  void new Brick({ x: 800, y: 200, height: 200, width: 100 })
+  void new Brick({ x: 500, y: 1400, height: 200, width: 100 })
+  void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
+  void new Brick({ x: -1300, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 750, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 800, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 850, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 900, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 950, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1000, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1050, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1100, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1150, y: 1300, height: 100, width: 10 })
+  void new Brick({ x: 1200, y: 1300, height: 200, width: 20 })
+  void new Brick({ x: 1250, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1300, y: 1300, height: 300, width: 10 })
+  void new Brick({ x: 1350, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1400, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
+}
+
 if (INITIAL_PUPPETS) {
   void new Puppet({
     x: -685,
@@ -267,7 +270,7 @@ if (INITIAL_PUPPETS) {
       { x: 100, y: -100 }
     ],
     direction: EAST_VECTOR,
-    force: 0.05
+    force: 0.005
   })
   void new Puppet({
     x: -1225,
@@ -278,11 +281,11 @@ if (INITIAL_PUPPETS) {
       { x: 100, y: -144 }
     ],
     direction: SOUTH_VECTOR,
-    force: 0.1
+    force: 0.001
   })
 }
 
-if (INITIAL_ONE_BOT) {
+if (INITIAL_1_BOT) {
   void new Bot({ x: 100, y: -100 })
 }
 if (INITIAL_WAYPOINT_BOTS) {
@@ -290,9 +293,8 @@ if (INITIAL_WAYPOINT_BOTS) {
     void new Bot({ x: waypoint.x, y: waypoint.y })
   })
 }
-if (INITIAL_MANY_BOTS) {
+if (INITIAL_5_BOTS) {
   void new Bot({ x: 499, y: 500 })
-  void new Bot({ x: -500, y: -500 })
   void new Bot({ x: 500, y: -500 })
   void new Bot({ x: -500, y: 500 })
   void new Bot({ x: 800, y: 800 })

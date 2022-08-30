@@ -16,10 +16,10 @@ export default class Bot extends Character {
   static DEBUG_CHASE = true
   static DEBUG_PATHING = true
   static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = true
+  static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
   static DEBUG_LOST = true
-  static WANDER_TIME = 15000
+  static WANDER_TIME = 5000
   static lostPoints: Matter.Vector[] = []
   searchTimes: number[] = []
   path: Matter.Vector[] = []
@@ -301,13 +301,14 @@ export default class Bot extends Character {
     this.path = []
   }
 
-  loseWay (): null {
+  loseWay (props?: { goal?: Matter.Vector }): null {
     if (Bot.DEBUG_LOST) {
-      const point = vectorToPoint(this.feature.body.position)
-      console.warn('Lost:', this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
+      const position = props?.goal ?? this.feature.body.position
+      const point = vectorToPoint(position)
       Bot.lostPoints.push(point)
+      console.warn(`Lost ${Bot.lostPoints.length}:`, this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
       Player.players.forEach(player => {
-        void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
+        void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
       })
     }
     return null
@@ -331,6 +332,7 @@ export default class Bot extends Character {
       return this.isPointWallVisible({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
+      console.log('Invisible path start')
       return this.loseWay()
     }
 
@@ -338,7 +340,8 @@ export default class Bot extends Character {
       return Wall.isPointClear({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
-      throw new Error('Invisible goal')
+      console.log('Invisible path goal')
+      return this.loseWay()
     }
 
     const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))

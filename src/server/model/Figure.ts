@@ -8,7 +8,7 @@ export default class VerticesFeature extends PolygonFeature {
     vertices,
     isObstacle = true,
     density = 0.001,
-    color = 'aqua'
+    color = 'gray'
   }: {
     x: number
     y: number

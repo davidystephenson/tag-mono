@@ -12,11 +12,11 @@ export default class Puppet extends Actor {
     x,
     y,
     vertices,
-    density = 0.0005,
+    density = Actor.SCENERY_DENSITY,
     targetSpeed = 0.5,
-    force = 0.01,
+    force = 0.001,
     direction = EAST_VECTOR,
-    color = 'aqua'
+    color = Actor.SCENERY_COLOR
   }: {
     x: number
     y: number
@@ -27,7 +27,7 @@ export default class Puppet extends Actor {
     direction?: Matter.Vector
     color?: string
   }) {
-    const figure = new Figure({ x, y, vertices, density })
+    const figure = new Figure({ x, y, vertices, density, color })
     super({ feature: figure })
     this.direction = direction
     this.targetSpeed = targetSpeed

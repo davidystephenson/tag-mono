@@ -6,6 +6,7 @@ import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
+import Controls, { Control } from '../../shared/controls'
 
 export default class Player extends Character {
   static DEBUG_POSITION = false
@@ -32,6 +33,20 @@ export default class Player extends Character {
     Player.players.set(this.socket.id, this)
   }
 
+  updateControls (controls: Controls): void {
+    let key: Control
+    for (key in controls) {
+      const control = controls[key]
+      const isBoolean = typeof control === 'boolean'
+
+      if (!isBoolean) {
+        console.warn('Control is not a boolean:', this.feature.body.id, control)
+      } else {
+        this.controls[key] = control
+      }
+    }
+  }
+
   updateClient (): void {
     const visibleFeatures = this.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => new Shape(feature.body))
@@ -52,7 +67,7 @@ export default class Player extends Character {
         return Wall.isPointClear({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
       })
       visible.forEach(waypoint => {
-        void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'white' })
+        void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'black' })
       })
     }
     if (Player.DEBUG_POSITION) {
