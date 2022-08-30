@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../lib/directions'
 import Actor from './Actor'
-import Figure from './Figure'
+import VerticesFeature from './VerticesFeature'
 
 export default class Puppet extends Actor {
   readonly direction: Matter.Vector
@@ -27,8 +27,9 @@ export default class Puppet extends Actor {
     direction?: Matter.Vector
     color?: string
   }) {
-    const figure = new Figure({ x, y, vertices, density, color })
+    const figure = new VerticesFeature({ x, y, vertices, density, color })
     super({ feature: figure })
+    this.feature.body.label = 'figure'
     this.direction = direction
     this.targetSpeed = targetSpeed
     this.force = force

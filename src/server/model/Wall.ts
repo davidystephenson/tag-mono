@@ -36,14 +36,15 @@ export default class Wall extends RectangleFeature {
   readonly height: number
   readonly halfWidth: number
   readonly halfHeight: number
-  constructor ({ x = 0, y = 0, width = 100, height = 100, waypoints = true }: {
+  constructor ({ x = 0, y = 0, width = 100, height = 100, waypoints = true, color = 'blue' }: {
     x: number
     y: number
     width: number
     height: number
     waypoints?: boolean
+    color?: string
   }) {
-    super({ x, y, width, height })
+    super({ x, y, width, height, color })
     this.body.label = 'wall'
     this.x = x
     this.y = y
@@ -51,7 +52,6 @@ export default class Wall extends RectangleFeature {
     this.height = height
     this.halfWidth = this.width / 2
     this.halfHeight = this.height / 2
-    this.body.render.fillStyle = 'blue'
     Matter.Body.setStatic(this.body, true)
     Wall.walls.push(this)
     Wall.wallObstacles.push(this.body)

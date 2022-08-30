@@ -32,7 +32,6 @@ export default class Character extends Actor {
     const feature = new CircleFeature({ x, y, radius, color })
     super({ feature })
     this.radius = radius
-    this.feature.body.render.fillStyle = color
     this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
     if (Character.characters.size === 1) this.makeIt()
@@ -119,7 +118,7 @@ export default class Character extends Actor {
   }
 
   loseIt (): void {
-    this.feature.body.render.fillStyle = 'green'
+    this.setColor('green')
   }
 
   makeIt (): void {
@@ -150,12 +149,17 @@ export default class Character extends Actor {
     }
     Character.it?.loseIt()
     this.controllable = false
-    this.feature.body.render.fillStyle = 'white'
+    this.setColor('white')
     Character.it = this
     setTimeout(() => {
       this.controllable = true
 
-      this.feature.body.render.fillStyle = 'red'
+      this.setColor('red')
     }, 5000)
+  }
+
+  setColor (color: string): void {
+    this.feature.body.render.fillStyle = color
+    this.feature.body.render.strokeStyle = color
   }
 }
