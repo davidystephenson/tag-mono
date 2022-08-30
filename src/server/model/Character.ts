@@ -127,26 +127,26 @@ export default class Character extends Actor {
       throw new Error('Already it')
     }
 
-    const struggling = this.moving && this.blocked
-    if (struggling || Character.it == null) {
-      void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: this.radius * 2, width: this.radius * 2 })
-    } else {
-      const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
-      const unitVector = {
-        x: Math.sin(radians),
-        y: Math.cos(radians)
-      }
-      void new Puppet({
-        x: this.feature.body.position.x,
-        y: this.feature.body.position.y,
-        direction: unitVector,
-        vertices: [
-          { x: 0, y: this.radius },
-          { x: -this.radius, y: -this.radius },
-          { x: this.radius, y: -this.radius }
-        ]
-      })
-    }
+    // const struggling = this.moving && this.blocked
+    // if (struggling || Character.it == null) {
+    //   void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: this.radius * 2, width: this.radius * 2 })
+    // } else {
+    //   const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
+    //   const unitVector = {
+    //     x: Math.sin(radians),
+    //     y: Math.cos(radians)
+    //   }
+    //   void new Puppet({
+    //     x: this.feature.body.position.x,
+    //     y: this.feature.body.position.y,
+    //     direction: unitVector,
+    //     vertices: [
+    //       { x: 0, y: this.radius },
+    //       { x: -this.radius, y: -this.radius },
+    //       { x: this.radius, y: -this.radius }
+    //     ]
+    //   })
+    // }
     Character.it?.loseIt()
     this.controllable = false
     this.setColor('white')
