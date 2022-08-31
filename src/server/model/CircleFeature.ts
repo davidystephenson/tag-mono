@@ -2,7 +2,6 @@ import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
 import { getSides } from '../lib/math'
-import { isPointVisionClear } from '../lib/raycast'
 import Feature from './Feature'
 
 export default class CircleFeature extends Feature {
@@ -35,10 +34,9 @@ export default class CircleFeature extends Feature {
     })
   }
 
-  isVisible ({ center, radius, obstacles }: {
+  isVisible ({ center, radius }: {
     center: Matter.Vector
     radius: number
-    obstacles: Matter.Body[]
   }): boolean {
     const arrow = Matter.Vector.sub(center, this.body.position)
     const direction = Matter.Vector.normalise(arrow)
@@ -48,12 +46,11 @@ export default class CircleFeature extends Feature {
       start: center, end: closest, xRange: VISION.width, yRange: VISION.height
     })
     if (!inRange) return false
-    return isPointVisionClear({
+    return Feature.isPointVisionClear({
       start: center,
       end: this.body.position,
       startRadius: radius,
-      endRadius: this.radius,
-      obstacles
+      endRadius: this.radius
     })
   }
 }

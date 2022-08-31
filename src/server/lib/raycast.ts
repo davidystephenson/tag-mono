@@ -3,24 +3,7 @@ import DebugLine from '../../shared/DebugLine'
 import VISION from '../../shared/VISION'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
-export default function isPointClear ({ start, end, obstacles, debug }: {
-  start: Matter.Vector
-  end: Matter.Vector
-  obstacles: Matter.Body[]
-  debug?: boolean
-}): boolean {
-  const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
-  if (dist === 0) return true
-  const collisions = Matter.Query.ray(obstacles, start, end)
-  const collide = collisions.length > 0
-  if (debug === true || DebugLine.IS_CLEAR) {
-    const color = collide ? 'red' : 'green'
-    void new DebugLine({ start, end, color })
-  }
-  return !collide
-}
-
-export function raycast ({ start, end, obstacles }: {
+export default function raycast ({ start, end, obstacles }: {
   start: Matter.Vector
   end: Matter.Vector
   obstacles: Matter.Body[]
@@ -63,6 +46,23 @@ export function raycast ({ start, end, obstacles }: {
   const exitArrow = Matter.Vector.mult(arrow, rayExitTime)
   const exitPoint = Matter.Vector.add(start, exitArrow)
   return { entryPoint, exitPoint, hitBody }
+}
+
+export function isPointClear ({ start, end, obstacles, debug }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+  debug?: boolean
+}): boolean {
+  const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
+  if (dist === 0) return true
+  const collisions = Matter.Query.ray(obstacles, start, end)
+  const collide = collisions.length > 0
+  if (debug === true || DebugLine.IS_CLEAR) {
+    const color = collide ? 'red' : 'green'
+    void new DebugLine({ start, end, color })
+  }
+  return !collide
 }
 
 export function isSomeCastClear ({ casts, obstacles, debug }: {

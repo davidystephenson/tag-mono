@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { isPointReachable } from '../lib/raycast'
+import { isPointClear, isPointReachable, isPointVisionClear } from '../lib/raycast'
 import { MARGIN } from '../lib/world'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
@@ -8,6 +8,14 @@ import Waypoint from './Waypoint'
 export default class Wall extends RectangleFeature {
   static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
+  static isPointClear ({ start, end, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    debug?: boolean
+  }): boolean {
+    return isPointClear({ start, end, obstacles: Wall.wallObstacles, debug })
+  }
+
   static isPointReachable ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
@@ -16,6 +24,18 @@ export default class Wall extends RectangleFeature {
   }): boolean {
     return isPointReachable({
       start, end, radius, obstacles: Wall.wallObstacles, debug
+    })
+  }
+
+  static isPointVisionClear ({ start, end, startRadius, endRadius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    startRadius: number
+    endRadius: number
+    debug?: boolean
+  }): boolean {
+    return isPointVisionClear({
+      start, end, startRadius, endRadius, obstacles: Wall.wallObstacles, debug
     })
   }
 
@@ -110,10 +130,9 @@ export default class Wall extends RectangleFeature {
     }
   }
 
-  isVisible ({ center, radius, obstacles }: {
+  isVisible ({ center, radius }: {
     center: Matter.Vector
     radius: number
-    obstacles: Matter.Body[]
   }): boolean {
     return true
   }

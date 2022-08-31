@@ -1,10 +1,42 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
+import { isPointClear, isPointReachable, isPointVisionClear } from '../lib/raycast'
 import Actor from './Actor'
 
 export default class Feature {
   static features = new Map<number, Feature>()
   static obstacles: Matter.Body[] = []
+  static isPointClear ({ start, end, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    debug?: boolean
+  }): boolean {
+    return isPointClear({ start, end, obstacles: Feature.obstacles, debug })
+  }
+
+  static isPointReachable ({ start, end, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    debug?: boolean
+  }): boolean {
+    return isPointReachable({
+      start, end, radius, obstacles: Feature.obstacles, debug
+    })
+  }
+
+  static isPointVisionClear ({ start, end, startRadius, endRadius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    startRadius: number
+    endRadius: number
+    debug?: boolean
+  }): boolean {
+    return isPointVisionClear({
+      start, end, startRadius, endRadius, obstacles: Feature.obstacles, debug
+    })
+  }
+
   readonly body: Matter.Body
   readonly isObstacle: boolean
   actor?: Actor
@@ -28,10 +60,9 @@ export default class Feature {
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }
 
-  isVisible ({ center, radius, obstacles }: {
+  isVisible ({ center, radius }: {
     center: Matter.Vector
     radius: number
-    obstacles: Matter.Body[]
   }): boolean {
     return true
   }
