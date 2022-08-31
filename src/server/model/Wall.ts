@@ -117,9 +117,9 @@ export default class Wall extends RectangleFeature {
     }
   }
 
-  isVisible ({ center, viewpoints, obstacles }: {
+  isVisible ({ center, radius, obstacles }: {
     center: Matter.Vector
-    viewpoints: Matter.Vector[]
+    radius: number
     obstacles: Matter.Body[]
   }): boolean {
     return true

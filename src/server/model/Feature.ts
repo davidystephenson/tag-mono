@@ -28,9 +28,9 @@ export default class Feature {
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }
 
-  isVisible ({ center, viewpoints, obstacles }: {
+  isVisible ({ center, radius, obstacles }: {
     center: Matter.Vector
-    viewpoints: Matter.Vector[]
+    radius: number
     obstacles: Matter.Body[]
   }): boolean {
     return true

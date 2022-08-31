@@ -158,3 +158,12 @@ export function getSides ({ start, end, radius }: {
   const perpendicular = getPerpendicular({ start, end, radius })
   return getPerpendicularSides({ point: start, perpendicular })
 }
+
+export function getViewpoints ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): Matter.Vector[] {
+  const sides = getSides({ start, end, radius })
+  return [start, ...sides]
+}

@@ -89,9 +89,11 @@ export default class Character extends Actor {
   }
 
   isFeatureVisible (feature: Feature): boolean {
-    const sides = this.feature.getSides(feature.body.position)
-    const viewpoints = [this.feature.body.position, ...sides]
-    const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
+    const isVisible = feature.isVisible({
+      center: this.feature.body.position,
+      radius: this.radius,
+      obstacles: Feature.obstacles
+    })
 
     return isVisible
   }

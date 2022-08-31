@@ -78,6 +78,31 @@ export function isEveryStartClear ({ starts, end, obstacles, debug }: {
   return casterPointClear({ starts, end, obstacles, caster: isEveryCastClear, debug })
 }
 
+export function getSideCasts ({ start, end, startRadius, endRadius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  startRadius: number
+  endRadius: number
+}): Matter.Vector[][] {
+  const startPerpendicular = getPerpendicular({
+    start, end, radius: startRadius - 1
+  })
+  const [leftStart, rightStart] = getPerpendicularSides({
+    point: start, perpendicular: startPerpendicular
+  })
+  const endPerpendicular = getPerpendicular({
+    start, end, radius: endRadius - 1
+  })
+  const [leftEnd, rightEnd] = getPerpendicularSides({
+    point: end, perpendicular: endPerpendicular
+  })
+  const left = [leftStart, leftEnd]
+  const right = [rightStart, rightEnd]
+  const casts = [left, right]
+
+  return casts
+}
+
 export function isPointReachable ({
   start, end, radius, debug, obstacles
 }: {
@@ -87,44 +112,28 @@ export function isPointReachable ({
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const perpendicular = getPerpendicular({
-    start, end, radius: radius - 1
+  const casts = getSideCasts({
+    start, end, startRadius: radius, endRadius: radius
   })
-  const [leftStart, rightStart] = getPerpendicularSides({
-    point: start, perpendicular
-  })
-  const [leftEnd, rightEnd] = getPerpendicularSides({
-    point: end, perpendicular
-  })
-  const left = [leftStart, leftEnd]
-  const right = [rightStart, rightEnd]
-  const casts = [left, right]
 
   return isEveryCastClear({ casts, obstacles, debug })
 }
 
 export function isPointVisionClear ({
-  start, end, radius, debug, obstacles
+  start, end, startRadius, endRadius, debug, obstacles
 }: {
   start: Matter.Vector
   end: Matter.Vector
-  radius: number
+  startRadius: number
+  endRadius: number
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const perpendicular = getPerpendicular({
-    start, end, radius: radius - 1
-  })
-  const [leftStart, rightStart] = getPerpendicularSides({
-    point: start, perpendicular
-  })
-  const [leftEnd, rightEnd] = getPerpendicularSides({
-    point: end, perpendicular
+  const sideCasts = getSideCasts({
+    start, end, startRadius, endRadius
   })
   const center = [start, end]
-  const left = [leftStart, leftEnd]
-  const right = [rightStart, rightEnd]
-  const casts = [center, left, right]
+  const casts = [center, ...sideCasts]
 
   return isSomeCastClear({ casts, obstacles, debug })
 }

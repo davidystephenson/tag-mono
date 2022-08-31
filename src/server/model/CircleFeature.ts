@@ -35,15 +35,21 @@ export default class CircleFeature extends Feature {
     })
   }
 
-  isVisible ({ center, viewpoints, obstacles }: {
+  isVisible ({ center, radius, obstacles }: {
     center: Matter.Vector
-    viewpoints: Matter.Vector[]
+    radius: number
     obstacles: Matter.Body[]
   }): boolean {
     const inRange = this.body.vertices.some(vertex => isPointInRange({
       start: center, end: vertex, xRange: VISION.width, yRange: VISION.height
     }))
     if (!inRange) return false
-    return isPointVisionClear({ start: center, end: this.body.position, radius: this.radius, obstacles })
+    return isPointVisionClear({
+      start: center,
+      end: this.body.position,
+      startRadius: radius,
+      endRadius: this.radius,
+      obstacles
+    })
   }
 }
