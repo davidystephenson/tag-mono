@@ -18,7 +18,7 @@ export default class Bot extends Character {
   static DEBUG_IT_CHOICE = false
   static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
-  static DEBUG_LOST = true 
+  static DEBUG_LOST = true
   static WANDER_TIME = 5000
   static lostPoints: Matter.Vector[] = []
   static botCount = 0
@@ -254,7 +254,7 @@ export default class Bot extends Character {
     for (const character of characters) {
       const isVisible =
         character !== this &&
-        character.taggable &&
+        character.ready &&
         this.isFeatureVisible(character.feature)
       if (isVisible) visibleCharacters.push(character)
     }

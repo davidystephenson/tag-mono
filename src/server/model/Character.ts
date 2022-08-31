@@ -15,7 +15,7 @@ export default class Character extends Actor {
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
-  taggable = true
+  ready = true
   pursuer?: Bot
   blocked = true // Philosophical
   moving = false
@@ -38,7 +38,7 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    if (this.taggable || this.observer) {
+    if (this.ready || this.observer) {
       const vector = { x: 0, y: 0 }
       this.moving = false
       if (this.controls.up) {
@@ -63,10 +63,15 @@ export default class Character extends Actor {
     }
   }
 
+  beReady = (): void => {
+    this.ready = true
+    this.setColor('red')
+  }
+
   characterCollide ({ actor }: { actor: Actor }): void {
     if (Character.it === actor) {
       const it = actor as Character
-      if (it.taggable && this.taggable) {
+      if (it.ready && this.ready) {
         this.makeIt()
       }
     }
@@ -112,20 +117,21 @@ export default class Character extends Actor {
     this.setColor('green')
   }
 
+  loseReady (): void {
+    this.ready = false
+    this.setColor('white')
+  }
+
   makeIt (): void {
     if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
     Character.it?.loseIt()
-    this.taggable = false
+    this.loseReady()
     this.setColor('white')
     Character.it = this
-    setTimeout(() => {
-      this.taggable = true
-
-      this.setColor('red')
-    }, 5000)
+    setTimeout(this.beReady, 5000)
   }
 
   setColor (color: string): void {
