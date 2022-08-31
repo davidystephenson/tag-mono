@@ -12,7 +12,6 @@ export default class Waypoint {
   readonly y: number
   readonly position: Matter.Vector
   readonly id: number
-  readonly label: number
   neighbors: Waypoint[] = []
   distances: number[] = []
   paths: Vector[][] = []
@@ -25,7 +24,6 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = Waypoint.waypoints.length
-    this.label = Waypoint.label
     Waypoint.label = Waypoint.label + 1
     const obstacle = Wall.walls.find(wall => {
       const dX = Math.abs(this.x - wall.x)

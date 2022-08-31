@@ -110,7 +110,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-void new Wall({ x: 600, y: -955, width: 1710, height: 1000 })
+void new Wall({ x: 590, y: -940, width: 1700, height: 1000 })
 void new Wall({ x: -500, y: -1300, width: 100, height: 100 })
 void new Wall({ x: -1000, y: -1100, width: 500, height: 210 })
 void new Wall({ x: -500, y: -1100, width: 100, height: 100 })
@@ -168,7 +168,7 @@ Waypoint.waypoints.forEach(waypoint => {
   if (DebugLabel.WAYPOINTS) {
     const y = DebugCircle.WAYPOINTS ? waypoint.y + 50 : waypoint.y
     void new DebugLabel({
-      x: waypoint.x, y, text: waypoint.label.toString(), color: 'aqua'
+      x: waypoint.x, y, text: String(waypoint.id), color: 'aqua'
     })
   }
 })
