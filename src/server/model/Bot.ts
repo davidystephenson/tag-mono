@@ -270,14 +270,6 @@ export default class Bot extends Character {
     return visibleCharacters
   }
 
-  isPointBoring ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
-    const close = this.isPointClose({ point, limit })
-    if (close) return true
-
-    const visible = this.isPointWallVisible({ point })
-    return !visible
-  }
-
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
     const distance = this.getDistance(point)
     const close = distance < limit
