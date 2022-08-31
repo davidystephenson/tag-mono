@@ -62,7 +62,7 @@ export default class Player extends Character {
     super.act()
     if (Player.DEBUG_CLEAR_WAYPOINTS) {
       const visible = Waypoint.waypoints.filter(waypoint => {
-        return Wall.isPointClear({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
+        return Wall.isPointReachable({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
       })
       visible.forEach(waypoint => {
         void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'black' })

@@ -274,7 +274,7 @@ export default class Bot extends Character {
   }
 
   isPointWallClear ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Wall.isPointClear({ start: this.feature.body.position, end: point, radius: this.radius, debug })
+    return Wall.isPointReachable({ start: this.feature.body.position, end: point, radius: this.radius, debug })
   }
 
   isPointWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
@@ -325,7 +325,7 @@ export default class Bot extends Character {
     }
 
     const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isPointClear({ start: waypoint.position, end: goalPoint, radius: this.radius })
+      return Wall.isPointReachable({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
       console.log('Invisible path goal')

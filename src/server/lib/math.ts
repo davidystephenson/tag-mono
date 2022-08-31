@@ -128,3 +128,33 @@ export function getAnglePercentageDifference (a: number, b: number): number {
   // 3) If |𝐴−𝐵|>180, take 360−|𝐴−𝐵|. You are done.
   return 1 - absoluteDifference
 }
+
+export function getPerpendicular ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): Matter.Vector {
+  const arrow = Matter.Vector.sub(end, start)
+  const direction = Matter.Vector.normalise(arrow)
+  const perpendicularDirection = Matter.Vector.perp(direction)
+  const perpendicularVector = Matter.Vector.mult(perpendicularDirection, radius)
+  return perpendicularVector
+}
+
+export function getPerpendicularSides ({ point, perpendicular }: {
+  point: Matter.Vector
+  perpendicular: Matter.Vector
+}): [Matter.Vector, Matter.Vector] {
+  const leftSide = Matter.Vector.add(point, perpendicular)
+  const rightSide = Matter.Vector.sub(point, perpendicular)
+  return [leftSide, rightSide]
+}
+
+export function getSides ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): [Matter.Vector, Matter.Vector] {
+  const perpendicular = getPerpendicular({ start, end, radius })
+  return getPerpendicularSides({ point: start, perpendicular })
+}

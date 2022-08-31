@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { isEveryCastClear } from '../lib/raycast'
+import { isPointReachable } from '../lib/raycast'
 import { MARGIN } from '../lib/world'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
@@ -8,26 +8,15 @@ import Waypoint from './Waypoint'
 export default class Wall extends RectangleFeature {
   static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
-  static isPointClear ({ start, end, radius, debug }: {
+  static isPointReachable ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     radius: number
     debug?: boolean
   }): boolean {
-    const toArrow = Matter.Vector.sub(end, start)
-    const toDirection = Matter.Vector.normalise(toArrow)
-    const toPerp = Matter.Vector.perp(toDirection)
-    const startPerp = Matter.Vector.mult(toPerp, radius - 1)
-    const leftStart = Matter.Vector.add(start, startPerp)
-    const rightStart = Matter.Vector.sub(start, startPerp)
-
-    const leftEnd = Matter.Vector.add(end, startPerp)
-    const rightEnd = Matter.Vector.sub(end, startPerp)
-    const left = [leftStart, leftEnd]
-    const right = [rightStart, rightEnd]
-    const casts = [left, right]
-
-    return isEveryCastClear({ casts, obstacles: Wall.wallObstacles, debug })
+    return isPointReachable({
+      start, end, radius, obstacles: Wall.wallObstacles, debug
+    })
   }
 
   readonly x: number

@@ -168,7 +168,7 @@ Waypoint.waypoints.forEach(waypoint => {
   if (DebugLabel.WAYPOINTS) {
     const y = DebugCircle.WAYPOINTS ? waypoint.y + 50 : waypoint.y
     void new DebugLabel({
-      x: waypoint.x, y, text: String(waypoint.id), color: 'aqua'
+      x: waypoint.x, y, text: String(waypoint.id), color: 'white'
     })
   }
 })

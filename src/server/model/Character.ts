@@ -19,6 +19,7 @@ export default class Character extends Actor {
   pursuer?: Bot
   blocked = true // Philosophical
   moving = false
+  declare feature: CircleFeature
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -87,18 +88,8 @@ export default class Character extends Actor {
     })
   }
 
-  getSides (point: Matter.Vector): Matter.Vector[] {
-    const arrow = Matter.Vector.sub(point, this.feature.body.position)
-    const direction = Matter.Vector.normalise(arrow)
-    const perp = Matter.Vector.perp(direction)
-    const startPerp = Matter.Vector.mult(perp, this.radius)
-    const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
-    const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-    return [leftSide, rightSide]
-  }
-
   isFeatureVisible (feature: Feature): boolean {
-    const sides = this.getSides(feature.body.position)
+    const sides = this.feature.getSides(feature.body.position)
     const viewpoints = [this.feature.body.position, ...sides]
     const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
 
