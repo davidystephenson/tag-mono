@@ -14,11 +14,11 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_CHASE = true
-  static DEBUG_PATHING = true
-  static DEBUG_IT_CHOICE = true
-  static DEBUG_NOT_IT_CHOICE = true
+  static DEBUG_PATHING = false
+  static DEBUG_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
-  static DEBUG_LOST = false
+  static DEBUG_LOST = true 
   static WANDER_TIME = 5000
   static lostPoints: Matter.Vector[] = []
   static botCount = 0
