@@ -106,12 +106,18 @@ const draw = function (): void {
     context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const label = context.fillStyle.slice(1)
+      console.log('shape.fillStyle:', shape.render.fillStyle, context.fillStyle)
+      const upper = context.fillStyle.toUpperCase()
+      const red = upper.slice(1, 3)
+      const green = upper.slice(3, 5)
+      const blue = upper.slice(5, 7)
       context.fillStyle = 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = '8px sans'
-      context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
+      context.font = '10px sans'
+      context.fillText(red, shape.ix - camera.x, shape.iy - camera.y - 9)
+      context.fillText(green, shape.ix - camera.x, shape.iy - camera.y + 1)
+      context.fillText(blue, shape.ix - camera.x, shape.iy - camera.y + 11)
     }
   })
   state.debugCircles.forEach(circle => {
