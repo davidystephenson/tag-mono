@@ -26,7 +26,8 @@ export default class Player extends Character {
   }) {
     super({ x, y, color, radius })
     if (Player.OBSERVER) {
-      this.controllable = false
+      this.taggable = false
+      this.observer = true
       this.feature.body.render.fillStyle = 'white'
     }
     this.socket = socket

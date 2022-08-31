@@ -77,13 +77,6 @@ export default class Wall extends RectangleFeature {
             void new Waypoint({ x: this.rightMargin, y: this.bottomMargin })
           }
         }
-        const direction = Matter.Vector.normalise({
-          x: Math.sign(corner.x - this.body.position.x),
-          y: Math.sign(corner.y - this.body.position.y)
-        })
-        const away = Matter.Vector.mult(direction, MARGIN)
-        const location = Matter.Vector.add(corner, away)
-        void new Waypoint({ x: location.x, y: location.y })
       })
       if (this.height > VISION_INNER_HEIGHT) {
         let factor = 2

@@ -5,7 +5,7 @@ import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
 import DebugCircle from '../../shared/DebugCircle'
-import VISION from '../../shared/VISION'
+import VISION, { } from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Direction from './Direction'
 import { getAnglePercentage, getAnglePercentageDifference, whichMax, whichMin } from '../lib/math'
@@ -14,11 +14,11 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_CHASE = true
-  static DEBUG_PATHING = true
-  static DEBUG_IT_CHOICE = true
-  static DEBUG_NOT_IT_CHOICE = true
+  static DEBUG_PATHING = false
+  static DEBUG_IT_CHOICE = false
+  static DEBUG_NOT_IT_CHOICE = false
   static DEBUG_WANDER = false
-  static DEBUG_LOST = true
+  static DEBUG_LOST = false
   static WANDER_TIME = 5000
   static lostPoints: Matter.Vector[] = []
   static botCount = 0
@@ -252,7 +252,7 @@ export default class Bot extends Character {
     for (const character of characters) {
       const isVisible =
         character !== this &&
-        character.controllable &&
+        character.taggable &&
         this.isFeatureVisible(character.feature)
       if (isVisible) visibleCharacters.push(character)
     }
@@ -304,6 +304,92 @@ export default class Bot extends Character {
 
   makeIt (): void {
     super.makeIt()
+    // const struggling = this.moving && this.blocked
+    // const northY = this.feature.body.position.y - VISION_HEIGHT
+    // const southY = this.feature.body.position.y + VISION_HEIGHT
+    // const westX = this.feature.body.position.x - VISION_WIDTH
+    // const eastX = this.feature.body.position.x + VISION_WIDTH
+    // const northEast = { x: eastX, y: northY }
+    // const southEast = { x: eastX, y: southY }
+    // const southWest = { x: westX, y: southY }
+    // const northWest = { x: westX, y: northY }
+    // const northEastHit = raycast({ start: this.feature.body.position, end: northEast, obstacles: Feature.obstacles })
+    // const southEastHit = raycast({ start: this.feature.body.position, end: southEast, obstacles: Feature.obstacles })
+    // const southWestHit = raycast({ start: this.feature.body.position, end: southWest, obstacles: Feature.obstacles })
+    // const northWestHit = raycast({ start: this.feature.body.position, end: northWest, obstacles: Feature.obstacles })
+    // const entryPoints = [northEastHit.entryPoint, southEastHit.entryPoint, southWestHit.entryPoint, northWestHit.entryPoint]
+    // const northEastDistance = this.getDistance(northEastHit.entryPoint)
+    // const southWestDistance = this.getDistance(southWestHit.entryPoint)
+    // const southEastDistance = this.getDistance(southEastHit.entryPoint)
+    // const northWestDistance = this.getDistance(northWestHit.entryPoint)
+    // const entryPointsDistances = [northEastDistance, southEastDistance, southWestDistance, northWestDistance]
+    // const farthestEntryPoint = whichMax(entryPoints, entryPointsDistances)
+    // const minimumDistance = Math.min(...entryPointsDistances)
+    // const halfMinimum = minimumDistance / 2
+    // const maximumDistance = 700 // Math.max(...entryPointsDistances)
+    // const halfMaximum = maximumDistance / 2
+    // const boxCenter = {
+    //   x: (this.feature.body.position.x + farthestEntryPoint.x) / 2,
+    //   y: (this.feature.body.position.y + farthestEntryPoint.y) / 2
+    // }
+    // const northEastCorner = { x: boxCenter.x + halfMaximum, y: boxCenter.y - halfMaximum }
+    // const southWestCorner = { x: boxCenter.x - halfMaximum, y: boxCenter.y + halfMaximum }
+    // const southEastCorner = { x: boxCenter.x + halfMaximum, y: boxCenter.y + halfMaximum }
+    // const northWestCorner = { x: boxCenter.x - halfMaximum, y: boxCenter.y - halfMaximum }
+    // const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
+    // const refBounds = refWall.body.bounds
+    // console.log('refBounds', refBounds)
+    // // const northClear = isPointClear({ start: northWestCorner, end: northEastCorner, obstacles: Feature.obstacles })
+    // // const southClear = isPointClear({ start: southWestCorner, end: southEastCorner, obstacles: Feature.obstacles })
+    // // const westClear = isPointClear({ start: northWestCorner, end: southWestCorner, obstacles: Feature.obstacles })
+    // // const eastClear = isPointClear({ start: northEastCorner, end: southEastCorner, obstacles: Feature.obstacles })
+    // // const forwardClear = isPointClear({ start: southWestCorner, end: northEastCorner, obstacles: Feature.obstacles })
+    // // const backwardClear = isPointClear({ start: northWestCorner, end: southEastCorner, obstacles: Feature.obstacles })
+    // const queryBounds = Matter.Bounds.create(corners)
+    // console.log('queryBounds', queryBounds)
+    // const refOverlaps = Matter.Bounds.overlaps(queryBounds, refBounds)
+    // console.log('refOverlaps', refOverlaps)
+    // const boxQuery = Matter.Query.region(Feature.obstacles, queryBounds)
+    // console.log('boxQuery', boxQuery)
+    // console.log('Feature.obstacles.length', Feature.obstacles.length)
+    // const isBoxClear = boxQuery.length === 0
+    // if (isBoxClear) {
+    //   console.log('clear test')
+    //   void new Brick({
+    //     x: boxCenter.x,
+    //     y: boxCenter.y,
+    //     width: maximumDistance,
+    //     height: maximumDistance
+    //   })
+    // } else {
+    //   console.log('unclear test')
+    //   void new Brick({
+    //     x: this.feature.body.position.x,
+    //     y: this.feature.body.position.y,
+    //     height: this.radius * 2,
+    //     width: this.radius * 2
+    //   })
+    // }
+    // Actor.paused = true
+    // if (struggling || Character.it == null) {
+
+    // } else {
+    //   const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
+    //   const unitVector = {
+    //     x: Math.sin(radians),
+    //     y: Math.cos(radians)
+    //   }
+    //   void new Puppet({
+    //     x: this.feature.body.position.x,
+    //     y: this.feature.body.position.y,
+    //     direction: unitVector,
+    //     vertices: [
+    //       { x: 0, y: this.radius },
+    //       { x: -this.radius, y: -this.radius },
+    //       { x: this.radius, y: -this.radius }
+    //     ]
+    //   })
+    // }
     this.path = []
   }
 
@@ -320,7 +406,9 @@ export default class Bot extends Character {
       return this.isPointWallVisible({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
-      console.log('Invisible path start')
+      if (Bot.DEBUG_LOST) {
+        console.log('Invisible path start')
+      }
       return this.loseWay()
     }
 
@@ -328,7 +416,9 @@ export default class Bot extends Character {
       return Wall.isPointReachable({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
-      console.log('Invisible path goal')
+      if (Bot.DEBUG_LOST) {
+        console.log('Invisible path goal')
+      }
       return this.loseWay()
     }
 

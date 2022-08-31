@@ -15,11 +15,12 @@ export default class Character extends Actor {
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
-  controllable = true
+  taggable = true
   pursuer?: Bot
   blocked = true // Philosophical
   moving = false
   declare feature: CircleFeature
+  observer = false
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -37,7 +38,7 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    if (this.controllable) {
+    if (this.taggable || this.observer) {
       const vector = { x: 0, y: 0 }
       this.moving = false
       if (this.controls.up) {
@@ -65,7 +66,7 @@ export default class Character extends Actor {
   characterCollide ({ actor }: { actor: Actor }): void {
     if (Character.it === actor) {
       const it = actor as Character
-      if (it.controllable && this.controllable) {
+      if (it.taggable && this.taggable) {
         this.makeIt()
       }
     }
@@ -117,33 +118,12 @@ export default class Character extends Actor {
     if (Character.it === this) {
       throw new Error('Already it')
     }
-
-    // const struggling = this.moving && this.blocked
-    // if (struggling || Character.it == null) {
-    //   void new Brick({ x: this.feature.body.position.x, y: this.feature.body.position.y, height: this.radius * 2, width: this.radius * 2 })
-    // } else {
-    //   const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
-    //   const unitVector = {
-    //     x: Math.sin(radians),
-    //     y: Math.cos(radians)
-    //   }
-    //   void new Puppet({
-    //     x: this.feature.body.position.x,
-    //     y: this.feature.body.position.y,
-    //     direction: unitVector,
-    //     vertices: [
-    //       { x: 0, y: this.radius },
-    //       { x: -this.radius, y: -this.radius },
-    //       { x: this.radius, y: -this.radius }
-    //     ]
-    //   })
-    // }
     Character.it?.loseIt()
-    this.controllable = false
+    this.taggable = false
     this.setColor('white')
     Character.it = this
     setTimeout(() => {
-      this.controllable = true
+      this.taggable = true
 
       this.setColor('red')
     }, 5000)
