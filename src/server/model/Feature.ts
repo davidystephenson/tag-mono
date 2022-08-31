@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
-import { isPointClear, isPointReachable, isPointVisionClear } from '../lib/raycast'
+import { isPointClear, isPointOpen, isPointVisionClear } from '../lib/raycast'
 import Actor from './Actor'
 
 export default class Feature {
@@ -14,13 +14,13 @@ export default class Feature {
     return isPointClear({ start, end, obstacles: Feature.obstacles, debug })
   }
 
-  static isPointReachable ({ start, end, radius, debug }: {
+  static isPointOpen ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     radius: number
     debug?: boolean
   }): boolean {
-    return isPointReachable({
+    return isPointOpen({
       start, end, radius, obstacles: Feature.obstacles, debug
     })
   }

@@ -14,9 +14,9 @@ import Player from './Player'
 export default class Bot extends Character {
   static oldest: Bot
   static DEBUG_CHASE = true
-  static DEBUG_PATHING = false
-  static DEBUG_IT_CHOICE = false
-  static DEBUG_NOT_IT_CHOICE = false
+  static DEBUG_PATHING = true
+  static DEBUG_IT_CHOICE = true
+  static DEBUG_NOT_IT_CHOICE = true
   static DEBUG_WANDER = false
   static DEBUG_LOST = false
   static WANDER_TIME = 5000
@@ -84,7 +84,7 @@ export default class Bot extends Character {
         this.path = []
         this.wanderTime = undefined
       }
-      if (this.path.length === 0 || this.isPointClose({ point: this.path[0] })) {
+      if (this.path.length === 0 || this.isPointClose({ point: this.path[0], limit: 15 })) {
         if (this.blocked) {
           return this.unblock()
         } else if (itVisible) {
@@ -177,7 +177,7 @@ export default class Bot extends Character {
     const vector = Matter.Vector.sub(this.feature.body.position, Character.it.feature.body.position)
     const direction = Matter.Vector.normalise(vector)
     const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, 30))
-    return !this.isPointWallClear({ point: blockPoint, debug: Bot.DEBUG_CHASE })
+    return !this.isPointWallOpen({ point: blockPoint, debug: Bot.DEBUG_CHASE })
   }
 
   getDistance (point: Matter.Vector): number {
@@ -185,25 +185,27 @@ export default class Bot extends Character {
   }
 
   getTarget ({ path }: { path: Matter.Vector[] }): Matter.Vector | undefined {
-    return path.find(point => this.isPointWallVisible({ point }))
+    return path.find(point => this.isPointReachable({ point }))
   }
 
   getUnblockPoint (): Matter.Vector | null {
-    const visible = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position })
+    const reachable = Waypoint.waypoints.filter(waypoint => {
+      return this.isPointReachable({ point: waypoint.position })
     })
-    if (visible.length === 0) {
+    if (reachable.length === 0) {
       return this.loseWay()
     }
-    const far = visible.filter(waypoint => {
+    const far = reachable.filter(waypoint => {
       const isClose = this.isPointClose({ point: waypoint.position, limit: 45 })
       return !isClose
     })
     if (far.length === 0) {
-      Player.players.forEach(player => {
-        void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
-      })
-      Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
+      if (Bot.DEBUG_LOST) {
+        Player.players.forEach(player => {
+          void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
+        })
+        Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
+      }
       return this.feature.body.position
     }
     if (Character.it == null || Character.it === this) {
@@ -265,6 +267,13 @@ export default class Bot extends Character {
     return close
   }
 
+  isPointReachable ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    const inRange = this.isPointInRange(point)
+    if (!inRange) return false
+    const clear = this.isPointWallOpen({ point, debug })
+    return clear
+  }
+
   isPointInRange (point: Matter.Vector): boolean {
     const start = this.feature.body.position
     const inRangeX = start.x - VISION.width < point.x && point.x < start.x + VISION.width
@@ -274,13 +283,35 @@ export default class Bot extends Character {
   }
 
   isPointWallClear ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Wall.isPointReachable({ start: this.feature.body.position, end: point, radius: this.radius, debug })
+    return Wall.isPointClear({ start: this.feature.body.position, end: point, debug })
+  }
+
+  isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return Wall.isPointOpen({ start: this.feature.body.position, end: point, radius: this.radius, debug })
+  }
+
+  isPointWallVisionClear ({
+    point,
+    radius = this.radius,
+    debug
+  }: {
+    point: Matter.Vector
+    radius?: number
+    debug?: boolean
+  }): boolean {
+    return Wall.isPointVisionClear({
+      start: this.feature.body.position,
+      end: point,
+      startRadius: this.radius,
+      endRadius: radius,
+      debug
+    })
   }
 
   isPointWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     const inRange = this.isPointInRange(point)
     if (!inRange) return false
-    const clear = this.isPointWallClear({ point, debug })
+    const clear = this.isPointWallVisionClear({ point, debug })
     return clear
   }
 
@@ -397,13 +428,13 @@ export default class Bot extends Character {
     goal: Matter.Vector
   }): Matter.Vector | null {
     const goalPoint = vectorToPoint(goal)
-    if (this.isPointWallVisible({ point: goalPoint })) {
+    if (this.isPointReachable({ point: goalPoint })) {
       this.path = [goalPoint]
 
       return goalPoint
     }
     const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointWallVisible({ point: waypoint.position })
+      return this.isPointReachable({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
       if (Bot.DEBUG_LOST) {
@@ -413,7 +444,7 @@ export default class Bot extends Character {
     }
 
     const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isPointReachable({ start: waypoint.position, end: goalPoint, radius: this.radius })
+      return Wall.isPointOpen({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
       if (Bot.DEBUG_LOST) {

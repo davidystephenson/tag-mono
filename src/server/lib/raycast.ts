@@ -149,7 +149,7 @@ export function getSideCasts ({ start, end, startRadius, endRadius }: {
   return casts
 }
 
-export function isPointReachable ({
+export function isPointOpen ({
   start, end, radius, debug, obstacles
 }: {
   start: Matter.Vector

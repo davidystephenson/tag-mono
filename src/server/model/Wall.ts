@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { isPointClear, isPointReachable, isPointVisionClear } from '../lib/raycast'
+import { isPointClear, isPointOpen, isPointVisionClear } from '../lib/raycast'
 import { MARGIN } from '../lib/world'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
@@ -16,13 +16,13 @@ export default class Wall extends RectangleFeature {
     return isPointClear({ start, end, obstacles: Wall.wallObstacles, debug })
   }
 
-  static isPointReachable ({ start, end, radius, debug }: {
+  static isPointOpen ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     radius: number
     debug?: boolean
   }): boolean {
-    return isPointReachable({
+    return isPointOpen({
       start, end, radius, obstacles: Wall.wallObstacles, debug
     })
   }

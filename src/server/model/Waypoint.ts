@@ -93,7 +93,7 @@ export default class Waypoint {
   setNeighbors (): void {
     this.neighbors = Waypoint.waypoints.filter(other => {
       if (other.id === this.id) return false
-      return Wall.isPointReachable({
+      return Wall.isPointOpen({
         start: this.position,
         end: other.position,
         radius: Character.MAXIMUM_RADIUS
@@ -133,7 +133,7 @@ export default class Waypoint {
     let pathComplete = false
     while (!pathComplete) {
       const currentPoint = path[path.length - 1]
-      const clear = Wall.isPointReachable({
+      const clear = Wall.isPointOpen({
         start: currentPoint.position,
         end: goal.position,
         radius: Character.MAXIMUM_RADIUS
