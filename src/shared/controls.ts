@@ -1,3 +1,5 @@
+import { getDirectional } from '../server/lib/math'
+
 export const keyToControl = {
   w: 'up',
   s: 'down',
@@ -87,4 +89,19 @@ export const STILL: Partial<Controls> = {
   down: false,
   left: false,
   right: false
+}
+
+const directionalControls = {
+  UP,
+  UP_RIGHT,
+  RIGHT,
+  DOWN_RIGHT,
+  DOWN,
+  DOWN_LEFT,
+  LEFT,
+  UP_LEFT
+}
+
+export function getRadiansControls (radians: number): Partial<Controls> {
+  return getDirectional({ radians, directionals: directionalControls })
 }

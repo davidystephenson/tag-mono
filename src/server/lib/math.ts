@@ -1,6 +1,4 @@
 import Matter from 'matter-js'
-import Controls, { UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT } from '../../shared/controls'
-import { EAST_VECTOR, NORTH_E_VECTOR, NORTH_VECTOR, NORTH_W_VECTOR, SOUTH_E_VECTOR, SOUTH_VECTOR, SOUTH_W_VECTOR, WEST_VECTOR } from './directions'
 import { FIVE_8, ONE_8, SEVEN_8, THREE_8, ONE_4, ONE_2, THREE_4 } from './fractions'
 
 export const ONE_8_PI = ONE_8 * Math.PI
@@ -62,31 +60,21 @@ export function areRadiansUpLeft (radians: number): boolean {
   return WEST_NW_RADIANS <= radians && radians < NORTH_NW_RADIANS
 }
 
-export function getRadiansControls (radians: number): Partial<Controls> {
-  if (areRadiansUp(radians)) {
-    return UP
-  }
-  if (areRadiansUpRight(radians)) return UP_RIGHT
-  if (areRadiansRight(radians)) return RIGHT
-  if (areRadiansDownRight(radians)) return DOWN_RIGHT
-  if (areRadiansDown(radians)) return DOWN
-  if (areRadiansDownLeft(radians)) return DOWN_LEFT
-  if (areRadiansLeft(radians)) return LEFT
-  if (areRadiansUpLeft(radians)) return UP_LEFT
-
-  const string = String(radians)
-  throw new Error(`Invalid radians: ${string}`)
-}
-
-export function getRadiansUnitVector (radians: number): Matter.Vector {
-  if (areRadiansUp(radians)) return NORTH_VECTOR
-  if (areRadiansUpRight(radians)) return NORTH_E_VECTOR
-  if (areRadiansRight(radians)) return EAST_VECTOR
-  if (areRadiansDownRight(radians)) return SOUTH_E_VECTOR
-  if (areRadiansDown(radians)) return SOUTH_VECTOR
-  if (areRadiansDownLeft(radians)) return SOUTH_W_VECTOR
-  if (areRadiansLeft(radians)) return WEST_VECTOR
-  if (areRadiansUpLeft(radians)) return NORTH_W_VECTOR
+const DIRECTIONAL_KEYS = ['UP', 'UP_RIGHT', 'RIGHT', 'DOWN_RIGHT', 'DOWN', 'DOWN_LEFT', 'LEFT', 'UP_LEFT']
+type DirectionalKey = typeof DIRECTIONAL_KEYS[number]
+type Directionals <Directional> = Record<DirectionalKey, Directional>
+export function getDirectional <Directional> ({ radians, directionals }: {
+  radians: number
+  directionals: Directionals<Directional>
+}): Directional {
+  if (areRadiansUp(radians)) return directionals.UP
+  if (areRadiansUpRight(radians)) return directionals.UP_RIGHT
+  if (areRadiansRight(radians)) return directionals.RIGHT
+  if (areRadiansDownRight(radians)) return directionals.DOWN_RIGHT
+  if (areRadiansDown(radians)) return directionals.DOWN
+  if (areRadiansDownLeft(radians)) return directionals.DOWN_LEFT
+  if (areRadiansLeft(radians)) return directionals.LEFT
+  if (areRadiansUpLeft(radians)) return directionals.UP_LEFT
 
   const string = String(radians)
   throw new Error(`Invalid radians: ${string}`)

@@ -1,7 +1,6 @@
 import Matter from 'matter-js'
-import Controls from '../../shared/controls'
+import Controls, { getRadiansControls } from '../../shared/controls'
 import DebugLine from '../../shared/DebugLine'
-import { getRadiansControls } from '../lib/math'
 
 export default class Direction {
   start: Matter.Vector

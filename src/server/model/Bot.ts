@@ -228,32 +228,21 @@ export default class Bot extends Character {
   }
 
   getWanderWaypoint (): Waypoint | null {
-    console.log('getWanderWaypoint', this.feature.body.position)
     const visibleWaypointIds: number[] = []
     const visibleTimes = this.searchTimes.filter((time, index) => {
       const isVisible = this.isPointWallVisible({ point: Waypoint.waypoints[index].position })
-
-      if (isVisible) {
-        void new DebugLine({ start: this.feature.body.position, end: Waypoint.waypoints[index].position, color: 'yellow' })
-        visibleWaypointIds.push(Waypoint.waypoints[index].id)
-      }
-
+      if (isVisible) visibleWaypointIds.push(Waypoint.waypoints[index].id)
       return isVisible
     })
-    console.log('visibleWaypointIds', visibleWaypointIds)
 
     if (visibleTimes.length === 0) {
-      console.log('lose way')
       return this.loseWay()
     }
     const earlyTime = Math.min(...visibleTimes)
-    console.log('earlyTime test:', earlyTime)
     const earlyVisibleIds = visibleWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
     const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
     const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
     const earlyFarWaypoint = Waypoint.waypoints[earlyFarId]
-    void new DebugCircle({ x: earlyFarWaypoint.position.x, y: earlyFarWaypoint.position.y, color: 'yellow', radius: 10 })
-    console.log('earlyFarWaypoint.position test:', earlyFarWaypoint.id, earlyFarWaypoint.position)
     return earlyFarWaypoint
   }
 
