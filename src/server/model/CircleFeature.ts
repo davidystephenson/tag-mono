@@ -40,9 +40,13 @@ export default class CircleFeature extends Feature {
     radius: number
     obstacles: Matter.Body[]
   }): boolean {
-    const inRange = this.body.vertices.some(vertex => isPointInRange({
-      start: center, end: vertex, xRange: VISION.width, yRange: VISION.height
-    }))
+    const arrow = Matter.Vector.sub(center, this.body.position)
+    const direction = Matter.Vector.normalise(arrow)
+    const magnified = Matter.Vector.mult(direction, this.radius)
+    const closest = Matter.Vector.add(this.body.position, magnified)
+    const inRange = isPointInRange({
+      start: center, end: closest, xRange: VISION.width, yRange: VISION.height
+    })
     if (!inRange) return false
     return isPointVisionClear({
       start: center,

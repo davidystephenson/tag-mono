@@ -84,6 +84,7 @@ export default class Character extends Actor {
       start: this.feature.body.position,
       end,
       startVelocity: this.feature.body.velocity,
+      endVelocity: velocity,
       debugColor
     })
   }

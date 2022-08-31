@@ -26,7 +26,7 @@ export default class Direction {
     this.endVelocity = endVelocity
     this.vector = Matter.Vector.sub(end, start)
     this.distance = Matter.Vector.magnitude(this.vector)
-    const futureTime = this.distance / 2
+    const futureTime = this.distance * 2
     const futureEnd = Matter.Vector.add(end, Matter.Vector.mult(endVelocity, futureTime))
     const futureVector = Matter.Vector.sub(futureEnd, start)
     this.unitVector = Matter.Vector.normalise(futureVector)
