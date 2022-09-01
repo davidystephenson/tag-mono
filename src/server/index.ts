@@ -6,7 +6,7 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import { DEBUG_STEP_TIME, DEBUG_STEP_TIME_LIMIT, engine, runner } from './lib/engine'
+import { engine, runner } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
@@ -22,6 +22,7 @@ import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
 import { INITIAL_CORNER_BOTS, INITIAL_CENTER_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, MARGIN, INITIAL_BRICKS } from './lib/world'
+import { DEBUG } from './lib/debug'
 
 /* TO DO:
 Crates and Puppets Block Navigation Vision
@@ -68,7 +69,7 @@ async function updateClients (): Promise<void> {
       socket.emit('updateClient', message)
       */
     } else {
-      if (Bot.DEBUG_LOST) {
+      if (DEBUG.LOST) {
         Bot.lostPoints.forEach(point => {
           void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
         })
@@ -311,7 +312,7 @@ let warningCount = 0
 let warningDifferenceTotal = 0
 let initial = true
 Matter.Events.on(engine, 'afterUpdate', () => {
-  if (DEBUG_STEP_TIME) {
+  if (DEBUG.STEP_TIME) {
     const newTime = Date.now()
     const difference = newTime - oldTime
     if (initial) {
@@ -319,7 +320,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       initial = false
     }
 
-    if (difference >= DEBUG_STEP_TIME_LIMIT) {
+    if (difference >= DEBUG.STEP_TIME_LIMIT) {
       warningCount = warningCount + 1
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference

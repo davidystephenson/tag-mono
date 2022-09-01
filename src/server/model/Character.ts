@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
+import { DEBUG } from '../lib/debug'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
@@ -11,7 +12,6 @@ export default class Character extends Actor {
   static it?: Character
   static characters = new Map<number, Character>()
   static MAXIMUM_RADIUS = 15
-  static DEBUG_MAKE_IT = false
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
@@ -123,7 +123,7 @@ export default class Character extends Actor {
   }
 
   makeIt (): void {
-    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
+    if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }

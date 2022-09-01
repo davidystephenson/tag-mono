@@ -7,11 +7,9 @@ import DebugLabel from '../../shared/DebugLabel'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 import Controls, { Control, controlValues } from '../../shared/controls'
+import { DEBUG } from '../lib/debug'
 
 export default class Player extends Character {
-  static DEBUG_POSITION = false
-  static DEBUG_SPEED = false
-  static DEBUG_CLEAR_WAYPOINTS = false
   static OBSERVER = false
   static players = new Map<string, Player>()
   readonly socket: Socket
@@ -60,7 +58,7 @@ export default class Player extends Character {
 
   act (): void {
     super.act()
-    if (Player.DEBUG_CLEAR_WAYPOINTS) {
+    if (DEBUG.CLEAR_WAYPOINTS) {
       const visible = Waypoint.waypoints.filter(waypoint => {
         return Wall.isPointOpen({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
       })
@@ -68,10 +66,10 @@ export default class Player extends Character {
         void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'black' })
       })
     }
-    if (Player.DEBUG_POSITION) {
+    if (DEBUG.POSITION) {
       console.log('player position', this.feature.body.position)
     }
-    if (Player.DEBUG_SPEED) {
+    if (DEBUG.SPEED) {
       console.log('player speed', this.feature.body.speed)
     }
   }
