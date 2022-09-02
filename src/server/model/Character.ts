@@ -12,6 +12,7 @@ export default class Character extends Actor {
   static it?: Character
   static characters = new Map<number, Character>()
   static MAXIMUM_RADIUS = 15
+  static MARGIN = Character.MAXIMUM_RADIUS + 1
   readonly radius: number
   force = 0.0001
   controls = new Input().controls

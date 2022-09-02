@@ -24,7 +24,7 @@ export default class Actor {
   }
 
   dent (): void {
-    this.health = this.health - 0.01
+    this.health = this.health - 0.0001
     if (this.health <= 0) {
       this.destroy()
     } else {

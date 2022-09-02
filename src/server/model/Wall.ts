@@ -1,7 +1,8 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { isPointClear, isPointOpen, isPointVisionClear } from '../lib/raycast'
-import { MARGIN } from '../lib/world'
+import Bot from './Bot'
+import Character from './Character'
 import RectangleFeature from './RectangleFeature'
 import Waypoint from './Waypoint'
 
@@ -73,10 +74,10 @@ export default class Wall extends RectangleFeature {
     this.rightSide = this.x + this.halfWidth
     this.topSide = this.y - this.halfHeight
     this.bottomSide = this.y + this.halfHeight
-    this.leftMargin = this.leftSide - MARGIN
-    this.rightMargin = this.rightSide + MARGIN
-    this.topMargin = this.topSide - MARGIN
-    this.bottomMargin = this.bottomSide + MARGIN
+    this.leftMargin = this.leftSide - Character.MARGIN
+    this.rightMargin = this.rightSide + Character.MARGIN
+    this.topMargin = this.topSide - Character.MARGIN
+    this.bottomMargin = this.bottomSide + Character.MARGIN
     Matter.Body.setStatic(this.body, true)
     Wall.walls.push(this)
     Wall.wallObstacles.push(this.body)
@@ -128,6 +129,13 @@ export default class Wall extends RectangleFeature {
         }
       }
     }
+  }
+
+  initialBots (): void {
+    void new Bot({ x: this.leftMargin, y: this.topMargin })
+    void new Bot({ x: this.leftMargin, y: this.bottomMargin })
+    void new Bot({ x: this.rightMargin, y: this.topMargin })
+    void new Bot({ x: this.rightMargin, y: this.bottomMargin })
   }
 
   isVisible ({ center, radius }: {

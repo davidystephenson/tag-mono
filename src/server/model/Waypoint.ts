@@ -1,5 +1,4 @@
 import Matter, { Vector } from 'matter-js'
-import { MARGIN } from '../lib/world'
 import Character from './Character'
 import Wall from './Wall'
 
@@ -39,7 +38,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < MARGIN - 1) {
+          if (cornerMagnitude < Character.MARGIN - 1) {
             return true
           }
         }
@@ -49,7 +48,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < MARGIN - 1) {
+          if (cornerMagnitude < Character.MARGIN - 1) {
             return true
           }
         }
@@ -59,7 +58,7 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < MARGIN - 1) {
+          if (cornerMagnitude < Character.MARGIN - 1) {
             return true
           }
         }
@@ -69,13 +68,13 @@ export default class Waypoint {
           const cornerPosition = { x: cornerX, y: cornerY }
           const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
           const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
-          if (cornerMagnitude < MARGIN - 1) {
+          if (cornerMagnitude < Character.MARGIN - 1) {
             return true
           }
         }
       } else {
-        const xBuffer = wall.halfWidth + MARGIN - 1
-        const yBuffer = wall.halfHeight + MARGIN - 1
+        const xBuffer = wall.halfWidth + Character.MARGIN - 1
+        const yBuffer = wall.halfHeight + Character.MARGIN - 1
         if (dX < xBuffer && dY < yBuffer) {
           return true
         }

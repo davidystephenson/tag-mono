@@ -21,7 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
-import { INITIAL_CORNER_BOTS, INITIAL_CENTER_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, MARGIN, INITIAL_BRICKS } from './lib/world'
+import { INITIAL_CORNER_BOTS, INITIAL_CENTER_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, INITIAL_BRICKS, WORLD_SIZE, WORLD_MARGIN, INITIAL_MIDPOINT_BOTS } from './lib/world'
 import { DEBUG } from './lib/debug'
 
 /* TO DO:
@@ -101,13 +101,12 @@ io.on('connection', socket => {
   })
 })
 
-const MAP_SIZE = 3000
-const WALL_SIZE = MAP_SIZE * 3
+const WALL_SIZE = WORLD_SIZE * 3
 const wallProps = [
-  { x: 0, y: MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
-  { x: 0, y: -MAP_SIZE, width: WALL_SIZE, height: MAP_SIZE },
-  { x: MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE },
-  { x: -MAP_SIZE, y: 0, width: MAP_SIZE, height: WALL_SIZE }
+  { x: 0, y: WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
+  { x: 0, y: -WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
+  { x: WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE },
+  { x: -WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE }
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
@@ -137,8 +136,8 @@ void new Wall({ x: -800, y: 1300, width: 400, height: 200 })
 void new Wall({ x: 300, y: 1300, width: 800, height: 200 })
 void new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
 
-const EDGE_PADDING = MARGIN
-const innerSize = MAP_SIZE - EDGE_PADDING * 2
+const EDGE_PADDING = Character.MARGIN
+const innerSize = WORLD_SIZE - EDGE_PADDING * 2
 let xFactor = 2
 let xSegment = innerSize / xFactor
 while (xSegment > VISION_INNER_WIDTH) {
@@ -181,11 +180,6 @@ Waypoint.waypoints.forEach(waypoint => {
 console.log('navigation complete')
 
 if (INITIAL_BRICKS) {
-  void new Brick({ x: 200, y: -1200, height: 500, width: 10 })
-  void new Brick({ x: -0, y: -900, height: 300, width: 100 })
-  void new Brick({ x: -800, y: -800, height: 10, width: 200 })
-  void new Brick({ x: -800, y: -200, height: 300, width: 10 })
-  void new Brick({ x: -500, y: -200, height: 300, width: 100 })
   void new Brick({ x: -30, y: -30, height: 20, width: 20 })
   void new Brick({ x: 30, y: -30, height: 20, width: 20 })
   void new Brick({ x: 0, y: -30, height: 20, width: 20 })
@@ -224,26 +218,6 @@ if (INITIAL_BRICKS) {
 }
 
 if (INITIAL_PUPPETS) {
-  void new Puppet({
-    x: -685,
-    y: -1110,
-    vertices: [
-      { x: 0, y: 50 },
-      { x: -50, y: -50 },
-      { x: 50, y: -50 }
-    ]
-  })
-  void new Puppet({
-    x: 1400,
-    y: -1425,
-    vertices: [
-      { x: 0, y: 20 },
-      { x: -20, y: -20 },
-      { x: 20, y: -20 }
-    ],
-    direction: EAST_VECTOR,
-    force: 0.0
-  })
   void new Puppet({
     x: 750,
     y: 750,
@@ -298,11 +272,22 @@ if (INITIAL_WAYPOINT_BOTS) {
   })
 }
 if (INITIAL_CORNER_BOTS) {
-  void new Bot({ x: -1485, y: -1485 })
-  void new Bot({ x: 1485, y: -1485 })
-  void new Bot({ x: -1485, y: 1485 })
-  void new Bot({ x: 1485, y: 1485 })
+  void new Bot({ x: -WORLD_MARGIN, y: -WORLD_MARGIN })
+  void new Bot({ x: WORLD_MARGIN, y: -WORLD_MARGIN })
+  void new Bot({ x: -WORLD_MARGIN, y: WORLD_MARGIN })
+  void new Bot({ x: WORLD_MARGIN, y: WORLD_MARGIN })
 }
+if (INITIAL_MIDPOINT_BOTS) {
+  void new Bot({ x: 0, y: -WORLD_MARGIN })
+  void new Bot({ x: WORLD_MARGIN, y: 0 })
+  void new Bot({ x: 0, y: WORLD_MARGIN })
+  void new Bot({ x: -WORLD_MARGIN, y: 0 })
+}
+PIT.initialBots()
+MANSION.initialBots()
+FORT.initialBots()
+PRECINCT.initialBots()
+CANDLESTICK.initialBots()
 
 Matter.Runner.run(runner, engine)
 
