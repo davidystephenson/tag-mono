@@ -1,6 +1,9 @@
 export const DEBUG = {
+  BOT_CIRCLES: true,
   CHASE: true,
   CLEAR_WAYPOINTS: false,
+  COLLISON: true,
+  IS_CLEAR: false,
   IT_CHOICE: false,
   LOST: false,
   MAKE_IT: false,

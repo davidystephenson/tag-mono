@@ -35,7 +35,7 @@ export default class Bot extends Character {
   }
 
   act (): void {
-    if (DebugCircle.BOT_POSITION) {
+    if (DEBUG.BOT_CIRCLES) {
       const debugColor = Character.it === this ? 'red' : 'white'
       void new DebugCircle({
         x: this.feature.body.position.x,
