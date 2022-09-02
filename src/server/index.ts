@@ -21,7 +21,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Puppet from './model/Puppet'
 import { EAST_VECTOR, WEST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR } from './lib/directions'
 import Brick from './model/Brick'
-import { INITIAL_CORNER_BOTS, INITIAL_CENTER_BOT, INITIAL_WAYPOINT_BOTS, INITIAL_PUPPETS, INITIAL_BRICKS, WORLD_SIZE, WORLD_MARGIN, INITIAL_MIDPOINT_BOTS } from './lib/world'
+import { INITIAL, WORLD_MARGIN, WORLD_SIZE } from './lib/world'
 import { DEBUG } from './lib/debug'
 
 /* TO DO:
@@ -179,7 +179,7 @@ Waypoint.waypoints.forEach(waypoint => {
 
 console.log('navigation complete')
 
-if (INITIAL_BRICKS) {
+if (INITIAL.BRICKS) {
   void new Brick({ x: -30, y: -30, height: 20, width: 20 })
   void new Brick({ x: 30, y: -30, height: 20, width: 20 })
   void new Brick({ x: 0, y: -30, height: 20, width: 20 })
@@ -217,7 +217,7 @@ if (INITIAL_BRICKS) {
   void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
 }
 
-if (INITIAL_PUPPETS) {
+if (INITIAL.PUPPETS) {
   void new Puppet({
     x: 750,
     y: 750,
@@ -263,21 +263,21 @@ if (INITIAL_PUPPETS) {
   })
 }
 
-if (INITIAL_CENTER_BOT) {
+if (INITIAL.CENTER_BOT) {
   void new Bot({ x: 100, y: -100 })
 }
-if (INITIAL_WAYPOINT_BOTS) {
+if (INITIAL.WAYPOINT_BOTS) {
   Waypoint.waypoints.forEach(waypoint => {
     void new Bot({ x: waypoint.x, y: waypoint.y })
   })
 }
-if (INITIAL_CORNER_BOTS) {
+if (INITIAL.CORNER_BOTS) {
   void new Bot({ x: -WORLD_MARGIN, y: -WORLD_MARGIN })
   void new Bot({ x: WORLD_MARGIN, y: -WORLD_MARGIN })
   void new Bot({ x: -WORLD_MARGIN, y: WORLD_MARGIN })
   void new Bot({ x: WORLD_MARGIN, y: WORLD_MARGIN })
 }
-if (INITIAL_MIDPOINT_BOTS) {
+if (INITIAL.MIDPOINT_BOTS) {
   void new Bot({ x: 0, y: -WORLD_MARGIN })
   void new Bot({ x: WORLD_MARGIN, y: 0 })
   void new Bot({ x: 0, y: WORLD_MARGIN })

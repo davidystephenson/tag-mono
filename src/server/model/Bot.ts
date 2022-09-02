@@ -14,13 +14,14 @@ import { DEBUG } from '../lib/debug'
 
 export default class Bot extends Character {
   static oldest: Bot
-  static WANDER_TIME = 5000
+  static TIME_LIMIT = 5000
   static lostPoints: Matter.Vector[] = []
   static botCount = 0
+  searchPoint?: Matter.Vector
   searchTimes: number[] = []
   path: Matter.Vector[] = []
-  searchPoint?: Matter.Vector
-  wanderTime?: number
+  pathTime?: number
+  unblocking = false
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -40,7 +41,7 @@ export default class Bot extends Character {
       void new DebugCircle({
         x: this.feature.body.position.x,
         y: this.feature.body.position.y,
-        radius: 10,
+        radius: 5,
         color: debugColor
       })
     }
@@ -63,32 +64,14 @@ export default class Bot extends Character {
     if (Character.it == null) {
       return null
     }
-    const isNotIt = Character.it !== this
-    if (isNotIt) {
-      const itVisible = this.isFeatureVisible(Character.it.feature)
-      if (itVisible) {
-        this.blocked = this.isBlocked()
-        if (this.wanderTime != null) {
-          this.path = []
-          this.wanderTime = undefined
-        }
-      } else {
-        this.blocked = false
-      }
-      if (this.isBored()) {
-        this.wanderTime = undefined
-        if (this.blocked) {
-          return this.unblock()
-        } else if (itVisible) {
-          return this.flee()
-        } else {
-          return this.wander(DEBUG.NOT_IT_CHOICE)
-        }
-      }
-    } else { // Character.it === this
+    const isIt = Character.it === this
+    const itVisible = !isIt && this.isFeatureVisible(Character.it.feature)
+    this.blocked = itVisible && this.isBlocked()
+    const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
+    if (isIt) {
       const visibleCharacters = this.getVisibleCharacters()
       if (visibleCharacters.length > 0) {
-        this.wanderTime = undefined
+        this.losePath()
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
@@ -96,14 +79,20 @@ export default class Bot extends Character {
         this.path = [point]
         const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
-      } else if (this.isBored()) {
-        this.wanderTime = undefined
-        return this.wander(DEBUG.IT_CHOICE)
       }
+      return this.followPath(DEBUG.IT_CHOICE)
+    } else if ((itVisible && !this.unblocking) || this.isBored()) {
+      this.losePath()
+      if (this.blocked) {
+        return this.unblock()
+      } else if (itVisible) {
+        return this.flee()
+      } else {
+        return this.wander(debug)
+      }
+    } else {
+      return this.followPath(debug)
     }
-
-    const debug = isNotIt ? DEBUG.NOT_IT_CHOICE : DEBUG.IT_CHOICE
-    return this.followPath(debug)
   }
 
   followPath (debug?: boolean): Direction | null {
@@ -152,6 +141,19 @@ export default class Bot extends Character {
     return getDistance(this.feature.body.position, point)
   }
 
+  getNewPathDirection (props?: {
+    itVisible?: boolean
+  }): Direction | null {
+    this.losePath()
+    if (this.blocked) {
+      return this.unblock()
+    } else if (props?.itVisible === true) {
+      return this.flee()
+    } else {
+      return this.wander(DEBUG.NOT_IT_CHOICE)
+    }
+  }
+
   getTarget ({ path }: { path: Matter.Vector[] }): Matter.Vector | undefined {
     return path.find(point => this.isPointReachable({ point }))
   }
@@ -168,13 +170,7 @@ export default class Bot extends Character {
       return !isClose
     })
     if (far.length === 0) {
-      if (DEBUG.LOST) {
-        Player.players.forEach(player => {
-          void new DebugLine({ start: player.feature.body.position, end: this.feature.body.position, color: 'yellow' })
-        })
-        Bot.lostPoints.push(vectorToPoint(this.feature.body.position))
-      }
-      return this.feature.body.position
+      return this.loseWay()
     }
     if (Character.it == null || Character.it === this) {
       throw new Error('No it to unblock from')
@@ -232,7 +228,7 @@ export default class Bot extends Character {
   isBored (): boolean {
     if (this.path.length === 0) return true
     if (this.isPointClose({ point: this.path[0], limit: 15 })) return true
-    if (this.wanderTime != null && Date.now() - this.wanderTime > Bot.WANDER_TIME) return true
+    if (this.isStuck()) return true
     return false
   }
 
@@ -301,9 +297,19 @@ export default class Bot extends Character {
     return shown
   }
 
+  isStuck (): boolean {
+    return this.pathTime != null && Date.now() - this.pathTime > Bot.TIME_LIMIT
+  }
+
   loseIt (): void {
     super.loseIt()
     this.path = []
+  }
+
+  losePath (): void {
+    this.path = []
+    this.pathTime = undefined
+    this.unblocking = false
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
@@ -408,6 +414,7 @@ export default class Bot extends Character {
     //   })
     // }
     this.path = []
+    this.blocked = false
   }
 
   pathfind ({ goal }: {
@@ -466,13 +473,14 @@ export default class Bot extends Character {
     if (unblockPoint == null) {
       return this.flee()
     }
+    this.unblocking = true
     this.path = [unblockPoint]
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'black' : undefined
     return this.getDirection({ end: this.path[0], debugColor })
   }
 
   wander (debug = DEBUG.WANDER): Direction | null {
-    this.wanderTime = Date.now()
+    this.pathTime = Date.now()
     const debugColor = debug ? 'tan' : undefined
     const waypoint = this.getWanderWaypoint()
     if (waypoint == null) {
