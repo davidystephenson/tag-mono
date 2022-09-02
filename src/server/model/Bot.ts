@@ -236,6 +236,31 @@ export default class Bot extends Character {
     return false
   }
 
+  isCircleWallShown ({
+    point,
+    radius = this.radius,
+    debug
+  }: {
+    point: Matter.Vector
+    radius?: number
+    debug?: boolean
+  }): boolean {
+    return Wall.isCircleShown({
+      start: this.feature.body.position,
+      end: point,
+      startRadius: this.radius,
+      endRadius: radius,
+      debug
+    })
+  }
+
+  isCircleWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    const inRange = this.isPointInRange(point)
+    if (!inRange) return false
+    const clear = this.isCircleWallShown({ point, debug })
+    return clear
+  }
+
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
     const distance = this.getDistance(point)
     const close = distance < limit
@@ -265,29 +290,15 @@ export default class Bot extends Character {
     return Wall.isPointOpen({ start: this.feature.body.position, end: point, radius: this.radius, debug })
   }
 
-  isPointWallVisionClear ({
-    point,
-    radius = this.radius,
-    debug
-  }: {
-    point: Matter.Vector
-    radius?: number
-    debug?: boolean
-  }): boolean {
-    return Wall.isPointVisionClear({
-      start: this.feature.body.position,
-      end: point,
-      startRadius: this.radius,
-      endRadius: radius,
-      debug
-    })
+  isPointWallShown ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return Wall.isPointShown({ start: this.feature.body.position, radius: this.radius, end: point, debug })
   }
 
   isPointWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     const inRange = this.isPointInRange(point)
     if (!inRange) return false
-    const clear = this.isPointWallVisionClear({ point, debug })
-    return clear
+    const shown = this.isPointWallShown({ point, debug })
+    return shown
   }
 
   loseIt (): void {

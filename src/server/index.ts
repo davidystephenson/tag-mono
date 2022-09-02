@@ -169,8 +169,8 @@ console.log('setting paths...')
 Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
 console.log('debugging waypoints...')
 Waypoint.waypoints.forEach(waypoint => {
-  if (DebugLabel.WAYPOINTS) {
-    const y = DebugCircle.WAYPOINTS ? waypoint.y + 50 : waypoint.y
+  if (DEBUG.WAYPOINT_LABELS) {
+    const y = DEBUG.WAYPOINT_CIRCLES ? waypoint.y + 50 : waypoint.y
     void new DebugLabel({
       x: waypoint.x, y, text: String(waypoint.id), color: 'white'
     })
@@ -283,11 +283,11 @@ if (INITIAL_MIDPOINT_BOTS) {
   void new Bot({ x: 0, y: WORLD_MARGIN })
   void new Bot({ x: -WORLD_MARGIN, y: 0 })
 }
-PIT.initialBots()
-MANSION.initialBots()
-FORT.initialBots()
-PRECINCT.initialBots()
-CANDLESTICK.initialBots()
+// PIT.initialBots()
+// MANSION.initialBots()
+// FORT.initialBots()
+// PRECINCT.initialBots()
+// CANDLESTICK.initialBots()
 
 Matter.Runner.run(runner, engine)
 
@@ -318,7 +318,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
   runner.enabled = !Actor.paused
   DebugLine.lines = []
   DebugCircle.circles = []
-  if (DebugCircle.WAYPOINTS) {
+  if (DEBUG.WAYPOINT_CIRCLES) {
     Waypoint.waypoints.forEach(waypoint => {
       void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
     })

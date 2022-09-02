@@ -141,12 +141,14 @@ export function getPerpendicular ({ start, end, radius }: {
   return perpendicularVector
 }
 
-export function getPerpendicularSides ({ point, perpendicular }: {
+export function getPerpendicularSides ({ point, perpendicular, reverse }: {
   point: Matter.Vector
   perpendicular: Matter.Vector
+  reverse?: boolean
 }): [Matter.Vector, Matter.Vector] {
   const leftSide = Matter.Vector.add(point, perpendicular)
   const rightSide = Matter.Vector.sub(point, perpendicular)
+  if (reverse === true) return [rightSide, leftSide]
   return [leftSide, rightSide]
 }
 

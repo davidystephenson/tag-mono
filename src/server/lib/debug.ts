@@ -10,5 +10,7 @@ export const DEBUG = {
   SPEED: false,
   STEP_TIME: true,
   STEP_TIME_LIMIT: 35,
-  WANDER: false
+  WANDER: false,
+  WAYPOINT_CIRCLES: true,
+  WAYPOINT_LABELS: true
 }

@@ -124,7 +124,25 @@ export function isEveryStartClear ({ starts, end, obstacles, debug }: {
   return casterPointClear({ starts, end, obstacles, caster: isEveryCastClear, debug })
 }
 
-export function getSideCasts ({ start, end, startRadius, endRadius }: {
+export function getSideCasts ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): Matter.Vector[][] {
+  const startPerpendicular = getPerpendicular({
+    start, end, radius: radius - 1
+  })
+  const [leftStart, rightStart] = getPerpendicularSides({
+    point: start, perpendicular: startPerpendicular
+  })
+  const left = [leftStart, end]
+  const right = [rightStart, end]
+  const casts = [left, right]
+
+  return casts
+}
+
+export function getCircleCasts ({ start, end, startRadius, endRadius }: {
   start: Matter.Vector
   end: Matter.Vector
   startRadius: number
@@ -158,14 +176,28 @@ export function isPointOpen ({
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const casts = getSideCasts({
+  const casts = getCircleCasts({
     start, end, startRadius: radius, endRadius: radius
   })
 
   return isEveryCastClear({ casts, obstacles, debug })
 }
 
-export function isPointVisionClear ({
+export function isPointShown ({ debug, end, obstacles, radius, start }: {
+  debug?: boolean
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+  radius: number
+  start: Matter.Vector
+}): boolean {
+  const sideCasts = getSideCasts({ start, end, radius })
+  const center = [start, end]
+  const casts = [center, ...sideCasts]
+
+  return isSomeCastClear({ casts, obstacles, debug })
+}
+
+export function isCircleShown ({
   start, end, startRadius, endRadius, debug, obstacles
 }: {
   start: Matter.Vector
@@ -175,7 +207,7 @@ export function isPointVisionClear ({
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const sideCasts = getSideCasts({
+  const sideCasts = getCircleCasts({
     start, end, startRadius, endRadius
   })
   const center = [start, end]

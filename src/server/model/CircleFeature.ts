@@ -46,7 +46,7 @@ export default class CircleFeature extends Feature {
       start: center, end: closest, xRange: VISION.width, yRange: VISION.height
     })
     if (!inRange) return false
-    return Feature.isPointVisionClear({
+    return Feature.isCircleShown({
       start: center,
       end: this.body.position,
       startRadius: radius,

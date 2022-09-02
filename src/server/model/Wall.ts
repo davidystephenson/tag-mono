@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { isPointClear, isPointOpen, isPointVisionClear } from '../lib/raycast'
+import { isCircleShown, isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Bot from './Bot'
 import Character from './Character'
 import RectangleFeature from './RectangleFeature'
@@ -28,14 +28,25 @@ export default class Wall extends RectangleFeature {
     })
   }
 
-  static isPointVisionClear ({ start, end, startRadius, endRadius, debug }: {
+  static isPointShown ({ start, end, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    debug?: boolean
+  }): boolean {
+    return isPointShown({
+      start, end, radius, obstacles: Wall.wallObstacles, debug
+    })
+  }
+
+  static isCircleShown ({ start, end, startRadius, endRadius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     startRadius: number
     endRadius: number
     debug?: boolean
   }): boolean {
-    return isPointVisionClear({
+    return isCircleShown({
       start, end, startRadius, endRadius, obstacles: Wall.wallObstacles, debug
     })
   }

@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
-import { isPointClear, isPointOpen, isPointVisionClear } from '../lib/raycast'
+import { isPointClear, isPointOpen, isCircleShown, isPointShown } from '../lib/raycast'
 import Actor from './Actor'
 
 export default class Feature {
@@ -25,14 +25,25 @@ export default class Feature {
     })
   }
 
-  static isPointVisionClear ({ start, end, startRadius, endRadius, debug }: {
+  static isPointShown ({ start, end, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    debug?: boolean
+  }): boolean {
+    return isPointShown({
+      start, end, radius, obstacles: Feature.obstacles, debug
+    })
+  }
+
+  static isCircleShown ({ start, end, startRadius, endRadius, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     startRadius: number
     endRadius: number
     debug?: boolean
   }): boolean {
-    return isPointVisionClear({
+    return isCircleShown({
       start, end, startRadius, endRadius, obstacles: Feature.obstacles, debug
     })
   }
