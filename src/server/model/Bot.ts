@@ -146,7 +146,6 @@ export default class Bot extends Character {
   }
 
   getUnblockPoint (): Matter.Vector | null {
-    console.log('this.unblockTries', this.unblockTries)
     const eligible = Waypoint.waypoints.filter(waypoint => {
       const tried = this.unblockTries?.[waypoint.id] === true
       if (tried) {
@@ -155,7 +154,6 @@ export default class Bot extends Character {
       const reachable = this.isPointReachable({ point: waypoint.position })
       return reachable
     })
-    console.log('eligible', eligible.map(waypoint => waypoint.id))
     if (eligible.length === 0) return this.loseWay()
     const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
     if (far.length === 0) return this.loseWay()
