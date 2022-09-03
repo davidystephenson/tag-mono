@@ -82,7 +82,7 @@ export default class Character extends Actor {
     super.destroy()
     Character.characters.delete(this.feature.body.id)
     if (this.pursuer != null) {
-      this.pursuer.path = []
+      this.pursuer.setPath()
     }
   }
 

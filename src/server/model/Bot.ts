@@ -22,6 +22,7 @@ export default class Bot extends Character {
   pathTime?: number
   unblockTries?: Record<number, boolean>
   unblocking = false
+  alertTime?: number
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -72,20 +73,16 @@ export default class Bot extends Character {
     if (isIt) {
       const visibleCharacters = this.getVisibleCharacters()
       if (visibleCharacters.length > 0) {
-        this.losePath()
-        this.pathTime = Date.now()
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
-        this.path = [point]
+        this.setPath({ path: [point] })
         const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
       }
     }
     if ((itVisible && !this.unblocking) || this.isBored()) {
-      this.losePath()
-      this.pathTime = Date.now()
       if (this.blocked) {
         return this.unblock()
       } else if (itVisible) {
@@ -119,7 +116,7 @@ export default class Bot extends Character {
   }
 
   flee (): Direction {
-    this.path = []
+    this.setPath()
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
     if (Character.it == null) {
       throw new Error('Fleeing from no one')
@@ -283,12 +280,12 @@ export default class Bot extends Character {
 
   loseIt (): void {
     super.loseIt()
-    this.losePath()
+    this.setPath()
   }
 
-  losePath (): void {
-    this.path = []
-    this.pathTime = undefined
+  setPath (props?: { path?: Matter.Vector[] }): void {
+    this.path = props?.path ?? []
+    this.pathTime = props?.path == null ? undefined : Date.now()
     this.unblocking = false
   }
 
@@ -393,7 +390,7 @@ export default class Bot extends Character {
     //     ]
     //   })
     // }
-    this.losePath()
+    this.setPath()
     this.blocked = false
   }
 
@@ -454,7 +451,7 @@ export default class Bot extends Character {
       return this.flee()
     }
     this.unblocking = true
-    this.path = [unblockPoint]
+    this.setPath({ path: [unblockPoint] })
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'black' : undefined
     return this.getDirection({ end: this.path[0], debugColor })
   }
@@ -463,12 +460,11 @@ export default class Bot extends Character {
     const debugColor = debug ? 'tan' : undefined
     const waypoint = this.getWanderWaypoint()
     if (waypoint == null) {
-      this.path = []
       return null
     }
 
     this.searchTimes[waypoint.id] = Date.now()
-    this.path = [waypoint.position]
+    this.setPath({ path: [waypoint.position] })
     return this.getDirection({ end: this.path[0], debugColor })
   }
 
