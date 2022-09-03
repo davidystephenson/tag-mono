@@ -42,7 +42,7 @@ export default class Bot extends Character {
       void new DebugCircle({
         x: this.feature.body.position.x,
         y: this.feature.body.position.y,
-        radius: 5,
+        radius: 10,
         color: debugColor
       })
     }
@@ -450,8 +450,8 @@ export default class Bot extends Character {
     if (unblockPoint == null) {
       return this.flee()
     }
-    this.unblocking = true
     this.setPath({ path: [unblockPoint] })
+    this.unblocking = true
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'black' : undefined
     return this.getDirection({ end: this.path[0], debugColor })
   }

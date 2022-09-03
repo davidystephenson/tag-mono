@@ -110,7 +110,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1200 })
+export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
 export const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5 })
 export const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
 export const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
