@@ -9,15 +9,16 @@ export default class PolygonFeature extends Feature {
     center: Matter.Vector
     radius: number
   }): boolean {
-    const inRange = this
-      .body
-      .vertices
-      .some(vertex => isPointInVisionRange({
-        start: center, end: vertex
-      }))
-    if (!inRange) return false
-    const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
-    const otherObstacles = Feature.obstacles.filter(obstacle => this.body.id !== obstacle.id)
-    return this.body.vertices.some(vertex => isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherObstacles }))
+    return true
+    // const inRange = this
+    //   .body
+    //   .vertices
+    //   .some(vertex => isPointInVisionRange({
+    //     start: center, end: vertex
+    //   }))
+    // if (!inRange) return false
+    // const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
+    // const otherObstacles = Feature.obstacles.filter(obstacle => this.body.id !== obstacle.id)
+    // return this.body.vertices.some(vertex => isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherObstacles }))
   }
 }

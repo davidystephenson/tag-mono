@@ -266,7 +266,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: 100, y: -100 })
+  void new Bot({ x: 0, y: 1150 })
 }
 if (INITIAL.WAYPOINT_BOTS) {
   Waypoint.waypoints.forEach(waypoint => {
