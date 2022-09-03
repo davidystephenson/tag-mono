@@ -7,7 +7,7 @@ export const INITIAL = {
   MAZE_BOTS: false,
   MIDPOINT_BOTS: true,
   PUPPETS: false,
-  WAYPOINT_BOTS: true
+  WAYPOINT_BOTS: false
 }
 export const WORLD_SIZE = 3000
 export const HALF_WORLD_SIZE = WORLD_SIZE / 2
