@@ -1,5 +1,5 @@
 export const DEBUG = {
-  BOT_CIRCLES: true,
+  BOT_CIRCLES: false,
   CHASE: true,
   CLEAR_WAYPOINTS: false,
   COLLISON: false,
@@ -7,7 +7,7 @@ export const DEBUG = {
   IT_CHOICE: false,
   LOST: false,
   MAKE_IT: false,
-  NOT_IT_CHOICE: false,
+  NOT_IT_CHOICE: true,
   PATHING: false,
   POSITION: false,
   SPEED: false,
@@ -15,5 +15,5 @@ export const DEBUG = {
   STEP_TIME_LIMIT: 35,
   WANDER: false,
   WAYPOINT_CIRCLES: false,
-  WAYPOINT_LABELS: false
+  WAYPOINT_LABELS: true
 }

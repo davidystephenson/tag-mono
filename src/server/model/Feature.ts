@@ -63,7 +63,7 @@ export default class Feature {
     this.body.render.strokeStyle = color
     this.isObstacle = isObstacle
     Matter.Composite.add(engine.world, this.body)
-    this.body.restitution = 1
+    this.body.restitution = 0
     this.body.friction = 0
     this.body.frictionAir = 0.01
     Matter.Body.setDensity(this.body, density)

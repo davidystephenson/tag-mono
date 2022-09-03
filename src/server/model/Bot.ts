@@ -8,7 +8,7 @@ import DebugCircle from '../../shared/DebugCircle'
 import VISION, { } from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Direction from './Direction'
-import { getAnglePercentage, getAnglePercentageDifference, whichMax, whichMin } from '../lib/math'
+import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
 
@@ -17,10 +17,10 @@ export default class Bot extends Character {
   static TIME_LIMIT = 5000
   static lostPoints: Matter.Vector[] = []
   static botCount = 0
-  searchPoint?: Matter.Vector
   searchTimes: number[] = []
   path: Matter.Vector[] = []
   pathTime?: number
+  unblockTries?: Record<number, boolean>
   unblocking = false
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
@@ -66,12 +66,14 @@ export default class Bot extends Character {
     }
     const isIt = Character.it === this
     const itVisible = !isIt && this.isFeatureVisible(Character.it.feature)
+    if (!itVisible) this.unblockTries = undefined
     this.blocked = itVisible && this.isBlocked()
     const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
     if (isIt) {
       const visibleCharacters = this.getVisibleCharacters()
       if (visibleCharacters.length > 0) {
         this.losePath()
+        this.pathTime = Date.now()
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
@@ -80,31 +82,29 @@ export default class Bot extends Character {
         const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
       }
-      return this.followPath(DEBUG.IT_CHOICE)
-    } else if ((itVisible && !this.unblocking) || this.isBored()) {
+    }
+    if ((itVisible && !this.unblocking) || this.isBored()) {
       this.losePath()
+      this.pathTime = Date.now()
       if (this.blocked) {
         return this.unblock()
       } else if (itVisible) {
         return this.flee()
       } else {
-        return this.wander(debug)
+        return this.wander()
       }
-    } else {
-      return this.followPath(debug)
     }
+    return this.followPath(debug)
   }
 
   followPath (debug?: boolean): Direction | null {
     const debugging = debug === true || DEBUG.PATHING
     if (debugging) {
-      const lastIndex = this.path.length - 1
-      void new DebugLine({ start: this.feature.body.position, end: this.path[lastIndex], color: 'purple' })
-      this.path.slice(0, lastIndex).forEach((point, i) => {
-        if (this.path != null) {
-          void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
-        }
+      const originIndex = this.path.length - 1
+      this.path.slice(0, originIndex).forEach((point, i) => {
+        void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
       })
+      void new DebugCircle({ x: this.path[0].x, y: this.path[0].y, radius: 10, color: 'purple' })
     }
     const target = this.getTarget({ path: this.path })
     if (target == null) {
@@ -141,56 +141,36 @@ export default class Bot extends Character {
     return getDistance(this.feature.body.position, point)
   }
 
-  getNewPathDirection (props?: {
-    itVisible?: boolean
-  }): Direction | null {
-    this.losePath()
-    if (this.blocked) {
-      return this.unblock()
-    } else if (props?.itVisible === true) {
-      return this.flee()
-    } else {
-      return this.wander(DEBUG.NOT_IT_CHOICE)
-    }
-  }
-
   getTarget ({ path }: { path: Matter.Vector[] }): Matter.Vector | undefined {
     return path.find(point => this.isPointReachable({ point }))
   }
 
   getUnblockPoint (): Matter.Vector | null {
-    const reachable = Waypoint.waypoints.filter(waypoint => {
-      return this.isPointReachable({ point: waypoint.position })
+    console.log('this.unblockTries', this.unblockTries)
+    const eligible = Waypoint.waypoints.filter(waypoint => {
+      const tried = this.unblockTries?.[waypoint.id] === true
+      if (tried) {
+        return false
+      }
+      const reachable = this.isPointReachable({ point: waypoint.position })
+      return reachable
     })
-    if (reachable.length === 0) {
-      return this.loseWay()
-    }
-    const far = reachable.filter(waypoint => {
-      const isClose = this.isPointClose({ point: waypoint.position, limit: 45 })
-      return !isClose
-    })
-    if (far.length === 0) {
-      return this.loseWay()
-    }
+    console.log('eligible', eligible.map(waypoint => waypoint.id))
+    if (eligible.length === 0) return this.loseWay()
+    const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
+    if (far.length === 0) return this.loseWay()
     if (Character.it == null || Character.it === this) {
       throw new Error('No it to unblock from')
     }
-    const itAngle = getAnglePercentage(this.feature.body.position, Character.it.feature.body.position)
-
-    const mostDifferent = far.reduce((mostDifferent, waypoint) => {
-      const angle = getAnglePercentage(this.feature.body.position, waypoint.position)
-      const difference = getAnglePercentageDifference(angle, itAngle)
-      if (difference > mostDifferent.difference) {
-        return {
-          waypoint,
-          difference,
-          angle
-        }
-      }
-      return mostDifferent
-    }, { waypoint: far[0], difference: 0, angle: 0 })
-
-    return mostDifferent.waypoint.position
+    const itAngle = getAngle(this.feature.body.position, Character.it.feature.body.position)
+    const differences = far.map(waypoint => {
+      const angle = getAngle(this.feature.body.position, waypoint.position)
+      return getAngleDifference(angle, itAngle)
+    })
+    const mostDifferent = whichMax(far, differences)
+    if (this.unblockTries == null) this.unblockTries = {}
+    this.unblockTries[mostDifferent.id] = true
+    return mostDifferent.position
   }
 
   getWanderWaypoint (): Waypoint | null {
@@ -298,12 +278,14 @@ export default class Bot extends Character {
   }
 
   isStuck (): boolean {
-    return this.pathTime != null && Date.now() - this.pathTime > Bot.TIME_LIMIT
+    if (this.pathTime == null) return false
+    const difference = Date.now() - this.pathTime
+    return difference > Bot.TIME_LIMIT
   }
 
   loseIt (): void {
     super.loseIt()
-    this.path = []
+    this.losePath()
   }
 
   losePath (): void {
@@ -413,7 +395,7 @@ export default class Bot extends Character {
     //     ]
     //   })
     // }
-    this.path = []
+    this.losePath()
     this.blocked = false
   }
 
@@ -480,7 +462,6 @@ export default class Bot extends Character {
   }
 
   wander (debug = DEBUG.WANDER): Direction | null {
-    this.pathTime = Date.now()
     const debugColor = debug ? 'tan' : undefined
     const waypoint = this.getWanderWaypoint()
     if (waypoint == null) {

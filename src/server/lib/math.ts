@@ -111,13 +111,13 @@ export function whichMax <Element> (array: Element[], numbers: number[]): Elemen
   return element
 }
 
-export function getAnglePercentage (from: Matter.Vector, to: Matter.Vector): number {
+export function getAngle (from: Matter.Vector, to: Matter.Vector): number {
   const angle = (Matter.Vector.angle(from, to) / Math.PI + 1) / 2
 
   return angle
 }
 
-export function getAnglePercentageDifference (a: number, b: number): number {
+export function getAngleDifference (a: number, b: number): number {
   // 1) Take |𝐴−𝐵|.
   const difference = a - b
   const absoluteDifference = Math.abs(difference)

@@ -1,12 +1,13 @@
 import Character from '../model/Character'
 
 export const INITIAL = {
-  WAYPOINT_BOTS: true,
+  BRICKS: false,
   CENTER_BOT: true,
-  CORNER_BOTS: false,
+  CORNER_BOTS: true,
+  MAZE_BOTS: false,
   MIDPOINT_BOTS: true,
-  BRICKS: true,
-  PUPPETS: true
+  PUPPETS: false,
+  WAYPOINT_BOTS: true
 }
 export const WORLD_SIZE = 3000
 export const HALF_WORLD_SIZE = WORLD_SIZE / 2

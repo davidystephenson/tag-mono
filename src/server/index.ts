@@ -110,7 +110,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
+export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1200 })
 export const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5 })
 export const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
 export const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
@@ -127,6 +127,8 @@ export const BUTCHER = new Wall({ x: -700, y: -500, width: 100, height: 100 })
 export const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100 })
 export const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100 })
 export const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5 })
+const MAZE_WALLS = [PIT, BYTE, PALACE, BIT, FORT, BARRACKS, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET]
+if (INITIAL.MAZE_BOTS) MAZE_WALLS.forEach(wall => wall.initialBots())
 void new Wall({ x: -1100, y: 400, width: 200, height: 500 })
 void new Wall({ x: 0, y: -200, width: 100, height: 100 })
 void new Wall({ x: 1000, y: 200, width: 200, height: 1000 })
