@@ -22,7 +22,7 @@ export default class Bot extends Character {
   pathTime?: number
   unblockTries?: Record<number, boolean>
   unblocking = false
-  alertTime?: number
+  chaseTime?: number
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -115,12 +115,18 @@ export default class Bot extends Character {
     }
   }
 
-  flee (): Direction {
-    this.setPath()
+  flee (stuck?: boolean): Direction {
+    const chaseTime = this.chaseTime ?? Date.now()
+    const difference = Date.now() - chaseTime
+    if (difference > Bot.TIME_LIMIT && stuck !== true) {
+      this.unblock()
+    }
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
     if (Character.it == null) {
       throw new Error('Fleeing from no one')
     }
+    this.setPath()
+    this.chaseTime = chaseTime
     return Character.it.getDirection({ end: this.feature.body.position, debugColor })
   }
 
@@ -287,6 +293,7 @@ export default class Bot extends Character {
     this.path = props?.path ?? []
     this.pathTime = props?.path == null ? undefined : Date.now()
     this.unblocking = false
+    this.chaseTime = undefined
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
@@ -448,10 +455,10 @@ export default class Bot extends Character {
   unblock (): Direction {
     const unblockPoint = this.getUnblockPoint()
     if (unblockPoint == null) {
-      return this.flee()
+      return this.flee(true)
     }
-    this.unblocking = true
     this.setPath({ path: [unblockPoint] })
+    this.unblocking = true
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'black' : undefined
     return this.getDirection({ end: this.path[0], debugColor })
   }
