@@ -312,8 +312,10 @@ export default class Bot extends Character {
     width: number
     height: number
   }): Matter.Vector[] {
-    const halfHeight = 0.5 * box.height
-    const halfWidth = 0.5 * box.width
+    const speed = Matter.Vector.magnitude(this.feature.body.velocity)
+    const scale = Math.min(1, speed / 4)
+    const halfHeight = Math.max(this.radius, 0.5 * scale * box.height)
+    const halfWidth = Math.max(this.radius, 0.5 * scale * box.width)
     const left = { x: -halfWidth, y: halfHeight }
     const right = { x: halfWidth, y: halfHeight }
     const itPosition = Character.it == null ? { x: 0, y: 0 } : Character.it?.feature.body.position
@@ -438,18 +440,24 @@ export default class Bot extends Character {
       const struggling = this.moving && this.blocked
       console.log('struggling test:', struggling)
       if (!struggling) {
+        const speed = Matter.Vector.magnitude(this.feature.body.velocity)
+        const scale = Math.min(1, speed / 4)
         void new Brick({
           x: box.center.x,
           y: box.center.y,
-          width: box.width,
-          height: box.height
+          width: Math.max(2 * this.radius, box.width * scale),
+          height: Math.max(2 * this.radius, box.height * scale)
         })
       } else {
         const verts = this.boxToTriangle(box)
         console.log('verts', verts)
         const v = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
-        const m = Matter.Vector.magnitude(v)
-        const z = 0.02 * m / 5
+        const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
+        const speed = Matter.Vector.magnitude(this.feature.body.velocity)
+        const maxSize = VISION_WIDTH * 0.5
+        const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
+        const m = even * Matter.Vector.magnitude(v)
+        const z = 0.02 * m / 5 * size / maxSize
         console.log('z test:', z)
         void new Puppet({
           x: box.center.x,
