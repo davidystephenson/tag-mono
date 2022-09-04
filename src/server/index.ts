@@ -266,7 +266,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: 0, y: 1150 })
+  void new Bot({ x: -100, y: -100 })
 }
 if (INITIAL.WAYPOINT_BOTS) {
   Waypoint.waypoints.forEach(waypoint => {
@@ -312,7 +312,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
       const average = Math.floor(warningDifferenceTotal / warningCount)
-      console.log(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
+      console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
       warningTime = newTime
     }
     oldTime = newTime

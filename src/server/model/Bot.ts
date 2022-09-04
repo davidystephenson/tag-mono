@@ -327,7 +327,6 @@ export default class Bot extends Character {
 
   makeIt (): void {
     const botPoint = vectorToPoint(this.feature.body.position)
-    console.log('botPoint', botPoint)
     const northY = this.feature.body.position.y - VISION_HEIGHT
     const southY = this.feature.body.position.y + VISION_HEIGHT
     const westX = this.feature.body.position.x - VISION_WIDTH
@@ -336,8 +335,6 @@ export default class Bot extends Character {
     const south = { x: botPoint.x, y: southY }
     const west = { x: westX, y: botPoint.y }
     const east = { x: eastX, y: botPoint.y }
-    console.log('east', east)
-    console.log('west', west)
     const northEast = { x: eastX, y: northY }
     const southEast = { x: eastX, y: southY }
     const southWest = { x: westX, y: southY }
@@ -358,7 +355,6 @@ export default class Bot extends Character {
     sideEntryPoints.forEach(entryPoint => {
       void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 10, color: 'aqua' })
     })
-    console.log('sideEntryPoints', sideEntryPoints)
     const sideDistances = sideEntryPoints.map(point => getDistance(botPoint, point))
     const maximum = Math.max(...sideDistances)
     const sideIndex = sideDistances.indexOf(maximum)
@@ -412,7 +408,6 @@ export default class Bot extends Character {
       box.width = (xMax - xMin) * 0.99
       box.height = Math.abs(botPoint.y - farthestSidePoint.y) * 0.99
     }
-    console.log('box', box)
     const halfWidth = 0.5 * box.width
     const halfHeight = 0.5 * box.height
     const northEastCorner = { x: box.center.x + halfWidth, y: box.center.y - halfHeight }
@@ -428,17 +423,13 @@ export default class Bot extends Character {
     boxQuery.forEach(body => console.log(body.label, body.position))
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
-      console.log('clear test')
       void new DebugCircle({
         x: box.center.x,
         y: box.center.y,
         radius: 15,
         color: 'white'
       })
-      console.log('this.moving test:', this.moving)
-      console.log('this.blocked test:', this.blocked)
       const struggling = this.moving && this.blocked
-      console.log('struggling test:', struggling)
       if (!struggling) {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
         const scale = Math.min(1, speed / 4)
@@ -450,7 +441,6 @@ export default class Bot extends Character {
         })
       } else {
         const verts = this.boxToTriangle(box)
-        console.log('verts', verts)
         const v = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
@@ -516,7 +506,7 @@ export default class Bot extends Character {
     })
     if (visibleFromStart.length === 0) {
       if (DEBUG.LOST) {
-        console.log('Invisible path start')
+        console.warn('Invisible path start')
       }
       return this.loseWay()
     }
@@ -526,7 +516,7 @@ export default class Bot extends Character {
     })
     if (visibleFromEnd.length === 0) {
       if (DEBUG.LOST) {
-        console.log('Invisible path goal')
+        console.warn('Invisible path goal')
       }
       return this.loseWay()
     }

@@ -3,9 +3,9 @@ import Character from '../model/Character'
 export const INITIAL = {
   BRICKS: true,
   CENTER_BOT: true,
-  CORNER_BOTS: true,
-  MAZE_BOTS: true,
-  MIDPOINT_BOTS: true,
+  CORNER_BOTS: false,
+  MAZE_BOTS: false,
+  MIDPOINT_BOTS: false,
   PUPPETS: true,
   WAYPOINT_BOTS: false
 }

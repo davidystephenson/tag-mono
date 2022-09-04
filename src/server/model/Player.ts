@@ -10,7 +10,7 @@ import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 
 export default class Player extends Character {
-  static OBSERVER = true
+  static OBSERVER = false
   static players = new Map<string, Player>()
   readonly socket: Socket
 
