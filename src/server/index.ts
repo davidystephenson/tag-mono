@@ -110,7 +110,7 @@ const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1200 })
+export const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
 export const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5 })
 export const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
 export const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
@@ -201,22 +201,22 @@ if (INITIAL.BRICKS) {
   void new Brick({ x: 800, y: 200, height: 200, width: 100 })
   void new Brick({ x: 500, y: 1400, height: 200, width: 100 })
   void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
-  void new Brick({ x: -1300, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 750, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 800, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 850, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 900, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 950, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1000, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1050, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1100, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1150, y: 1300, height: 100, width: 10 })
+  void new Brick({ x: -1300, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 750, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 800, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 850, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 900, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 950, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1000, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1050, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1100, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1150, y: 1300, height: 100, width: 15 })
   void new Brick({ x: 1200, y: 1300, height: 200, width: 20 })
-  void new Brick({ x: 1250, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1300, y: 1300, height: 300, width: 10 })
-  void new Brick({ x: 1350, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1400, y: 1300, height: 200, width: 10 })
-  void new Brick({ x: 1450, y: 1300, height: 200, width: 10 })
+  void new Brick({ x: 1250, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1300, y: 1300, height: 300, width: 15 })
+  void new Brick({ x: 1350, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1400, y: 1300, height: 200, width: 15 })
+  void new Brick({ x: 1450, y: 1300, height: 200, width: 15 })
 }
 
 if (INITIAL.PUPPETS) {
@@ -266,7 +266,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: 100, y: -100 })
+  void new Bot({ x: -100, y: -100 })
 }
 if (INITIAL.WAYPOINT_BOTS) {
   Waypoint.waypoints.forEach(waypoint => {
@@ -312,7 +312,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
       const average = Math.floor(warningDifferenceTotal / warningCount)
-      console.log(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
+      console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
       warningTime = newTime
     }
     oldTime = newTime

@@ -2,11 +2,11 @@ import Feature from './Feature'
 
 export default class Actor {
   static SCENERY_DENSITY = 0.00003
-  static SCENERY_COLOR = 'aqua'
+  static SCENERY_COLOR = 'rgba(0, 255, 255, 0.5)'
   static paused = false
   static actors = new Map<number, Actor>()
   readonly feature: Feature
-  health = 1
+  health = 0.5
 
   constructor ({ feature }: {
     feature: Feature
@@ -24,7 +24,7 @@ export default class Actor {
   }
 
   dent (): void {
-    this.health = this.health - 0.0001
+    this.health = this.health - 0.001
     if (this.health <= 0) {
       this.destroy()
     } else {
