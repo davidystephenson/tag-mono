@@ -266,7 +266,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: 400, y: -500 })
+  void new Bot({ x: 500, y: 250 })
 }
 
 if (INITIAL.MAZE_BOTS) MAZE_WALLS.forEach(wall => wall.initialBots())

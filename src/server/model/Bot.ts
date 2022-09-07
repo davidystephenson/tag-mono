@@ -420,8 +420,8 @@ export default class Bot extends Character {
       }
       if (farthestSidePoint.y < botPoint.y) {
         console.log('far point above')
-        const botEast = { x: southY, y: botPoint.y - this.radius * 1.01 }
-        const botWest = { x: northY, y: botPoint.y - this.radius * 1.01 }
+        const botEast = { x: eastX, y: botPoint.y - this.radius * 1.01 }
+        const botWest = { x: westX, y: botPoint.y - this.radius * 1.01 }
         corners.push(...[botEast, botWest, southEast, southWest])
       }
       corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
