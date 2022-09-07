@@ -1,12 +1,12 @@
 import Character from '../model/Character'
 
 export const INITIAL = {
-  BRICKS: true,
+  BRICKS: false,
   CENTER_BOT: true,
-  CORNER_BOTS: false,
-  MAZE_BOTS: false,
-  MIDPOINT_BOTS: false,
-  PUPPETS: true,
+  CORNER_BOTS: true,
+  MAZE_BOTS: true,
+  MIDPOINT_BOTS: true,
+  PUPPETS: false,
   WAYPOINT_BOTS: false
 }
 export const WORLD_SIZE = 3000

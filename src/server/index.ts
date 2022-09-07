@@ -128,7 +128,7 @@ export const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100 })
 export const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100 })
 export const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5 })
 const MAZE_WALLS = [PIT, BYTE, PALACE, BIT, FORT, BARRACKS, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET]
-if (INITIAL.MAZE_BOTS) MAZE_WALLS.forEach(wall => wall.initialBots())
+
 void new Wall({ x: -1100, y: 400, width: 200, height: 500 })
 void new Wall({ x: 0, y: -200, width: 100, height: 100 })
 void new Wall({ x: 1000, y: 200, width: 200, height: 1000 })
@@ -266,8 +266,10 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: -100, y: -100 })
+  void new Bot({ x: 400, y: -500 })
 }
+
+if (INITIAL.MAZE_BOTS) MAZE_WALLS.forEach(wall => wall.initialBots())
 if (INITIAL.WAYPOINT_BOTS) {
   Waypoint.waypoints.forEach(waypoint => {
     void new Bot({ x: waypoint.x, y: waypoint.y })
@@ -319,7 +321,7 @@ Matter.Events.on(engine, 'afterUpdate', () => {
   }
   runner.enabled = !Actor.paused
   DebugLine.lines = []
-  DebugCircle.circles = []
+  // DebugCircle.circles = []
   if (DEBUG.WAYPOINT_CIRCLES) {
     Waypoint.waypoints.forEach(waypoint => {
       void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
