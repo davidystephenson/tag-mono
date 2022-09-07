@@ -27,7 +27,8 @@ export default class Bot extends Character {
   pathTime?: number
   unblockTries?: Record<number, boolean>
   unblocking = false
-  alertTime?: number
+  chaseTime?: number
+  chaseCharacters?: Record<number, boolean>
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -77,14 +78,29 @@ export default class Bot extends Character {
     const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
     if (isIt) {
       const visibleCharacters = this.getVisibleCharacters()
-      if (visibleCharacters.length > 0) {
-        const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
-        const close = whichMin(visibleCharacters, distances)
+      const eligibleCharacters = visibleCharacters.filter(character => {
+        return this.chaseCharacters?.[character.feature.body.id] !== true
+      })
+      if (eligibleCharacters.length > 0) {
+        const distances = eligibleCharacters.map(character => this.getDistance(character.feature.body.position))
+        const close = whichMin(eligibleCharacters, distances)
+        if (this.chaseTime == null) this.chaseTime = Date.now()
+        else {
+          const difference = Date.now() - this.chaseTime
+          if (difference > Bot.TIME_LIMIT) {
+            if (this.chaseCharacters == null) this.chaseCharacters = {}
+            this.chaseCharacters[close.feature.body.id] = true
+            console.log('give up on', close.feature.body.id)
+            return null
+          }
+        }
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point] })
         const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
+      } else {
+        this.chaseCharacters = undefined
       }
     }
     if ((itVisible && !this.unblocking) || this.isBored()) {
@@ -121,11 +137,17 @@ export default class Bot extends Character {
   }
 
   flee (): Direction {
-    this.setPath()
+    const chaseTime = this.chaseTime ?? Date.now()
+    const difference = Date.now() - chaseTime
+    if (difference > Bot.TIME_LIMIT) {
+      this.unblock()
+    }
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
     if (Character.it == null) {
       throw new Error('Fleeing from no one')
     }
+    this.setPath()
+    this.chaseTime = chaseTime
     return Character.it.getDirection({ end: this.feature.body.position, debugColor })
   }
 
@@ -292,6 +314,7 @@ export default class Bot extends Character {
     this.path = props?.path ?? []
     this.pathTime = props?.path == null ? undefined : Date.now()
     this.unblocking = false
+    this.chaseTime = undefined
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
@@ -327,7 +350,7 @@ export default class Bot extends Character {
 
   makeIt (): void {
     const botPoint = vectorToPoint(this.feature.body.position)
-    console.log('botPoint', botPoint)
+    void new DebugCircle({ x: botPoint.x, y: botPoint.y, radius: 16, color: 'teal' })
     const northY = this.feature.body.position.y - VISION_HEIGHT
     const southY = this.feature.body.position.y + VISION_HEIGHT
     const westX = this.feature.body.position.x - VISION_WIDTH
@@ -336,8 +359,6 @@ export default class Bot extends Character {
     const south = { x: botPoint.x, y: southY }
     const west = { x: westX, y: botPoint.y }
     const east = { x: eastX, y: botPoint.y }
-    console.log('east', east)
-    console.log('west', west)
     const northEast = { x: eastX, y: northY }
     const southEast = { x: eastX, y: southY }
     const southWest = { x: westX, y: southY }
@@ -352,13 +373,13 @@ export default class Bot extends Character {
     const eastHit = raycast({ start: botPoint, end: east, obstacles: Feature.obstacles })
     const cornerEntryPoints = [northEastHit.entryPoint, southEastHit.entryPoint, southWestHit.entryPoint, northWestHit.entryPoint]
     const sideEntryPoints = [northHit.entryPoint, southHit.entryPoint, westHit.entryPoint, eastHit.entryPoint]
+    console.log('sideEntryPoints', sideEntryPoints)
     cornerEntryPoints.forEach(entryPoint => {
       void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 10, color: 'green' })
     })
     sideEntryPoints.forEach(entryPoint => {
       void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 10, color: 'aqua' })
     })
-    console.log('sideEntryPoints', sideEntryPoints)
     const sideDistances = sideEntryPoints.map(point => getDistance(botPoint, point))
     const maximum = Math.max(...sideDistances)
     const sideIndex = sideDistances.indexOf(maximum)
@@ -389,17 +410,21 @@ export default class Bot extends Character {
       box.height = (yMax - yMin) * 0.99
       box.width = Math.abs(botPoint.x - farthestSidePoint.x) * 0.99
     } else {
+      console.log('vertical case')
       const corners = []
       if (farthestSidePoint.y > botPoint.y) {
+        console.log('far point below')
         const botEast = { x: eastX, y: botPoint.y + this.radius * 1.01 }
         const botWest = { x: westX, y: botPoint.y + this.radius * 1.01 }
         corners.push(...[botEast, botWest, southEast, southWest])
       }
       if (farthestSidePoint.y < botPoint.y) {
-        const botEast = { x: southY, y: botPoint.y - this.radius * 1.01 }
-        const botWest = { x: northY, y: botPoint.y - this.radius * 1.01 }
+        console.log('far point above')
+        const botEast = { x: eastX, y: botPoint.y - this.radius * 1.01 }
+        const botWest = { x: westX, y: botPoint.y - this.radius * 1.01 }
         corners.push(...[botEast, botWest, southEast, southWest])
       }
+      corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
       const queryBounds = Matter.Bounds.create(corners)
       const boxQuery = Matter.Query.region(Feature.obstacles, queryBounds)
       const rights = boxQuery.map(body => body.bounds.max.x)
@@ -412,7 +437,6 @@ export default class Bot extends Character {
       box.width = (xMax - xMin) * 0.99
       box.height = Math.abs(botPoint.y - farthestSidePoint.y) * 0.99
     }
-    console.log('box', box)
     const halfWidth = 0.5 * box.width
     const halfHeight = 0.5 * box.height
     const northEastCorner = { x: box.center.x + halfWidth, y: box.center.y - halfHeight }
@@ -421,36 +445,32 @@ export default class Bot extends Character {
     const northWestCorner = { x: box.center.x - halfWidth, y: box.center.y - halfHeight }
     const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
     corners.forEach(entryPoint => {
-      void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 10, color: 'yellow' })
+      void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 6, color: 'yellow' })
     })
     const queryBounds = Matter.Bounds.create(corners)
     const boxQuery = Matter.Query.region(Feature.obstacles, queryBounds)
     boxQuery.forEach(body => console.log(body.label, body.position))
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
-      console.log('clear test')
       void new DebugCircle({
         x: box.center.x,
         y: box.center.y,
         radius: 15,
         color: 'white'
       })
-      console.log('this.moving test:', this.moving)
-      console.log('this.blocked test:', this.blocked)
       const struggling = this.moving && this.blocked
-      console.log('struggling test:', struggling)
       if (!struggling) {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
-        const scale = Math.min(1, speed / 4)
+        const scale = 0.5 // Math.min(1, speed / 4)
+        const boxWidth = Math.sign(this.feature.body.position.x - box.center.x) * 0.5 * box.width * scale
         void new Brick({
-          x: box.center.x,
+          x: box.center.x + boxWidth,
           y: box.center.y,
           width: Math.max(2 * this.radius, box.width * scale),
           height: Math.max(2 * this.radius, box.height * scale)
         })
       } else {
         const verts = this.boxToTriangle(box)
-        console.log('verts', verts)
         const v = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
@@ -477,7 +497,7 @@ export default class Bot extends Character {
         width: this.radius * 2
       })
     }
-    Actor.paused = false
+    Actor.paused = true
     // if (struggling || Character.it == null) {
 
     // } else {
@@ -516,7 +536,7 @@ export default class Bot extends Character {
     })
     if (visibleFromStart.length === 0) {
       if (DEBUG.LOST) {
-        console.log('Invisible path start')
+        console.warn('Invisible path start')
       }
       return this.loseWay()
     }
@@ -526,7 +546,7 @@ export default class Bot extends Character {
     })
     if (visibleFromEnd.length === 0) {
       if (DEBUG.LOST) {
-        console.log('Invisible path goal')
+        console.warn('Invisible path goal')
       }
       return this.loseWay()
     }
@@ -553,10 +573,10 @@ export default class Bot extends Character {
     return target
   }
 
-  unblock (): Direction {
+  unblock (): Direction | null {
     const unblockPoint = this.getUnblockPoint()
     if (unblockPoint == null) {
-      return this.flee()
+      return this.loseWay()
     }
     this.setPath({ path: [unblockPoint] })
     this.unblocking = true

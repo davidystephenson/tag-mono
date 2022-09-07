@@ -2,6 +2,7 @@ import Matter from 'matter-js'
 import DebugLine from '../../shared/DebugLine'
 import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
+import { vectorToPoint } from './engine'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
 export default function raycast ({ start, end, obstacles }: {
@@ -10,7 +11,9 @@ export default function raycast ({ start, end, obstacles }: {
   obstacles: Matter.Body[]
 }): {entryPoint: Matter.Vector, exitPoint?: Matter.Vector, hitBody?: Matter.Body} {
   const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
-  if (dist === 0) return { entryPoint: end }
+  if (dist === 0) {
+    return { entryPoint: end }
+  }
   const collisions = Matter.Query.ray(obstacles, start, end)
   const collide = collisions.length > 0
   if (!collide) {
@@ -27,12 +30,12 @@ export default function raycast ({ start, end, obstacles }: {
   const collision = collisions[distances.indexOf(Math.min(...distances))]
   const hitBody = collision.bodyA
   const arrow = Matter.Vector.sub(end, start)
-  const xTime1 = (hitBody.bounds.min.x - start.x) * (1.0 / arrow.x)
-  const xTime2 = (hitBody.bounds.max.x - start.x) * (1.0 / arrow.x)
+  const xTime1 = arrow.x === 0 ? 0 : (hitBody.bounds.min.x - start.x) * (1.0 / arrow.x)
+  const xTime2 = arrow.x === 0 ? 0 : (hitBody.bounds.max.x - start.x) * (1.0 / arrow.x)
   const xEntryTime = Math.min(xTime1, xTime2)
   const xExitTime = Math.max(xTime1, xTime2)
-  const yTime1 = (hitBody.bounds.min.y - start.y) * (1.0 / arrow.y)
-  const yTime2 = (hitBody.bounds.max.y - start.y) * (1.0 / arrow.y)
+  const yTime1 = arrow.y === 0 ? 0 : (hitBody.bounds.min.y - start.y) * (1.0 / arrow.y)
+  const yTime2 = arrow.y === 0 ? 0 : (hitBody.bounds.max.y - start.y) * (1.0 / arrow.y)
   const yEntryTime = Math.min(yTime1, yTime2)
   const yExitTime = Math.max(yTime1, yTime2)
   const rayEntryTime = Math.max(xEntryTime, yEntryTime)
@@ -42,7 +45,9 @@ export default function raycast ({ start, end, obstacles }: {
   const entryPoint = Matter.Vector.add(Matter.Vector.add(start, entryArrow), away)
   const visibleX = start.x - VISION.width < entryPoint.x && entryPoint.x < start.x + VISION.width
   const visibleY = start.y - VISION.height < entryPoint.y && entryPoint.y < start.y + VISION.height
-  if (!visibleX || !visibleY) return { entryPoint }
+  if (!visibleX || !visibleY) {
+    return { entryPoint }
+  }
   const rayExitTime = Math.min(xExitTime, yExitTime)
   const exitArrow = Matter.Vector.mult(arrow, rayExitTime)
   const exitPoint = Matter.Vector.add(start, exitArrow)
