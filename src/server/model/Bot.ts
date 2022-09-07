@@ -28,6 +28,7 @@ export default class Bot extends Character {
   unblockTries?: Record<number, boolean>
   unblocking = false
   chaseTime?: number
+  chaseCharacters?: Record<number, boolean>
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -77,14 +78,29 @@ export default class Bot extends Character {
     const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
     if (isIt) {
       const visibleCharacters = this.getVisibleCharacters()
-      if (visibleCharacters.length > 0) {
-        const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
-        const close = whichMin(visibleCharacters, distances)
+      const eligibleCharacters = visibleCharacters.filter(character => {
+        return this.chaseCharacters?.[character.feature.body.id] !== true
+      })
+      if (eligibleCharacters.length > 0) {
+        const distances = eligibleCharacters.map(character => this.getDistance(character.feature.body.position))
+        const close = whichMin(eligibleCharacters, distances)
+        if (this.chaseTime == null) this.chaseTime = Date.now()
+        else {
+          const difference = Date.now() - this.chaseTime
+          if (difference > Bot.TIME_LIMIT) {
+            if (this.chaseCharacters == null) this.chaseCharacters = {}
+            this.chaseCharacters[close.feature.body.id] = true
+            console.log('give up on', close.feature.body.id)
+            return null
+          }
+        }
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point] })
         const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
+      } else {
+        this.chaseCharacters = undefined
       }
     }
     if ((itVisible && !this.unblocking) || this.isBored()) {
@@ -120,10 +136,11 @@ export default class Bot extends Character {
     }
   }
 
-  flee (stuck?: boolean): Direction {
+  flee (): Direction {
     const chaseTime = this.chaseTime ?? Date.now()
     const difference = Date.now() - chaseTime
-    if (difference > Bot.TIME_LIMIT && stuck !== true) {
+    console.log('difference test:', difference)
+    if (difference > Bot.TIME_LIMIT) {
       this.unblock()
     }
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
@@ -550,10 +567,10 @@ export default class Bot extends Character {
     return target
   }
 
-  unblock (): Direction {
+  unblock (): Direction | null {
     const unblockPoint = this.getUnblockPoint()
     if (unblockPoint == null) {
-      return this.flee(true)
+      return this.loseWay()
     }
     this.setPath({ path: [unblockPoint] })
     this.unblocking = true

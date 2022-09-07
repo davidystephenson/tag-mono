@@ -5,7 +5,7 @@ export const DEBUG = {
   COLLISON: false,
   IS_CLEAR: false,
   IT_CHOICE: false,
-  LOST: false,
+  LOST: true,
   MAKE_IT: false,
   NOT_IT_CHOICE: true,
   PATHING: false,
