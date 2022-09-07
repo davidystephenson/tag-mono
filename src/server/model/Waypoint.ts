@@ -1,10 +1,11 @@
 import Matter, { Vector } from 'matter-js'
-import isClear from '../lib/isClear'
+import Character from './Character'
 import Wall from './Wall'
 
 export default class Waypoint {
   static waypoints: Waypoint[] = []
   static positions: Vector[] = []
+  static label = 0
   static ids: number[] = []
   readonly x: number
   readonly y: number
@@ -22,7 +23,66 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = Waypoint.waypoints.length
-    if (Matter.Query.point(Wall.wallObstacles, this.position).length === 0) {
+    Waypoint.label = Waypoint.label + 1
+    const obstacle = Wall.walls.find(wall => {
+      const dX = Math.abs(this.x - wall.x)
+      const dY = Math.abs(this.y - wall.y)
+      const overX = dX > wall.halfWidth
+      const overY = dY > wall.halfHeight
+      if (overX && overY) {
+        const isLeft = this.x < wall.x
+        const isTop = this.y < wall.y
+        if (isLeft && isTop) {
+          const cornerX = wall.x - wall.halfWidth
+          const cornerY = wall.y - wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Character.MARGIN - 1) {
+            return true
+          }
+        }
+        if (isLeft && !isTop) {
+          const cornerX = wall.x - wall.halfWidth
+          const cornerY = wall.y + wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Character.MARGIN - 1) {
+            return true
+          }
+        }
+        if (!isLeft && isTop) {
+          const cornerX = wall.x + wall.halfWidth
+          const cornerY = wall.y - wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Character.MARGIN - 1) {
+            return true
+          }
+        }
+        if (!isLeft && !isTop) {
+          const cornerX = wall.x + wall.halfWidth
+          const cornerY = wall.y + wall.halfHeight
+          const cornerPosition = { x: cornerX, y: cornerY }
+          const cornerVector = Matter.Vector.sub(cornerPosition, this.position)
+          const cornerMagnitude = Matter.Vector.magnitude(cornerVector)
+          if (cornerMagnitude < Character.MARGIN - 1) {
+            return true
+          }
+        }
+      } else {
+        const xBuffer = wall.halfWidth + Character.MARGIN - 1
+        const yBuffer = wall.halfHeight + Character.MARGIN - 1
+        if (dX < xBuffer && dY < yBuffer) {
+          return true
+        }
+      }
+
+      return false
+    })
+    if (obstacle == null) {
       Waypoint.waypoints.push(this)
       Waypoint.positions.push(this.position)
       Waypoint.ids.push(this.id)
@@ -32,10 +92,10 @@ export default class Waypoint {
   setNeighbors (): void {
     this.neighbors = Waypoint.waypoints.filter(other => {
       if (other.id === this.id) return false
-      return isClear({
+      return Wall.isPointOpen({
         start: this.position,
         end: other.position,
-        obstacles: Wall.wallObstacles
+        radius: Character.MAXIMUM_RADIUS
       })
     })
     this.neighbors.forEach(neighbor => {
@@ -59,6 +119,7 @@ export default class Waypoint {
     this.paths[this.id] = [this.position]
     Waypoint.waypoints.forEach(other => {
       if (other.id !== this.id) {
+        // console.log('setting path from', this.id, 'to', other.id)
         const waypointPath = this.getWaypointPath(other)
         const vectorPath = waypointPath.map(waypoint => waypoint.position)
         this.paths[other.id] = vectorPath
@@ -71,10 +132,10 @@ export default class Waypoint {
     let pathComplete = false
     while (!pathComplete) {
       const currentPoint = path[path.length - 1]
-      const clear = isClear({
+      const clear = Wall.isPointOpen({
         start: currentPoint.position,
         end: goal.position,
-        obstacles: Wall.wallObstacles
+        radius: Character.MAXIMUM_RADIUS
       })
       if (clear) pathComplete = true
       else {

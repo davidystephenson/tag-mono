@@ -12,6 +12,3 @@ export function getDistance (a: Matter.Vector, b: Matter.Vector): number {
   const vector = Matter.Vector.sub(b, a)
   return Matter.Vector.magnitude(vector)
 }
-
-export const DEBUG_STEP_TIME = true
-export const DEBUG_STEP_TIME_LIMIT = 35

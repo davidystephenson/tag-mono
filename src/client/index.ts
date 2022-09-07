@@ -15,7 +15,12 @@ const input = new Input()
 const state = new State()
 const camera = new Camera()
 
+let oldTime = Date.now()
 window.onclick = function () {
+  const newTime = Date.now()
+  const dt = newTime - oldTime
+  console.log('dt:', dt)
+  oldTime = newTime
   console.log('state:', state)
   console.log('camera:', camera)
 }
@@ -75,16 +80,20 @@ const setupCamera = function (): void {
   context.setTransform(yScale, 0, 0, xScale, xTranslate, yTranslate)
 }
 
+const BACKGROUND_COLOR = '#0E0E10'
+const FOREGROUND_COLOR = '#343434'
+
 const draw = function (): void {
   window.requestAnimationFrame(draw)
   setupCamera()
   const w = canvas.width / camera.scale * 100
   const h = canvas.height / camera.scale * 100
-  context.clearRect(-w / 2, -h / 2, w, h)
-  context.strokeStyle = 'rgba(0,0,0,0.25)'
-  context.fillStyle = 'Gray'
+  context.fillStyle = BACKGROUND_COLOR
+  context.fillRect(-w / 2, -h / 2, w, h)
+  context.fillStyle = FOREGROUND_COLOR
   context.fillRect(-VISION.width, -VISION.height, 2 * VISION.width, 2 * VISION.height)
   state.shapes.forEach(shape => {
+    context.strokeStyle = shape.render.strokeStyle ?? 'black'
     context.fillStyle = shape.render.fillStyle ?? 'black'
     context.beginPath()
     if (shape.circleRadius == null || shape.circleRadius === 0) {
@@ -94,15 +103,21 @@ const draw = function (): void {
       context.arc(shape.ix - camera.x, shape.iy - camera.y, shape.circleRadius, 0, 2 * Math.PI)
     }
     context.fill()
-    context.lineWidth = 1
+    context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const label = context.fillStyle.slice(1)
+      console.log('shape.fillStyle:', shape.render.fillStyle, context.fillStyle)
+      const upper = context.fillStyle.toUpperCase()
+      const red = upper.slice(1, 3)
+      const green = upper.slice(3, 5)
+      const blue = upper.slice(5, 7)
       context.fillStyle = 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
-      context.font = '8px sans'
-      context.fillText(label, shape.ix - camera.x, shape.iy - camera.y)
+      context.font = '10px sans'
+      context.fillText(red, shape.ix - camera.x, shape.iy - camera.y - 9)
+      context.fillText(green, shape.ix - camera.x, shape.iy - camera.y + 1)
+      context.fillText(blue, shape.ix - camera.x, shape.iy - camera.y + 11)
     }
   })
   state.debugCircles.forEach(circle => {
@@ -128,16 +143,17 @@ const draw = function (): void {
 }
 draw()
 
+const lerp = 0.6
+const lerpLess = 1 - lerp
 function tick (): void {
-  const lerp = 0.7
   state.shapes.forEach(shape => {
     if (!(shape.circleRadius == null || shape.circleRadius === 0)) {
-      shape.ix = lerp * shape.x + (1 - lerp) * shape.ix
-      shape.iy = lerp * shape.y + (1 - lerp) * shape.iy
+      shape.ix = lerp * shape.x + lerpLess * shape.ix
+      shape.iy = lerp * shape.y + lerpLess * shape.iy
     } else {
       shape.vertices.forEach((vertex, i) => {
-        shape.ivertices[i].x = lerp * vertex.x + (1 - lerp) * shape.ivertices[i].x
-        shape.ivertices[i].y = lerp * vertex.y + (1 - lerp) * shape.ivertices[i].y
+        shape.ivertices[i].x = lerp * vertex.x + lerpLess * shape.ivertices[i].x
+        shape.ivertices[i].y = lerp * vertex.y + lerpLess * shape.ivertices[i].y
       })
     }
     if (shape.id === state.torsoId) {

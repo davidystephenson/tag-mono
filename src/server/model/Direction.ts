@@ -1,7 +1,6 @@
 import Matter from 'matter-js'
-import Controls from '../../shared/controls'
+import Controls, { getRadiansControls } from '../../shared/controls'
 import DebugLine from '../../shared/DebugLine'
-import { getRadiansControls } from '../lib/math'
 
 export default class Direction {
   start: Matter.Vector
@@ -27,7 +26,10 @@ export default class Direction {
     this.endVelocity = endVelocity
     this.vector = Matter.Vector.sub(end, start)
     this.distance = Matter.Vector.magnitude(this.vector)
-    const futureTime = this.distance / 2
+    const towardsIt = Matter.Vector.sub(start, end)
+    const moveTowards = Matter.Vector.dot(endVelocity, towardsIt)
+    const lookAhead = moveTowards > 0 ? 0 : 2
+    const futureTime = this.distance * lookAhead
     const futureEnd = Matter.Vector.add(end, Matter.Vector.mult(endVelocity, futureTime))
     const futureVector = Matter.Vector.sub(futureEnd, start)
     this.unitVector = Matter.Vector.normalise(futureVector)

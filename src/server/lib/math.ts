@@ -1,5 +1,4 @@
 import Matter from 'matter-js'
-import Controls, { UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT, UP_LEFT } from '../../shared/controls'
 import { FIVE_8, ONE_8, SEVEN_8, THREE_8, ONE_4, ONE_2, THREE_4 } from './fractions'
 
 export const ONE_8_PI = ONE_8 * Math.PI
@@ -61,23 +60,37 @@ export function areRadiansUpLeft (radians: number): boolean {
   return WEST_NW_RADIANS <= radians && radians < NORTH_NW_RADIANS
 }
 
-export function getRadiansControls (radians: number): Partial<Controls> {
-  if (areRadiansUp(radians)) {
-    return UP
-  }
-  if (areRadiansUpRight(radians)) return UP_RIGHT
-  if (areRadiansRight(radians)) return RIGHT
-  if (areRadiansDownRight(radians)) return DOWN_RIGHT
-  if (areRadiansDown(radians)) return DOWN
-  if (areRadiansDownLeft(radians)) return DOWN_LEFT
-  if (areRadiansLeft(radians)) return LEFT
-  if (areRadiansUpLeft(radians)) return UP_LEFT
+const DIRECTIONAL_KEYS = ['UP', 'UP_RIGHT', 'RIGHT', 'DOWN_RIGHT', 'DOWN', 'DOWN_LEFT', 'LEFT', 'UP_LEFT']
+type DirectionalKey = typeof DIRECTIONAL_KEYS[number]
+type Directionals <Directional> = Record<DirectionalKey, Directional>
+export function getDirectional <Directional> ({ radians, directionals }: {
+  radians: number
+  directionals: Directionals<Directional>
+}): Directional {
+  if (areRadiansUp(radians)) return directionals.UP
+  if (areRadiansUpRight(radians)) return directionals.UP_RIGHT
+  if (areRadiansRight(radians)) return directionals.RIGHT
+  if (areRadiansDownRight(radians)) return directionals.DOWN_RIGHT
+  if (areRadiansDown(radians)) return directionals.DOWN
+  if (areRadiansDownLeft(radians)) return directionals.DOWN_LEFT
+  if (areRadiansLeft(radians)) return directionals.LEFT
+  if (areRadiansUpLeft(radians)) return directionals.UP_LEFT
 
   const string = String(radians)
   throw new Error(`Invalid radians: ${string}`)
 }
 
 export function whichMin <Element> (array: Element[], numbers: number[]): Element {
+  if (array.length === 0) {
+    console.log('array', array)
+    console.log('numbers', numbers)
+    throw new Error('Empty array')
+  }
+  if (array.length !== numbers.length) {
+    console.log('array', array)
+    console.log('numbers', numbers)
+    throw new Error('Array and numbers length mismatch')
+  }
   const minimum = Math.min(...numbers)
   const index = numbers.indexOf(minimum)
   if (array.length <= index) {
@@ -98,13 +111,13 @@ export function whichMax <Element> (array: Element[], numbers: number[]): Elemen
   return element
 }
 
-export function getAnglePercentage (from: Matter.Vector, to: Matter.Vector): number {
+export function getAngle (from: Matter.Vector, to: Matter.Vector): number {
   const angle = (Matter.Vector.angle(from, to) / Math.PI + 1) / 2
 
   return angle
 }
 
-export function getAnglePercentageDifference (a: number, b: number): number {
+export function getAngleDifference (a: number, b: number): number {
   // 1) Take |𝐴−𝐵|.
   const difference = a - b
   const absoluteDifference = Math.abs(difference)
@@ -114,4 +127,45 @@ export function getAnglePercentageDifference (a: number, b: number): number {
   }
   // 3) If |𝐴−𝐵|>180, take 360−|𝐴−𝐵|. You are done.
   return 1 - absoluteDifference
+}
+
+export function getPerpendicular ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): Matter.Vector {
+  const arrow = Matter.Vector.sub(end, start)
+  const direction = Matter.Vector.normalise(arrow)
+  const perpendicularDirection = Matter.Vector.perp(direction)
+  const perpendicularVector = Matter.Vector.mult(perpendicularDirection, radius)
+  return perpendicularVector
+}
+
+export function getPerpendicularSides ({ point, perpendicular, reverse }: {
+  point: Matter.Vector
+  perpendicular: Matter.Vector
+  reverse?: boolean
+}): [Matter.Vector, Matter.Vector] {
+  const leftSide = Matter.Vector.add(point, perpendicular)
+  const rightSide = Matter.Vector.sub(point, perpendicular)
+  if (reverse === true) return [rightSide, leftSide]
+  return [leftSide, rightSide]
+}
+
+export function getSides ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): [Matter.Vector, Matter.Vector] {
+  const perpendicular = getPerpendicular({ start, end, radius })
+  return getPerpendicularSides({ point: start, perpendicular })
+}
+
+export function getViewpoints ({ start, end, radius }: {
+  start: Matter.Vector
+  end: Matter.Vector
+  radius: number
+}): Matter.Vector[] {
+  const sides = getSides({ start, end, radius })
+  return [start, ...sides]
 }

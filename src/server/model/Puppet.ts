@@ -12,11 +12,11 @@ export default class Puppet extends Actor {
     x,
     y,
     vertices,
-    density = 0.0005,
+    density = Actor.SCENERY_DENSITY,
     targetSpeed = 0.5,
-    force = 0.01,
+    force = 0.001,
     direction = EAST_VECTOR,
-    color = 'aqua'
+    color = Actor.SCENERY_COLOR
   }: {
     x: number
     y: number
@@ -27,10 +27,9 @@ export default class Puppet extends Actor {
     direction?: Matter.Vector
     color?: string
   }) {
-    const feature = new VerticesFeature({ x, y, vertices, density })
-    super({ feature })
-    this.feature.body.render.fillStyle = color
-    this.feature.body.label = 'rock'
+    const figure = new VerticesFeature({ x, y, vertices, density, color })
+    super({ feature: figure })
+    this.feature.body.label = 'figure'
     this.direction = direction
     this.targetSpeed = targetSpeed
     this.force = force
@@ -42,5 +41,10 @@ export default class Puppet extends Actor {
       const magnified = Matter.Vector.mult(this.direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, magnified)
     }
+  }
+
+  characterCollide ({ actor }: { actor: Actor }): void {
+    super.characterCollide({ actor })
+    this.dent()
   }
 }

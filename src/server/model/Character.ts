@@ -1,6 +1,8 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
+import { DEBUG } from '../lib/debug'
 import Actor from './Actor'
+import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
@@ -9,11 +11,17 @@ export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
-  static DEBUG_MAKE_IT = false
+  static MAXIMUM_RADIUS = 15
+  static MARGIN = Character.MAXIMUM_RADIUS + 1
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
-  controllable = true
+  ready = true
+  pursuer?: Bot
+  blocked = true // Philosophical
+  moving = false
+  declare feature: CircleFeature
+  observer = false
 
   constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
     x: number
@@ -21,10 +29,9 @@ export default class Character extends Actor {
     color?: string
     radius?: number
   }) {
-    const feature = new CircleFeature({ x, y, radius })
+    const feature = new CircleFeature({ x, y, radius, color })
     super({ feature })
     this.radius = radius
-    this.feature.body.render.fillStyle = color
     this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
     if (Character.characters.size === 1) this.makeIt()
@@ -32,15 +39,50 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    if (this.controllable) {
+    if (this.ready || this.observer) {
       const vector = { x: 0, y: 0 }
-      if (this.controls.up) vector.y += -1
-      if (this.controls.down) vector.y += 1
-      if (this.controls.left) vector.x += -1
-      if (this.controls.right) vector.x += 1
+      this.moving = false
+      if (this.controls.up) {
+        vector.y += -1
+        this.moving = true
+      }
+      if (this.controls.down) {
+        vector.y += 1
+        this.moving = true
+      }
+      if (this.controls.left) {
+        vector.x += -1
+        this.moving = true
+      }
+      if (this.controls.right) {
+        vector.x += 1
+        this.moving = true
+      }
       const direction = Matter.Vector.normalise(vector)
       const multiplied = Matter.Vector.mult(direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, multiplied)
+    }
+  }
+
+  beReady = (): void => {
+    this.ready = true
+    this.setColor('red')
+  }
+
+  characterCollide ({ actor }: { actor: Actor }): void {
+    if (Character.it === actor) {
+      const it = actor as Character
+      if (it.ready && this.ready) {
+        this.makeIt()
+      }
+    }
+  }
+
+  destroy (): void {
+    super.destroy()
+    Character.characters.delete(this.feature.body.id)
+    if (this.pursuer != null) {
+      this.pursuer.setPath()
     }
   }
 
@@ -49,24 +91,16 @@ export default class Character extends Actor {
       start: this.feature.body.position,
       end,
       startVelocity: this.feature.body.velocity,
+      endVelocity: velocity,
       debugColor
     })
   }
 
-  getSides (point: Matter.Vector): Matter.Vector[] {
-    const arrow = Matter.Vector.sub(point, this.feature.body.position)
-    const direction = Matter.Vector.normalise(arrow)
-    const perp = Matter.Vector.perp(direction)
-    const startPerp = Matter.Vector.mult(perp, this.radius)
-    const leftSide = Matter.Vector.add(this.feature.body.position, startPerp)
-    const rightSide = Matter.Vector.sub(this.feature.body.position, startPerp)
-    return [leftSide, rightSide]
-  }
-
   isFeatureVisible (feature: Feature): boolean {
-    const sides = this.getSides(feature.body.position)
-    const viewpoints = [this.feature.body.position, ...sides]
-    const isVisible = feature.isVisible({ center: this.feature.body.position, viewpoints, obstacles: Feature.obstacles })
+    const isVisible = feature.isVisible({
+      center: this.feature.body.position,
+      radius: this.radius
+    })
 
     return isVisible
   }
@@ -81,22 +115,28 @@ export default class Character extends Actor {
   }
 
   loseIt (): void {
-    this.feature.body.render.fillStyle = 'green'
+    this.setColor('green')
+  }
+
+  loseReady (): void {
+    this.ready = false
+    this.setColor('white')
   }
 
   makeIt (): void {
-    if (Character.DEBUG_MAKE_IT) console.log('makeIt', this.feature.body.id)
+    if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    if (Character.it != null) Character.it.loseIt()
+    Character.it?.loseIt()
+    this.loseReady()
+    this.setColor('white')
     Character.it = this
-    this.controllable = false
-    this.feature.body.render.fillStyle = 'white'
-    setTimeout(() => {
-      this.controllable = true
+    setTimeout(this.beReady, 5000)
+  }
 
-      this.feature.body.render.fillStyle = 'red'
-    }, 5000)
+  setColor (color: string): void {
+    this.feature.body.render.fillStyle = color
+    this.feature.body.render.strokeStyle = color
   }
 }

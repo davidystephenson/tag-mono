@@ -1,23 +1,69 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
+import { isPointClear, isPointOpen, isCircleShown, isPointShown } from '../lib/raycast'
 import Actor from './Actor'
 
 export default class Feature {
   static features = new Map<number, Feature>()
   static obstacles: Matter.Body[] = []
+  static isPointClear ({ start, end, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    debug?: boolean
+  }): boolean {
+    return isPointClear({ start, end, obstacles: Feature.obstacles, debug })
+  }
+
+  static isPointOpen ({ start, end, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    debug?: boolean
+  }): boolean {
+    return isPointOpen({
+      start, end, radius, obstacles: Feature.obstacles, debug
+    })
+  }
+
+  static isPointShown ({ start, end, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    debug?: boolean
+  }): boolean {
+    return isPointShown({
+      start, end, radius, obstacles: Feature.obstacles, debug
+    })
+  }
+
+  static isCircleShown ({ start, end, startRadius, endRadius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    startRadius: number
+    endRadius: number
+    debug?: boolean
+  }): boolean {
+    return isCircleShown({
+      start, end, startRadius, endRadius, obstacles: Feature.obstacles, debug
+    })
+  }
+
   readonly body: Matter.Body
   readonly isObstacle: boolean
   actor?: Actor
 
-  constructor ({ body, isObstacle = true, density = 0.001 }: {
+  constructor ({ body, isObstacle = true, density = 0.001, color = 'gray' }: {
     body: Matter.Body
     isObstacle?: boolean
     density?: number
+    color?: string
   }) {
     this.body = body
+    this.body.render.fillStyle = color
+    this.body.render.strokeStyle = color
     this.isObstacle = isObstacle
     Matter.Composite.add(engine.world, this.body)
-    this.body.restitution = 1
+    this.body.restitution = 0
     this.body.friction = 0
     this.body.frictionAir = 0.01
     Matter.Body.setDensity(this.body, density)
@@ -25,10 +71,9 @@ export default class Feature {
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }
 
-  isVisible ({ center, viewpoints, obstacles }: {
+  isVisible ({ center, radius }: {
     center: Matter.Vector
-    viewpoints: Matter.Vector[]
-    obstacles: Matter.Body[]
+    radius: number
   }): boolean {
     return true
   }

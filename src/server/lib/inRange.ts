@@ -1,4 +1,5 @@
 import Matter from 'matter-js'
+import VISION from '../../shared/VISION'
 
 export default function isInRange ({ start, end, range }: {
   start: number
@@ -21,4 +22,13 @@ export function isPointInRange ({ start, end, xRange, yRange }: {
   const yInRange = isInRange({ start: start.y, end: end.y, range: yRange })
 
   return xInRange && yInRange
+}
+
+export function isPointInVisionRange ({ start, end }: {
+  start: Matter.Vector
+  end: Matter.Vector
+}): boolean {
+  return isPointInRange({
+    start, end, xRange: VISION.width, yRange: VISION.height
+  })
 }

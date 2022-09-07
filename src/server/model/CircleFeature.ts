@@ -1,21 +1,22 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
-import { someClearPoint } from '../lib/isClear'
+import { getSides } from '../lib/math'
 import Feature from './Feature'
 
 export default class CircleFeature extends Feature {
   static circleFeatures = new Map<number, CircleFeature>()
   readonly radius: number
-  constructor ({ x, y, radius, isObstacle = false, density = 0.001 }: {
+  constructor ({ x, y, radius, isObstacle = false, density = 0.001, color = 'gray' }: {
     x: number
     y: number
     radius: number
     isObstacle?: boolean
     density?: number
+    color?: string
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, isObstacle, density })
+    super({ body, isObstacle, density, color })
     this.radius = radius
     CircleFeature.circleFeatures.set(this.body.id, this)
   }
@@ -25,22 +26,31 @@ export default class CircleFeature extends Feature {
     CircleFeature.circleFeatures.delete(this.body.id)
   }
 
-  isVisible ({ center, viewpoints, obstacles }: {
+  getSides (point: Matter.Vector): Matter.Vector[] {
+    return getSides({
+      start: this.body.position,
+      end: point,
+      radius: this.radius
+    })
+  }
+
+  isVisible ({ center, radius }: {
     center: Matter.Vector
-    viewpoints: Matter.Vector[]
-    obstacles: Matter.Body[]
+    radius: number
   }): boolean {
-    const inRange = this.body.vertices.some(vertex => isPointInRange({
-      start: center, end: vertex, xRange: VISION.width, yRange: VISION.height
-    }))
-    if (!inRange) return false
-    const arrow = Matter.Vector.sub(this.body.position, center)
+    const arrow = Matter.Vector.sub(center, this.body.position)
     const direction = Matter.Vector.normalise(arrow)
-    const perp = Matter.Vector.perp(direction)
-    const startPerp = Matter.Vector.mult(perp, this.radius)
-    const leftSide = Matter.Vector.add(this.body.position, startPerp)
-    const rightSide = Matter.Vector.sub(this.body.position, startPerp)
-    const endpoints = [this.body.position, leftSide, rightSide]
-    return endpoints.some(endpoint => someClearPoint({ starts: viewpoints, end: endpoint, obstacles }))
+    const magnified = Matter.Vector.mult(direction, this.radius)
+    const closest = Matter.Vector.add(this.body.position, magnified)
+    const inRange = isPointInRange({
+      start: center, end: closest, xRange: VISION.width, yRange: VISION.height
+    })
+    if (!inRange) return false
+    return Feature.isCircleShown({
+      start: center,
+      end: this.body.position,
+      startRadius: radius,
+      endRadius: this.radius
+    })
   }
 }
