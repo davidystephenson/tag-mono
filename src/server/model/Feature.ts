@@ -6,6 +6,7 @@ import Actor from './Actor'
 export default class Feature {
   static features = new Map<number, Feature>()
   static obstacles: Matter.Body[] = []
+  static bodies: Matter.Body[] = []
   static isPointClear ({ start, end, debug }: {
     start: Matter.Vector
     end: Matter.Vector
@@ -68,6 +69,8 @@ export default class Feature {
     this.body.frictionAir = 0.01
     Matter.Body.setDensity(this.body, density)
     Feature.features.set(this.body.id, this)
+    // console.log('feature id test:', this.body.id)
+    Feature.bodies.push(this.body)
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }
 
