@@ -16,6 +16,7 @@ export default class CircleFeature extends Feature {
     color?: string
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
+    // console.log('circleFeature id test:', body.id)
     super({ body, isObstacle, density, color })
     this.radius = radius
     CircleFeature.circleFeatures.set(this.body.id, this)

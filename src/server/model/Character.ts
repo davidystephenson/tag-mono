@@ -34,7 +34,7 @@ export default class Character extends Actor {
     this.radius = radius
     this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
-    if (Character.characters.size === 1) this.makeIt()
+    if (Character.characters.size === 1) setTimeout(() => this.makeIt(), 300)
   }
 
   act (): void {

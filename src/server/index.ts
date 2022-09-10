@@ -91,6 +91,12 @@ io.on('connection', socket => {
 
   socket.on('updateServer', message => {
     player.controls = message.controls
+    if (player.controls.up) {
+      console.log('player.controls.up', player.controls.up)
+      Actor.paused = false
+      runner.enabled = !Actor.paused
+      console.log('Actor.paused', Actor.paused)
+    }
   })
 
   socket.on('disconnect', () => {
@@ -266,7 +272,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: 500, y: 250 })
+  void new Bot({ x: 100, y: -100 })
 }
 
 if (INITIAL.MAZE_BOTS) MAZE_WALLS.forEach(wall => wall.initialBots())
@@ -320,12 +326,14 @@ Matter.Events.on(engine, 'afterUpdate', () => {
     oldTime = newTime
   }
   runner.enabled = !Actor.paused
-  DebugLine.lines = []
-  // DebugCircle.circles = []
-  if (DEBUG.WAYPOINT_CIRCLES) {
-    Waypoint.waypoints.forEach(waypoint => {
-      void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
-    })
+  if (!Actor.paused) {
+    DebugLine.lines = []
+    DebugCircle.circles = []
+    if (DEBUG.WAYPOINT_CIRCLES) {
+      Waypoint.waypoints.forEach(waypoint => {
+        void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
+      })
+    }
   }
   Actor.actors.forEach(actor => actor.act())
 })
