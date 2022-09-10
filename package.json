@@ -38,5 +38,8 @@
     "buffer": "^6.0.3",
     "parcel": "^2.6.2",
     "ts-standard": "^11.0.0"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }
