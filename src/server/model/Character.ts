@@ -34,7 +34,7 @@ export default class Character extends Actor {
     this.radius = radius
     this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
-    if (Character.characters.size === 1) setTimeout(() => this.makeIt(), 300)
+    if (Character.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
   }
 
   act (): void {
@@ -73,7 +73,7 @@ export default class Character extends Actor {
     if (Character.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
-        this.makeIt()
+        this.makeIt({ predator: it })
       }
     }
   }
@@ -114,7 +114,7 @@ export default class Character extends Actor {
     return visibleFeatures
   }
 
-  loseIt (): void {
+  loseIt ({ prey }: { prey: Character }): void {
     this.setColor('green')
   }
 
@@ -123,12 +123,12 @@ export default class Character extends Actor {
     this.setColor('white')
   }
 
-  makeIt (): void {
+  makeIt ({ predator }: { predator: Character }): void {
     if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    Character.it?.loseIt()
+    predator.loseIt({ prey: this })
     this.loseReady()
     this.setColor('white')
     Character.it = this

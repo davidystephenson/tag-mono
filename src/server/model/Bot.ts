@@ -334,7 +334,7 @@ export default class Bot extends Character {
     return [botRight, topRight, point]
   }
 
-  loseIt (): void {
+  loseIt ({ prey }: { prey: Character }): void {
     const botPoint = vectorToPoint(this.feature.body.position)
     void new DebugCircle({ x: botPoint.x, y: botPoint.y, radius: 16, color: 'teal' })
     const northY = this.feature.body.position.y - VISION_HEIGHT
@@ -474,9 +474,9 @@ export default class Bot extends Character {
     boxQuery.forEach(body => console.log(body.label, body.position))
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
-      console.log('this.moving test:', this.moving)
-      console.log('this.blocked test:', this.blocked)
-      const struggling = this.moving && this.blocked
+      console.log('prey.moving test:', prey.moving)
+      console.log('prey.blocked test:', prey.blocked)
+      const struggling = prey.moving && prey.blocked
       console.log('struggling test:', struggling)
       void new DebugCircle({ x: box.center.x, y: box.center.y, radius: 6, color: 'white' })
       if (horizontal) {
@@ -528,7 +528,7 @@ export default class Bot extends Character {
       })
     }
     Actor.paused = true
-    super.loseIt()
+    super.loseIt({ prey })
     this.setPath()
   }
 
@@ -552,7 +552,7 @@ export default class Bot extends Character {
     return null
   }
 
-  makeIt (): void {
+  makeIt ({ predator }: { predator: Character }): void {
     console.log('Bot.makeIt test')
     // if (struggling || Character.it == null) {
 
@@ -575,7 +575,7 @@ export default class Bot extends Character {
     // }
     this.setPath()
     this.blocked = false
-    super.makeIt()
+    super.makeIt({ predator })
   }
 
   pathfind ({ goal }: {
