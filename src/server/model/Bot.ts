@@ -97,7 +97,7 @@ export default class Bot extends Character {
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point] })
-        const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'yellow' : undefined
+        const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'red' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
       } else {
         this.chaseCharacters = undefined
@@ -136,11 +136,11 @@ export default class Bot extends Character {
     }
   }
 
-  flee (): Direction {
+  flee (): Direction | null {
     const chaseTime = this.chaseTime ?? Date.now()
     const difference = Date.now() - chaseTime
     if (difference > Bot.TIME_LIMIT) {
-      this.unblock()
+      return this.unblock()
     }
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
     if (Character.it == null) {
@@ -527,7 +527,7 @@ export default class Bot extends Character {
         width: this.radius * 2
       })
     }
-    Actor.paused = true
+    // Actor.paused = true
     super.loseIt({ prey })
     this.setPath()
   }
@@ -636,7 +636,7 @@ export default class Bot extends Character {
     }
     this.setPath({ path: [unblockPoint] })
     this.unblocking = true
-    const debugColor = DEBUG.NOT_IT_CHOICE ? 'black' : undefined
+    const debugColor = DEBUG.NOT_IT_CHOICE ? 'limegreen' : undefined
     return this.getDirection({ end: this.path[0], debugColor })
   }
 

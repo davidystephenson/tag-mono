@@ -92,10 +92,8 @@ io.on('connection', socket => {
   socket.on('updateServer', message => {
     player.controls = message.controls
     if (player.controls.up) {
-      console.log('player.controls.up', player.controls.up)
       Actor.paused = false
       runner.enabled = !Actor.paused
-      console.log('Actor.paused', Actor.paused)
     }
   })
 
