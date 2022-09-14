@@ -84,16 +84,6 @@ export default class Bot extends Character {
       if (eligibleCharacters.length > 0) {
         const distances = eligibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(eligibleCharacters, distances)
-        if (this.chaseTime == null) this.chaseTime = Date.now()
-        else {
-          const difference = Date.now() - this.chaseTime
-          if (difference > Bot.TIME_LIMIT) {
-            if (this.chaseCharacters == null) this.chaseCharacters = {}
-            this.chaseCharacters[close.feature.body.id] = true
-            console.log('give up on', close.feature.body.id)
-            return null
-          }
-        }
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point] })
@@ -124,7 +114,7 @@ export default class Bot extends Character {
       })
       void new DebugCircle({ x: this.path[0].x, y: this.path[0].y, radius: 10, color: 'purple' })
     }
-    const target = this.getTarget({ path: this.path })
+    const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
       const target = this.pathfind({ goal: this.path[0] })
       if (target == null) return this.loseWay()
@@ -163,10 +153,6 @@ export default class Bot extends Character {
 
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
-  }
-
-  getTarget ({ path }: { path: Matter.Vector[] }): Matter.Vector | undefined {
-    return path.find(point => this.isPointReachable({ point }))
   }
 
   getUnblockPoint (): Matter.Vector | null {
@@ -479,7 +465,7 @@ export default class Bot extends Character {
       const struggling = prey.moving && prey.blocked
       console.log('struggling test:', struggling)
       void new DebugCircle({ x: box.center.x, y: box.center.y, radius: 6, color: 'white' })
-      if (horizontal) {
+      if (struggling) {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
         const scale = 1 // Math.min(1, speed / 4)
         console.log('horizontal', horizontal)

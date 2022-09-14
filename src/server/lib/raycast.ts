@@ -166,9 +166,10 @@ export function getCircleCasts ({ start, end, startRadius, endRadius }: {
   const [leftEnd, rightEnd] = getPerpendicularSides({
     point: end, perpendicular: endPerpendicular
   })
+  const center = [start, end]
   const left = [leftStart, leftEnd]
   const right = [rightStart, rightEnd]
-  const casts = [left, right]
+  const casts = [center, left, right]
 
   return casts
 }
@@ -213,11 +214,9 @@ export function isCircleShown ({
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const sideCasts = getCircleCasts({
+  const casts = getCircleCasts({
     start, end, startRadius, endRadius
   })
-  const center = [start, end]
-  const casts = [center, ...sideCasts]
 
   return isSomeCastClear({ casts, obstacles, debug })
 }

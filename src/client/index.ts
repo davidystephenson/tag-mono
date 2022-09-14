@@ -137,7 +137,7 @@ const draw = function (): void {
   state.debugLabels.forEach(label => {
     context.fillStyle = label.color
     context.lineWidth = 4
-    context.font = '40px sans'
+    context.font = '10px sans'
     context.fillText(label.text, label.x - camera.x, label.y - camera.y)
   })
 }
