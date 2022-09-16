@@ -142,7 +142,7 @@ export default class Wall extends RectangleFeature {
     }
   }
 
-  initialBots (): void {
+  spawnBots (): void {
     void new Bot({ x: this.leftMargin, y: this.topMargin })
     void new Bot({ x: this.leftMargin, y: this.bottomMargin })
     void new Bot({ x: this.rightMargin, y: this.topMargin })

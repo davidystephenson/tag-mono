@@ -96,6 +96,15 @@ export default class Character extends Actor {
     })
   }
 
+  isFeatureClear (feature: Feature): boolean {
+    const isClear = feature.isClear({
+      center: this.feature.body.position,
+      radius: this.radius
+    })
+
+    return isClear
+  }
+
   isFeatureVisible (feature: Feature): boolean {
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
@@ -103,6 +112,15 @@ export default class Character extends Actor {
     })
 
     return isVisible
+  }
+
+  getClearFeatures (): Feature[] {
+    const clearFeatures: Feature[] = []
+    Feature.features.forEach(feature => {
+      const isClear = this.isFeatureClear(feature)
+      if (isClear) clearFeatures.push(feature)
+    })
+    return clearFeatures
   }
 
   getVisibleFeatures (): Feature[] {

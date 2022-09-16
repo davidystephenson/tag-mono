@@ -74,6 +74,13 @@ export default class Feature {
     if (this.isObstacle) Feature.obstacles.push(this.body)
   }
 
+  isClear ({ center, radius }: {
+    center: Matter.Vector
+    radius: number
+  }): boolean {
+    return true
+  }
+
   isVisible ({ center, radius }: {
     center: Matter.Vector
     radius: number

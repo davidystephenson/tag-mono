@@ -35,6 +35,13 @@ export default class CircleFeature extends Feature {
     })
   }
 
+  isClear ({ center, radius }: {
+    center: Matter.Vector
+    radius: number
+  }): boolean {
+    return this.isVisible({ center, radius })
+  }
+
   isVisible ({ center, radius }: {
     center: Matter.Vector
     radius: number

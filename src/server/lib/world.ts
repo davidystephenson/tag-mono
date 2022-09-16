@@ -2,12 +2,17 @@ import Character from '../model/Character'
 
 export const INITIAL = {
   BRICKS: true,
-  CENTER_BOT: false,
-  CORNER_BOTS: false,
+  CENTER_BOT: true,
+  CORNER_BOTS: true,
+  GREEK_WALLS: true,
   GREEK_BOTS: false,
-  MAZE_BOTS: true,
+  GRID_BOTS: true,
+  TOWN_BOTS: false,
+  TOWN_WALLS: false,
   MIDPOINT_BOTS: true,
   PUPPETS: false,
+  COUNTRY_WALLS: false,
+  COUNTRY_BOTS: true,
   WAYPOINT_BOTS: false,
   WAYPOINT_BRICKS: false
 }

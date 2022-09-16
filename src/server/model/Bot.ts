@@ -12,7 +12,6 @@ import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
 import raycast from '../lib/raycast'
-import Actor from './Actor'
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
@@ -44,7 +43,12 @@ export default class Bot extends Character {
 
   act (): void {
     if (DEBUG.BOT_CIRCLES) {
-      const debugColor = Character.it === this ? 'red' : 'white'
+      const debugColor = Character.it === this
+        ? 'red'
+        : this.blocked
+          ? 'white'
+          : 'green'
+
       void new DebugCircle({
         x: this.feature.body.position.x,
         y: this.feature.body.position.y,
@@ -251,6 +255,10 @@ export default class Bot extends Character {
     return close
   }
 
+  isPointFeatureShown ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return Feature.isPointShown({ start: this.feature.body.position, radius: this.radius, end: point, debug })
+  }
+
   isPointReachable ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     const inRange = this.isPointInRange(point)
     if (!inRange) return false
@@ -365,30 +373,36 @@ export default class Bot extends Character {
       console.log('horizontal case')
       const corners = []
       if (farthestSidePoint.x > botPoint.x) {
+        console.log('right side')
+        console.log('farthestSidePoint', farthestSidePoint)
         const botNorth = { x: botPoint.x + this.radius, y: northY }
         const botSouth = { x: botPoint.x + this.radius, y: southY }
         corners.push(...[botNorth, botSouth, northEast, southEast])
       }
       if (farthestSidePoint.x < botPoint.x) {
+        console.log('left side')
         const botNorth = { x: botPoint.x - this.radius, y: northY }
         const botSouth = { x: botPoint.x - this.radius, y: southY }
         corners.push(...[botNorth, botSouth, northWest, southWest])
       }
       corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
       const queryBounds = Matter.Bounds.create(corners)
-      const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
+      const visibleFeatures = this.getClearFeatures()
+      const visibleBodies = visibleFeatures.map(feature => feature.body)
+      const boxQuery = Matter.Query.region(visibleBodies, queryBounds)
       const bottoms = boxQuery.map(body => body.bounds.max.y)
       const tops = boxQuery.map(body => body.bounds.min.y)
       const bottomsAbove = bottoms.filter(y => y < botPoint.y)
       const topsBelow = tops.filter(y => y > botPoint.y)
       if (farthestSidePoint.x > botPoint.x) {
         const lefts = boxQuery.map(body => body.bounds.min.x)
-        const leftsRight = lefts.filter(x => x > botPoint.x)
-        console.log('boxQuery.length', boxQuery.length)
+        const leftsRight = lefts.filter(x => x > botPoint.x + this.radius)
+        console.log('visibleBoxQuery.length', boxQuery.length)
+        console.log('leftsRight', leftsRight)
         farthestSidePoint.x = Math.min(...leftsRight, farthestSidePoint.x)
       } else {
         const rights = boxQuery.map(body => body.bounds.max.x)
-        const rightsLeft = rights.filter(x => x < botPoint.x)
+        const rightsLeft = rights.filter(x => x < botPoint.x - this.radius)
         farthestSidePoint.x = Math.max(...rightsLeft, farthestSidePoint.x)
       }
       boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 10, color: 'magenta' }))
@@ -399,6 +413,9 @@ export default class Bot extends Character {
       box.center = { x: 0.5 * (botPoint.x + offset) + 0.5 * farthestSidePoint.x, y: 0.5 * yMin + 0.5 * yMax }
       box.height = (yMax - yMin) * 0.999
       box.width = Math.abs(botPoint.x + offset - farthestSidePoint.x) * 0.999
+      console.log('botPoint', botPoint)
+      console.log('farthestSidePoint', farthestSidePoint)
+      console.log('box', box)
     } else {
       console.log('vertical case')
       const corners = []
@@ -416,7 +433,10 @@ export default class Bot extends Character {
       }
       corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
       const queryBounds = Matter.Bounds.create(corners)
-      const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
+      const visibleFeatures = this.getClearFeatures()
+      console.log('visibleFeatures.length', visibleFeatures.length)
+      const visibleBodies = visibleFeatures.map(feature => feature.body)
+      const boxQuery = Matter.Query.region(visibleBodies, queryBounds)
       const rights = boxQuery.map(body => body.bounds.max.x)
       const lefts = boxQuery.map(body => body.bounds.min.x)
       const rightsWest = rights.filter(x => x < botPoint.x)
@@ -424,13 +444,13 @@ export default class Bot extends Character {
       if (farthestSidePoint.y > botPoint.y) {
         console.log('below case')
         const tops = boxQuery.map(body => body.bounds.min.y)
-        const topsBelow = tops.filter(y => y > botPoint.y)
+        const topsBelow = tops.filter(y => y > botPoint.y + this.radius)
         console.log('topsBelow.length', topsBelow.length)
         farthestSidePoint.y = Math.min(...topsBelow, farthestSidePoint.y)
       } else {
         console.log('above case')
         const bottoms = boxQuery.map(body => body.bounds.max.y)
-        const bottomsAbove = bottoms.filter(y => y < botPoint.y)
+        const bottomsAbove = bottoms.filter(y => y < botPoint.y - this.radius)
         farthestSidePoint.y = Math.max(...bottomsAbove, farthestSidePoint.y)
       }
       boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 10, color: 'magenta' }))
@@ -441,8 +461,8 @@ export default class Bot extends Character {
       box.width = (xMax - xMin) * 0.999
       box.height = Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.999
       console.log('box', box)
-      console.log('botPoint.y + offset', botPoint.y + offset)
-      console.log('farthestSidePoint.y', farthestSidePoint.y)
+      console.log('botPoint', botPoint)
+      console.log('farthestSidePoint', farthestSidePoint)
     }
     const halfWidth = 0.5 * box.width
     const halfHeight = 0.5 * box.height
@@ -451,13 +471,16 @@ export default class Bot extends Character {
     const southEastCorner = { x: box.center.x + halfWidth, y: box.center.y + halfHeight }
     const northWestCorner = { x: box.center.x - halfWidth, y: box.center.y - halfHeight }
     const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
-    corners.forEach(entryPoint => {
-      void new DebugCircle({ x: entryPoint.x, y: entryPoint.y, radius: 6, color: 'yellow' })
+    corners.forEach(corner => {
+      void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
     })
     const queryBounds = Matter.Bounds.create(corners)
 
     const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
-    boxQuery.forEach(body => console.log(body.label, body.position))
+    boxQuery.forEach(body => {
+      console.log(body.label, body.position)
+      void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 12, color: 'aqua' })
+    })
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
       console.log('prey.moving test:', prey.moving)
@@ -483,7 +506,7 @@ export default class Bot extends Character {
         const m = even * Matter.Vector.magnitude(v)
         const z = 0.02 * m / 5 * size / maxSize
         console.log('z test:', z)
-        const puppet = new Puppet({
+        void new Puppet({
           x: center.x + boxWidth,
           y: center.y + boxHeight,
           direction: Character.it?.feature.body.velocity,
@@ -492,7 +515,7 @@ export default class Bot extends Character {
         })
       } else {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
-        const scale = Math.min(1, speed / 4)
+        const scale = 0.5 // Math.min(1, speed / 4)
         const boxWidth = horizontal ? Math.sign(this.feature.body.position.x - box.center.x) * 0.5 * box.width * (1 - scale) : 0
         const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
         console.log('boxWidth', boxWidth)
@@ -539,6 +562,7 @@ export default class Bot extends Character {
   }
 
   makeIt ({ predator }: { predator: Character }): void {
+    super.makeIt({ predator })
     console.log('Bot.makeIt test')
     // if (struggling || Character.it == null) {
 
@@ -561,7 +585,6 @@ export default class Bot extends Character {
     // }
     this.setPath()
     this.blocked = false
-    super.makeIt({ predator })
   }
 
   pathfind ({ goal }: {
@@ -628,7 +651,21 @@ export default class Bot extends Character {
 
   wander (debug = DEBUG.WANDER): Direction | null {
     const debugColor = debug ? 'tan' : undefined
-    const waypoint = this.getWanderWaypoint()
+    const visibleWaypointIds: number[] = []
+    const visibleTimes = this.searchTimes.filter((time, index) => {
+      const isVisible = this.isPointWallVisible({ point: Waypoint.waypoints[index].position })
+      if (isVisible) visibleWaypointIds.push(Waypoint.waypoints[index].id)
+      return isVisible
+    })
+
+    if (visibleTimes.length === 0) {
+      return this.loseWay()
+    }
+    const earlyTime = Math.min(...visibleTimes)
+    const earlyVisibleIds = visibleWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
+    const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
+    const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
+    const waypoint = Waypoint.waypoints[earlyFarId]
     if (waypoint == null) {
       return null
     }
