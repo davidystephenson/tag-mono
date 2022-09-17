@@ -108,9 +108,9 @@ export default class Bot extends Character {
         this.unblockTries = undefined
       }
     }
-    // if (stuck) {
-    //   return this.explore()
-    // }
+    if (stuck) {
+      return this.explore()
+    }
     if (stuck || bored || arriving) {
       return this.wander()
     }
