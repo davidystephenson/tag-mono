@@ -128,7 +128,7 @@ const draw = function (): void {
   })
   state.debugLines.forEach(line => {
     context.strokeStyle = line.color
-    context.lineWidth = 8
+    context.lineWidth = 1
     context.beginPath()
     context.moveTo(line.start.x - camera.x, line.start.y - camera.y)
     context.lineTo(line.end.x - camera.x, line.end.y - camera.y)

@@ -65,8 +65,7 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   const collisions = Matter.Query.ray(obstacles, start, end)
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
-    const color = collide ? 'red' : 'green'
-    void new DebugLine({ start, end, color })
+    !collide && new DebugLine({ start, end, color: 'green' })
   }
   return !collide
 }
@@ -113,12 +112,13 @@ export function casterPointClear ({ starts, end, obstacles, caster, debug }: {
   return caster({ casts, obstacles, debug })
 }
 
-export function isSomeStartClear ({ starts, end, obstacles }: {
+export function isSomeStartClear ({ starts, end, obstacles, debug }: {
   starts: Matter.Vector[]
   end: Matter.Vector
   obstacles: Matter.Body[]
+  debug?: boolean
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: isSomeCastClear })
+  return casterPointClear({ starts, end, obstacles, caster: isSomeCastClear, debug })
 }
 
 export function isEveryStartClear ({ starts, end, obstacles, debug }: {

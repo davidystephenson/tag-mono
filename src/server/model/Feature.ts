@@ -28,6 +28,19 @@ export default class Feature {
     })
   }
 
+  static isPointX ({ start, end, radius, body, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    radius: number
+    body: Matter.Body
+    debug?: boolean
+  }): boolean {
+    const bodies = Feature.bodies.filter(element => element !== body)
+    return isPointShown({
+      start, end, radius, obstacles: bodies, debug
+    })
+  }
+
   static isPointShown ({ start, end, radius, debug }: {
     start: Matter.Vector
     end: Matter.Vector

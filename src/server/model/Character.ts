@@ -6,6 +6,9 @@ import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
+import { setEngineTimeout } from '../lib/engine'
+import VISION from '../../shared/VISION'
+import { isPointInVisionRange } from '../lib/inRange'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -65,6 +68,7 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
+    console.log('beReady')
     this.ready = true
     this.setColor('red')
   }
@@ -114,6 +118,10 @@ export default class Character extends Actor {
     return isVisible
   }
 
+  isPointInRange (point: Matter.Vector): boolean {
+    return isPointInVisionRange({ start: this.feature.body.position, end: point })
+  }
+
   getClearFeatures (): Feature[] {
     const clearFeatures: Feature[] = []
     Feature.features.forEach(feature => {
@@ -150,7 +158,8 @@ export default class Character extends Actor {
     this.loseReady()
     this.setColor('white')
     Character.it = this
-    setTimeout(this.beReady, 5000)
+    setEngineTimeout(5000, this.beReady)
+    // setTimeout(this.beReady, 5000)
   }
 
   setColor (color: string): void {

@@ -6,7 +6,7 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import Matter from 'matter-js'
 import Wall from './model/Wall'
-import { engine, runner } from './lib/engine'
+import { engine, runner, engineTimers } from './lib/engine'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import config from './config.json'
 import DebugLine from '../shared/DebugLine'
@@ -121,7 +121,7 @@ if (INITIAL.TOWN_WALLS) {
   const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
   const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
   const FORT = new Wall({ x: -872.5, y: -900, width: 1165, height: 100 })
-  const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210 })
+  const MANSION = new Wall({ x: -520, y: -700, width: 400, height: 210 })
   const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2 })
   const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1 })
   const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100 })
@@ -293,7 +293,7 @@ if (INITIAL.PUPPETS) {
 }
 
 if (INITIAL.CENTER_BOT) {
-  void new Bot({ x: -756.9248410931764, y: -184.90992151969084 })
+  void new Bot({ x: -750, y: -240 })
 }
 
 if (INITIAL.GREEK_BOTS) greekWalls.forEach(wall => wall.spawnBots())
@@ -331,6 +331,19 @@ let warningCount = 0
 let warningDifferenceTotal = 0
 let initial = true
 Matter.Events.on(engine, 'afterUpdate', () => {
+  engineTimers.forEach((value, index) => {
+    const endTime = value[0]
+    const action = value[1]
+    if (engine.timing.timestamp > endTime) {
+      action()
+    }
+  })
+  Array.from(engineTimers.entries()).forEach(([key, value]) => {
+    const endTime = value[0]
+    if (engine.timing.timestamp > endTime) {
+      engineTimers.delete(key)
+    }
+  })
   if (DEBUG.STEP_TIME) {
     const newTime = Date.now()
     const difference = newTime - oldTime
