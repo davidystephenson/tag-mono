@@ -5,24 +5,26 @@ import Actor from './Actor'
 
 export default class Feature {
   static features = new Map<number, Feature>()
-  static obstacles: Matter.Body[] = []
+  static scenery: Matter.Body[] = []
   static bodies: Matter.Body[] = []
   static isPointClear ({ start, end, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     debug?: boolean
   }): boolean {
-    return isPointClear({ start, end, obstacles: Feature.obstacles, debug })
+    return isPointClear({ start, end, obstacles: Feature.bodies, debug })
   }
 
-  static isPointOpen ({ start, end, radius, debug }: {
+  static isPointOpen ({ start, end, radius, body, debug }: {
     start: Matter.Vector
     end: Matter.Vector
     radius: number
+    body: Matter.Body
     debug?: boolean
   }): boolean {
+    const bodies = Feature.bodies.filter(element => element !== body)
     return isPointOpen({
-      start, end, radius, obstacles: Feature.obstacles, debug
+      start, end, radius, obstacles: bodies, debug
     })
   }
 
@@ -33,7 +35,7 @@ export default class Feature {
     debug?: boolean
   }): boolean {
     return isPointShown({
-      start, end, radius, obstacles: Feature.obstacles, debug
+      start, end, radius, obstacles: Feature.scenery, debug
     })
   }
 
@@ -45,7 +47,7 @@ export default class Feature {
     debug?: boolean
   }): boolean {
     return isCircleShown({
-      start, end, startRadius, endRadius, obstacles: Feature.obstacles, debug
+      start, end, startRadius, endRadius, obstacles: Feature.scenery, debug
     })
   }
 
@@ -71,7 +73,7 @@ export default class Feature {
     Feature.features.set(this.body.id, this)
     // console.log('feature id test:', this.body.id)
     Feature.bodies.push(this.body)
-    if (this.isObstacle) Feature.obstacles.push(this.body)
+    if (this.isObstacle) Feature.scenery.push(this.body)
   }
 
   isClear ({ center, radius }: {
@@ -91,6 +93,6 @@ export default class Feature {
   destroy (): void {
     Matter.Composite.remove(engine.world, this.body)
     Feature.features.delete(this.body.id)
-    if (this.isObstacle) Feature.obstacles = Feature.obstacles.filter(obstacle => obstacle.id !== this.body.id)
+    if (this.isObstacle) Feature.scenery = Feature.scenery.filter(obstacle => obstacle.id !== this.body.id)
   }
 }

@@ -4,7 +4,7 @@ export const DEBUG = {
   CLEAR_WAYPOINTS: false,
   COLLISON: false,
   IS_CLEAR: false,
-  IT_CHOICE: false,
+  IT_CHOICE: true,
   LOST: false,
   MAKE_IT: false,
   NOT_IT_CHOICE: true,
@@ -13,7 +13,7 @@ export const DEBUG = {
   SPEED: false,
   STEP_TIME: true,
   STEP_TIME_LIMIT: 35,
-  WANDER: false,
+  WANDER: true,
   WAYPOINT_CIRCLES: false,
   WAYPOINT_LABELS: false
 }

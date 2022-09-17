@@ -374,4 +374,3 @@ Matter.Events.on(engine, 'collisionStart', event => {
     }
   })
 })
-Actor.paused = true

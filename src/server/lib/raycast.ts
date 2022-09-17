@@ -160,9 +160,11 @@ export function getCircleCasts ({ start, end, startRadius, endRadius }: {
   const [leftStart, rightStart] = getPerpendicularSides({
     point: start, perpendicular: startPerpendicular
   })
-  const endPerpendicular = getPerpendicular({
-    start, end, radius: endRadius - 1
-  })
+  const endPerpendicular = startRadius === endRadius
+    ? startPerpendicular
+    : getPerpendicular({
+      start, end, radius: endRadius - 1
+    })
   const [leftEnd, rightEnd] = getPerpendicularSides({
     point: end, perpendicular: endPerpendicular
   })
@@ -197,9 +199,7 @@ export function isPointShown ({ debug, end, obstacles, radius, start }: {
   radius: number
   start: Matter.Vector
 }): boolean {
-  const sideCasts = getSideCasts({ start, end, radius })
-  const center = [start, end]
-  const casts = [center, ...sideCasts]
+  const casts = getCircleCasts({ start, end, startRadius: radius, endRadius: radius })
 
   return isSomeCastClear({ casts, obstacles, debug })
 }
