@@ -420,7 +420,7 @@ export default class Bot extends Character {
       console.log('offset', offset)
       box.center = { x: 0.5 * (botPoint.x + offset) + 0.5 * farthestSidePoint.x, y: 0.5 * yMin + 0.5 * yMax }
       box.height = (yMax - yMin) - 1
-      box.width = Math.abs(botPoint.x + offset - farthestSidePoint.x) - 1
+      box.width = Math.abs(botPoint.x + offset - farthestSidePoint.x) - 10
       console.log('botPoint', botPoint)
       console.log('farthestSidePoint', farthestSidePoint)
       console.log('box', box)
@@ -487,15 +487,16 @@ export default class Bot extends Character {
     const southEastCorner = { x: box.center.x + halfWidth, y: box.center.y + halfHeight }
     const northWestCorner = { x: box.center.x - halfWidth, y: box.center.y - halfHeight }
     const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
-    corners.forEach(corner => {
-      void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
+    corners.forEach((corner, index, corners) => {
+      // void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
+      void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'yellow' })
     })
     const queryBounds = Matter.Bounds.create(corners)
 
     const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
     boxQuery.forEach(body => {
       console.log(body.label, body.position)
-      void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 12, color: 'aqua' })
+      void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'orange' })
     })
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
@@ -553,8 +554,8 @@ export default class Bot extends Character {
         height: this.radius * 2,
         width: this.radius * 2
       })
+      Actor.paused = true
     }
-    Actor.paused = true
     super.loseIt({ prey })
     this.setPath({ path: [], label: 'reset' })
   }
