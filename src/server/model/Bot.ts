@@ -109,11 +109,8 @@ export default class Bot extends Character {
         this.unblockTries = undefined
       }
     }
-    if (stuck) {
-      return this.explore()
-    }
     if (stuck || bored || arriving) {
-      return this.wander()
+      return this.explore()
     }
     return this.followPath(debug)
   }
@@ -360,7 +357,7 @@ export default class Bot extends Character {
     const sideIndex = sideDistances.indexOf(maximum)
     const farthestSidePoint = sideEntryPoints[sideIndex]
     sideEntryPoints.forEach(point => new DebugCircle({ x: point.x, y: point.y, radius: 10, color: 'limegreen' }))
-    void new DebugCircle({ x: farthestSidePoint.x, y: farthestSidePoint.y, radius: 10, color: 'limegreen' })
+    void new DebugCircle({ x: farthestSidePoint.x, y: farthestSidePoint.y, radius: 5, color: 'black' })
     const horizontal = [2, 3].includes(sideIndex)
     const box = { center: botPoint, height: 2 * this.radius, width: 2 * this.radius }
     // const visibleFeatures = this.getClearFeatures()
@@ -388,6 +385,9 @@ export default class Bot extends Character {
       const queryBounds = Matter.Bounds.create(corners)
       const boxQuery0 = Matter.Query.region(visibleBodies, queryBounds)
       const boxQuery = boxQuery0.filter(body => {
+        // if (body.label === 'wall') {
+        //   return true
+        // }
         const points = [...body.vertices, body.position]
         const noPointInRange = points.every(point => !this.isPointInRange(point))
         if (noPointInRange) return true
@@ -413,14 +413,14 @@ export default class Bot extends Character {
         const rightsLeft = rights.filter(x => x < botPoint.x - this.radius)
         farthestSidePoint.x = Math.max(...rightsLeft, farthestSidePoint.x)
       }
-      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 10, color: 'magenta' }))
+      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'magenta' }))
       const yMin = Math.max(...bottomsAbove, northY)
       const yMax = Math.min(...topsBelow, southY)
       const offset = Math.sign(farthestSidePoint.x - botPoint.x) * this.radius * 1
       console.log('offset', offset)
       box.center = { x: 0.5 * (botPoint.x + offset) + 0.5 * farthestSidePoint.x, y: 0.5 * yMin + 0.5 * yMax }
-      box.height = (yMax - yMin) - 1
-      box.width = Math.abs(botPoint.x + offset - farthestSidePoint.x) - 10
+      box.height = (yMax - yMin) * 0.9
+      box.width = Math.abs(botPoint.x + offset - farthestSidePoint.x) * 0.9
       console.log('botPoint', botPoint)
       console.log('farthestSidePoint', farthestSidePoint)
       console.log('box', box)
@@ -469,13 +469,13 @@ export default class Bot extends Character {
         const bottomsAbove = bottoms.filter(y => y < botPoint.y - this.radius)
         farthestSidePoint.y = Math.max(...bottomsAbove, farthestSidePoint.y)
       }
-      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 10, color: 'magenta' }))
+      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'magenta' }))
       const xMin = Math.max(...rightsWest, westX)
       const xMax = Math.min(...leftsEast, eastX)
       const offset = Math.sign(farthestSidePoint.y - botPoint.y) * this.radius
       box.center = { x: 0.5 * xMin + 0.5 * xMax, y: 0.5 * (botPoint.y + offset) + 0.5 * farthestSidePoint.y }
-      box.width = (xMax - xMin) - 1
-      box.height = Math.abs(botPoint.y + offset - farthestSidePoint.y) - 1
+      box.width = (xMax - xMin) * 0.9
+      box.height = Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.9
       console.log('box', box)
       console.log('botPoint', botPoint)
       console.log('farthestSidePoint', farthestSidePoint)
@@ -496,7 +496,7 @@ export default class Bot extends Character {
     const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
     boxQuery.forEach(body => {
       console.log(body.label, body.position)
-      void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'orange' })
+      void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 13, color: 'orange' })
     })
     const isBoxClear = boxQuery.length === 0
     if (isBoxClear) {
@@ -548,12 +548,12 @@ export default class Bot extends Character {
       }
     } else {
       console.log('unclear test')
-      void new Brick({
-        x: this.feature.body.position.x,
-        y: this.feature.body.position.y,
-        height: this.radius * 2,
-        width: this.radius * 2
-      })
+      // void new Brick({
+      // x: this.feature.body.position.x,
+      // y: this.feature.body.position.y,
+      // height: this.radius * 2,
+      // width: this.radius * 2
+      // })
       Actor.paused = true
     }
     super.loseIt({ prey })

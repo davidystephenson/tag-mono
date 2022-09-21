@@ -389,3 +389,19 @@ Matter.Events.on(engine, 'collisionStart', event => {
     }
   })
 })
+
+Matter.Events.on(engine, 'collisionActive', event => {
+  event.pairs.forEach(pair => {
+    const actorA = Actor.actors.get(pair.bodyA.id)
+    const actorB = Actor.actors.get(pair.bodyB.id)
+    const delta = engine.timing.lastDelta
+    if (actorA != null) {
+      actorA.colliding({ actor: actorB, delta })
+    }
+    if (actorB != null) {
+      actorB.colliding({ actor: actorA, delta })
+    }
+  })
+})
+
+// Actor.paused = true

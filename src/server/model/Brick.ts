@@ -27,4 +27,9 @@ export default class Brick extends Actor {
     super.characterCollide({ actor })
     this.dent()
   }
+
+  characterColliding({ actor, delta }: { actor: Actor; delta: number }): void {
+    super.characterColliding({ actor, delta })
+    this.dent(delta)
+  }
 }

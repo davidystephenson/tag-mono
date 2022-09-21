@@ -2,11 +2,11 @@ import Feature from './Feature'
 
 export default class Actor {
   static SCENERY_DENSITY = 0.00003
-  static SCENERY_COLOR = 'rgba(0, 255, 255, 0.5)'
+  static SCENERY_COLOR = 'rgba(0, 255, 255, 1)'
   static paused = false
   static actors = new Map<number, Actor>()
   readonly feature: Feature
-  health = 0.5
+  health = 1
 
   constructor ({ feature }: {
     feature: Feature
@@ -23,8 +23,8 @@ export default class Actor {
     Actor.actors.delete(this.feature.body.id)
   }
 
-  dent (): void {
-    this.health = this.health - 0.001
+  dent (delta: number = 30): void {
+    this.health = this.health - 0.0001 * delta
     if (this.health <= 0) {
       this.destroy()
     } else {
@@ -34,9 +34,17 @@ export default class Actor {
 
   characterCollide ({ actor }: { actor: Actor }): void {}
 
+  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {}
+
   collide ({ actor }: { actor?: Actor }): void {
     if (actor?.feature.body.label === 'character') {
       this.characterCollide({ actor })
+    }
+  }
+
+  colliding ({ actor, delta }: { actor?: Actor, delta: number }): void {
+    if (actor?.feature.body.label === 'character') {
+      this.characterColliding({ actor, delta })
     }
   }
 }

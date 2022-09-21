@@ -2,6 +2,7 @@ import Matter from 'matter-js'
 import { engine } from '../lib/engine'
 import { isPointClear, isPointOpen, isCircleShown, isPointShown } from '../lib/raycast'
 import Actor from './Actor'
+import Wall from './Wall'
 
 export default class Feature {
   static features = new Map<number, Feature>()
@@ -35,7 +36,7 @@ export default class Feature {
     body: Matter.Body
     debug?: boolean
   }): boolean {
-    const bodies = Feature.bodies.filter(element => element !== body)
+    const bodies = Wall.wallObstacles.filter(element => element !== body)
     return isPointShown({
       start, end, radius, obstacles: bodies, debug
     })
