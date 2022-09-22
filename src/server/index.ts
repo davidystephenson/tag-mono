@@ -20,13 +20,6 @@ import { WORLD_SIZE } from './lib/world'
 import { DEBUG } from './lib/debug'
 import Game from './model/Game'
 
-/* TO DO:
-Crates and Puppets Block Navigation Vision
-Random starting internal obstacles
-Generate AI players
-Random boundary size
-*/
-
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
@@ -83,7 +76,7 @@ function tick (): void {
 io.on('connection', socket => {
   console.log('connection:', socket.id)
   socket.emit('socketId', socket.id)
-  const player = new Player({ x: 0, y: -100, socket })
+  const player = new Player({ x: 0, y: -100, socket, observer: true })
 
   socket.on('updateServer', message => {
     player.controls = message.controls

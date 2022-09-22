@@ -8,25 +8,28 @@ import Wall from './Wall'
 import Waypoint from './Waypoint'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
-import { OBSERVER } from '../lib/world'
-import { whichMin } from '../lib/math'
-import Matter from 'matter-js'
-import { isPointClear } from '../lib/raycast'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
   readonly socket: Socket
 
-  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
+  constructor ({
+    color = 'green',
+    observer,
+    radius = 15,
+    socket,
+    x = 0,
+    y = 0
+  }: {
+    color?: string
+    observer?: boolean
+    radius?: number
+    socket: Socket
     x: number
     y: number
-    socket: Socket
-    angle?: number
-    color?: string
-    radius?: number
   }) {
     super({ x, y, color, radius })
-    if (OBSERVER) {
+    if (observer === true) {
       this.observer = true
       this.loseReady()
     }

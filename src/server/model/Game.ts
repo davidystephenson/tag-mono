@@ -1,7 +1,6 @@
 import DebugLabel from '../../shared/DebugLabel'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
-import { HALF_WORLD_SIZE } from '../lib/world'
 import Bot from './Bot'
 import Brick from './Brick'
 import Character from './Character'
@@ -9,7 +8,6 @@ import Wall from './Wall'
 import Waypoint from './Waypoint'
 
 export default class Game {
-  static WORLD_MARGIN = HALF_WORLD_SIZE - Character.MARGIN
   name = 'World'
 
   constructor ({
@@ -43,6 +41,8 @@ export default class Game {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    const halfSize = size / 2
+    const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
     if (town === true) {
       const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
@@ -192,16 +192,16 @@ export default class Game {
       })
     }
     if (cornerBots === true) {
-      void new Bot({ x: -Game.WORLD_MARGIN, y: -Game.WORLD_MARGIN })
-      void new Bot({ x: Game.WORLD_MARGIN, y: -Game.WORLD_MARGIN })
-      void new Bot({ x: -Game.WORLD_MARGIN, y: Game.WORLD_MARGIN })
-      void new Bot({ x: Game.WORLD_MARGIN, y: Game.WORLD_MARGIN })
+      void new Bot({ x: -marginEdge, y: -marginEdge })
+      void new Bot({ x: marginEdge, y: -marginEdge })
+      void new Bot({ x: -marginEdge, y: marginEdge })
+      void new Bot({ x: marginEdge, y: marginEdge })
     }
     if (midpointBots === true) {
-      void new Bot({ x: 0, y: -Game.WORLD_MARGIN })
-      void new Bot({ x: Game.WORLD_MARGIN, y: 0 })
-      void new Bot({ x: 0, y: Game.WORLD_MARGIN })
-      void new Bot({ x: -Game.WORLD_MARGIN, y: 0 })
+      void new Bot({ x: 0, y: -marginEdge })
+      void new Bot({ x: marginEdge, y: 0 })
+      void new Bot({ x: 0, y: marginEdge })
+      void new Bot({ x: -marginEdge, y: 0 })
     }
   }
 }
