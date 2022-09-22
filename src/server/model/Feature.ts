@@ -90,6 +90,10 @@ export default class Feature {
     if (this.isObstacle) Feature.scenery.push(this.body)
   }
 
+  getArea (): number {
+    return Matter.Vertices.area(this.body.vertices, true)
+  }
+
   isClear ({ center, radius }: {
     center: Matter.Vector
     radius: number

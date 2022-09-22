@@ -2,6 +2,9 @@ import Matter from 'matter-js'
 import PolygonFeature from './PolygonFeature'
 
 export default class RectangleFeature extends PolygonFeature {
+  width: number
+  height: number
+
   constructor ({ x, y, width, height, density = 0.001, color = 'gray' }: {
     x: number
     y: number
@@ -12,5 +15,11 @@ export default class RectangleFeature extends PolygonFeature {
   }) {
     const body = Matter.Bodies.rectangle(x, y, width, height)
     super({ body, density, color })
+    this.width = width
+    this.height = height
+  }
+
+  getArea (): number {
+    return this.width * this.height
   }
 }

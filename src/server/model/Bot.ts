@@ -83,15 +83,20 @@ export default class Bot extends Character {
     const arriving = !bored && this.isPointClose({ point: this.path[0], limit: 15 })
 
     if (isIt) {
-      const visibleCharacters = this.getVisibleCharacters()
+      const visibleCharacters: Character[] = []
+      Character.characters.forEach(character => {
+        const isVisible =
+          character !== this &&
+          character.ready &&
+          this.isFeatureVisible(character.feature)
+        if (isVisible) visibleCharacters.push(character)
+      })
       if (visibleCharacters.length > 0) {
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
-        const debugColor = DEBUG.IT_CHOICE || DEBUG.CHASE ? 'red' : undefined
-        return this.getDirection({ end: close.feature.body.position, debugColor })
       }
     } else {
       const itVisible = this.isFeatureVisible(Character.it.feature)
@@ -122,9 +127,9 @@ export default class Bot extends Character {
       const point = Waypoint.waypoints[index].position
       const inRange = this.isPointInRange(point)
       if (!inRange) return false
-      const isVisible = this.isPointOpen({ point })
-      if (isVisible) openWaypointIds.push(Waypoint.waypoints[index].id)
-      return isVisible
+      const isCharacterOpen = this.isPointCharacterOpen({ point })
+      if (isCharacterOpen) openWaypointIds.push(Waypoint.waypoints[index].id)
+      return isCharacterOpen
     })
     if (openTimes.length === 0) {
       return this.wander()
@@ -156,7 +161,7 @@ export default class Bot extends Character {
       this.path.slice(0, originIndex).forEach((point, i) => {
         void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
       })
-      void new DebugCircle({ x: this.path[0].x, y: this.path[0].y, radius: 10, color: 'purple' })
+      void new DebugCircle({ x: this.path[0].x, y: this.path[0].y, radius: 5, color: 'purple' })
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
@@ -210,7 +215,7 @@ export default class Bot extends Character {
     return mostDifferent.position
   }
 
-  getVisibleCharacters (): Character[] {
+  getOpenCharacters (): Character[] {
     const characters = Character.characters.values()
     const visibleCharacters = []
     for (const character of characters) {
@@ -554,7 +559,7 @@ export default class Bot extends Character {
       // height: this.radius * 2,
       // width: this.radius * 2
       // })
-      Actor.paused = true
+      // Actor.paused = true
     }
     super.loseIt({ prey })
     this.setPath({ path: [], label: 'reset' })

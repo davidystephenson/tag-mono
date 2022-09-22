@@ -331,6 +331,7 @@ let oldTime = Date.now()
 let warningTime = Date.now()
 let warningCount = 0
 let warningDifferenceTotal = 0
+const warnings10: number[] = []
 let initial = true
 Matter.Events.on(engine, 'afterUpdate', () => {
   engineTimers.forEach((value, index) => {
@@ -359,7 +360,12 @@ Matter.Events.on(engine, 'afterUpdate', () => {
       const warningDifference = newTime - warningTime
       warningDifferenceTotal = warningDifferenceTotal + warningDifference
       const average = Math.floor(warningDifferenceTotal / warningCount)
-      console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}] <${Bot.botCount} bots>`)
+      warnings10.unshift(warningDifference)
+      if (warnings10.length > 10) {
+        warnings10.pop()
+      }
+      const average10 = Math.floor(warnings10.reduce((a, b) => a + b, 0) / warnings10.length)
+      console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}] <${Bot.botCount} bots>`)
       warningTime = newTime
     }
     oldTime = newTime

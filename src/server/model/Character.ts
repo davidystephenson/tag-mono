@@ -9,13 +9,26 @@ import Feature from './Feature'
 import { setEngineTimeout } from '../lib/engine'
 import VISION from '../../shared/VISION'
 import { isPointInVisionRange } from '../lib/inRange'
+import { isPointOpen } from '../lib/raycast'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
+  static bodies: Matter.Body[] = []
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
+  static isPointOpen ({ start, end, body, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    body: Matter.Body
+    radius: number
+    debug?: boolean
+  }): boolean {
+    const obstacles = Character.bodies.filter(b => b !== body)
+    return isPointOpen({ start, end, radius, debug, obstacles })
+  }
+
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
@@ -33,10 +46,11 @@ export default class Character extends Actor {
     radius?: number
   }) {
     const feature = new CircleFeature({ x, y, radius, color })
+    feature.body.label = 'character'
     super({ feature })
     this.radius = radius
-    this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
+    Character.bodies.push(this.feature.body)
     if (Character.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
   }
 
@@ -100,13 +114,23 @@ export default class Character extends Actor {
     })
   }
 
-  isFeatureClear (feature: Feature): boolean {
-    const isClear = feature.isClear({
-      center: this.feature.body.position,
-      radius: this.radius
+  getVisibleFeatures (): Feature[] {
+    const visibleFeatures: Feature[] = []
+    Feature.features.forEach(feature => {
+      const isVisible = this.isFeatureVisible(feature)
+      if (isVisible) visibleFeatures.push(feature)
     })
+    return visibleFeatures
+  }
 
-    return isClear
+  isPointCharacterOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return Character.isPointOpen({
+      start: this.feature.body.position,
+      end: point,
+      body: this.feature.body,
+      radius: this.radius,
+      debug
+    })
   }
 
   isFeatureVisible (feature: Feature): boolean {
@@ -120,24 +144,6 @@ export default class Character extends Actor {
 
   isPointInRange (point: Matter.Vector): boolean {
     return isPointInVisionRange({ start: this.feature.body.position, end: point })
-  }
-
-  getClearFeatures (): Feature[] {
-    const clearFeatures: Feature[] = []
-    Feature.features.forEach(feature => {
-      const isClear = this.isFeatureClear(feature)
-      if (isClear) clearFeatures.push(feature)
-    })
-    return clearFeatures
-  }
-
-  getVisibleFeatures (): Feature[] {
-    const visibleFeatures: Feature[] = []
-    Feature.features.forEach(feature => {
-      const isVisible = this.isFeatureVisible(feature)
-      if (isVisible) visibleFeatures.push(feature)
-    })
-    return visibleFeatures
   }
 
   loseIt ({ prey }: { prey: Character }): void {
@@ -159,7 +165,6 @@ export default class Character extends Actor {
     this.setColor('white')
     Character.it = this
     setEngineTimeout(5000, this.beReady)
-    // setTimeout(this.beReady, 5000)
   }
 
   setColor (color: string): void {

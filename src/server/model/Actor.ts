@@ -6,13 +6,17 @@ export default class Actor {
   static paused = false
   static actors = new Map<number, Actor>()
   readonly feature: Feature
-  health = 1
+  maximumHealth: number
+  health: number
 
   constructor ({ feature }: {
     feature: Feature
   }) {
     this.feature = feature
     this.feature.actor = this
+    this.health = this.feature.getArea()
+    this.maximumHealth = this.health
+    console.log(this.feature.body.label, 'health test:', this.health)
     Actor.actors.set(this.feature.body.id, this)
   }
 
@@ -24,11 +28,12 @@ export default class Actor {
   }
 
   dent (delta: number = 30): void {
-    this.health = this.health - 0.0001 * delta
+    this.health = this.health - delta * 0.1
     if (this.health <= 0) {
       this.destroy()
     } else {
-      this.feature.body.render.fillStyle = `rgba(0, 255, 255, ${this.health})`
+      const alpha = this.health / this.maximumHealth
+      this.feature.body.render.fillStyle = `rgba(0, 255, 255, ${alpha})`
     }
   }
 
