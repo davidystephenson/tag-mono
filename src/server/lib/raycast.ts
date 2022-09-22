@@ -2,7 +2,6 @@ import Matter from 'matter-js'
 import DebugLine from '../../shared/DebugLine'
 import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
-import { vectorToPoint } from './engine'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
 export default function raycast ({ start, end, obstacles }: {

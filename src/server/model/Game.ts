@@ -1,7 +1,12 @@
+import Matter from 'matter-js'
 import { wallProps } from '..'
+import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
+import DebugLine from '../../shared/DebugLine'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
+import { engine, engineTimers, runner } from '../lib/engine'
+import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
 import Character from './Character'
@@ -205,5 +210,88 @@ export default class Game {
       void new Bot({ x: 0, y: marginEdge })
       void new Bot({ x: -marginEdge, y: 0 })
     }
+    Matter.Runner.run(runner, engine)
+    let oldTime = Date.now()
+    let warningTime = Date.now()
+    let warningCount = 0
+    let warningDifferenceTotal = 0
+    const warnings10: number[] = []
+    let initial = true
+    Matter.Events.on(engine, 'afterUpdate', () => {
+      engineTimers.forEach((value, index) => {
+        const endTime = value[0]
+        const action = value[1]
+        if (engine.timing.timestamp > endTime) {
+          action()
+        }
+      })
+      Array.from(engineTimers.entries()).forEach(([key, value]) => {
+        const endTime = value[0]
+        if (engine.timing.timestamp > endTime) {
+          engineTimers.delete(key)
+        }
+      })
+      if (DEBUG.STEP_TIME) {
+        const newTime = Date.now()
+        const difference = newTime - oldTime
+        if (initial) {
+          console.log('initial difference:', difference)
+          initial = false
+        }
+
+        if (difference >= DEBUG.STEP_TIME_LIMIT) {
+          warningCount = warningCount + 1
+          const warningDifference = newTime - warningTime
+          warningDifferenceTotal = warningDifferenceTotal + warningDifference
+          const average = Math.floor(warningDifferenceTotal / warningCount)
+          warnings10.unshift(warningDifference)
+          if (warnings10.length > 10) {
+            warnings10.pop()
+          }
+          const average10 = Math.floor(warnings10.reduce((a, b) => a + b, 0) / warnings10.length)
+          console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}] <${Bot.botCount} bots>`)
+          warningTime = newTime
+        }
+        oldTime = newTime
+      }
+      runner.enabled = !Actor.paused
+      if (!Actor.paused) {
+        DebugLine.lines = []
+        DebugCircle.circles = []
+        if (DEBUG.WAYPOINT_CIRCLES) {
+          Waypoint.waypoints.forEach(waypoint => {
+            void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
+          })
+        }
+      }
+      Actor.actors.forEach(actor => actor.act())
+    })
+
+    Matter.Events.on(engine, 'collisionStart', event => {
+      event.pairs.forEach(pair => {
+        const actorA = Actor.actors.get(pair.bodyA.id)
+        const actorB = Actor.actors.get(pair.bodyB.id)
+        if (actorA != null) {
+          actorA.collide({ actor: actorB })
+        }
+        if (actorB != null) {
+          actorB.collide({ actor: actorA })
+        }
+      })
+    })
+
+    Matter.Events.on(engine, 'collisionActive', event => {
+      event.pairs.forEach(pair => {
+        const actorA = Actor.actors.get(pair.bodyA.id)
+        const actorB = Actor.actors.get(pair.bodyB.id)
+        const delta = engine.timing.lastDelta
+        if (actorA != null) {
+          actorA.colliding({ actor: actorB, delta })
+        }
+        if (actorB != null) {
+          actorB.colliding({ actor: actorA, delta })
+        }
+      })
+    })
   }
 }
