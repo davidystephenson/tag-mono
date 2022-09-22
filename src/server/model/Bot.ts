@@ -5,7 +5,7 @@ import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
 import Waypoint from './Waypoint'
 import DebugCircle from '../../shared/DebugCircle'
-import VISION, { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
+import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Direction from './Direction'
 import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
@@ -15,8 +15,6 @@ import raycast from '../lib/raycast'
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
-import Actor from './Actor'
-import { isPointInVisionRange } from '../lib/inRange'
 
 export default class Bot extends Character {
   static botCount = 0
@@ -307,7 +305,6 @@ export default class Bot extends Character {
     console.log('boxToTriangle')
     const halfHeight = Math.max(this.radius, 0.5 * scale * box.height)
     const halfWidth = Math.max(this.radius, 0.5 * scale * box.width)
-    const sideX = sign * 2 * halfWidth
     const topRight = { x: halfWidth, y: -halfHeight }
     const botRight = { x: halfWidth, y: halfHeight }
     const topLeft = { x: -halfWidth, y: -halfHeight }
@@ -539,7 +536,7 @@ export default class Bot extends Character {
         })
       } else {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
-        const scale = 0.5 // Math.min(1, speed / 4)
+        const scale = Math.min(1, speed / 4)
         const boxWidth = horizontal ? Math.sign(this.feature.body.position.x - box.center.x) * 0.5 * box.width * (1 - scale) : 0
         const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
         console.log('boxWidth', boxWidth)

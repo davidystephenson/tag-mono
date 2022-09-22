@@ -7,13 +7,13 @@ export const INITIAL = {
   GREEK_WALLS: true,
   GREEK_BOTS: false,
   GRID_BOTS: false,
-  TOWN_BOTS: false,
+  TOWN_BOTS: true,
   TOWN_WALLS: true,
   MIDPOINT_BOTS: false,
   PUPPETS: false,
   COUNTRY_WALLS: true,
-  COUNTRY_BOTS: false,
-  WAYPOINT_BOTS: true,
+  COUNTRY_BOTS: true,
+  WAYPOINT_BOTS: false,
   WAYPOINT_BRICKS: true
 }
 export const WORLD_SIZE = 3000
