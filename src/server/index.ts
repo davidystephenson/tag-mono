@@ -16,7 +16,6 @@ import Character from './model/Character'
 import Player from './model/Player'
 import Waypoint from './model/Waypoint'
 import DebugCircle from '../shared/DebugCircle'
-import { WORLD_SIZE } from './lib/world'
 import { DEBUG } from './lib/debug'
 import Game from './model/Game'
 
@@ -94,8 +93,9 @@ io.on('connection', socket => {
   })
 })
 
+const WORLD_SIZE = 3000
 const WALL_SIZE = WORLD_SIZE * 3
-const wallProps = [
+export const wallProps = [
   { x: 0, y: WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
   { x: 0, y: -WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
   { x: WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE },

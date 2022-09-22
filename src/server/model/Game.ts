@@ -1,3 +1,4 @@
+import { wallProps } from '..'
 import DebugLabel from '../../shared/DebugLabel'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
@@ -41,6 +42,7 @@ export default class Game {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
