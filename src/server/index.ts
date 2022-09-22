@@ -14,7 +14,7 @@ import Character from './model/Character'
 import Player from './model/Player'
 import DebugCircle from '../shared/DebugCircle'
 import { DEBUG } from './lib/debug'
-import Game from './model/Game'
+import Play from './model/Play'
 
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
@@ -100,7 +100,7 @@ export const wallProps = [
 ]
 wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
 
-void new Game({
+void new Play({
   centerBot: true,
   country: true,
   countryBots: true,

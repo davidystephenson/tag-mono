@@ -13,7 +13,7 @@ import Character from './Character'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
-export default class Game {
+export default class Play {
   name = 'World'
 
   constructor ({
