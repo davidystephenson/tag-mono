@@ -4,7 +4,13 @@ import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
-export let rays = 0
+let rays = 0
+
+export function getRays (): number {
+  const result = rays
+  rays = 0
+  return result
+}
 
 export default function raycast ({ start, end, obstacles }: {
   start: Matter.Vector

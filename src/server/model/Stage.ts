@@ -5,7 +5,7 @@ import DebugLine from '../../shared/DebugLine'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
-import { rays } from '../lib/raycast'
+import { getRays } from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
@@ -259,7 +259,7 @@ export default class Stage {
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
           const bodies = Matter.Composite.allBodies(engine.world)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}]
-<${Bot.botCount} bots, ${bodies.length} bodies, ${rays} rays>`)
+<${Bot.botCount} bots, ${bodies.length} bodies, ${getRays()} rays>`)
           this.warningTime = newTime
         }
         this.oldTime = newTime
