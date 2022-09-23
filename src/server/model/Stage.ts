@@ -5,7 +5,7 @@ import DebugLine from '../../shared/DebugLine'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
-import { getRays } from '../lib/raycast'
+import { getRayCount } from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
@@ -226,6 +226,7 @@ export default class Stage {
     }
     Matter.Runner.run(runner, engine)
     Matter.Events.on(engine, 'afterUpdate', () => {
+      const rayCount = getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
         const action = value[1]
@@ -259,7 +260,7 @@ export default class Stage {
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
           const bodies = Matter.Composite.allBodies(engine.world)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}]
-<${Bot.botCount} bots, ${bodies.length} bodies, ${getRays()} rays>`)
+<${Bot.botCount} bots, ${bodies.length} bodies, ${rayCount.count} rays (μ${rayCount.average})>`)
           this.warningTime = newTime
         }
         this.oldTime = newTime

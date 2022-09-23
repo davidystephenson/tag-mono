@@ -4,11 +4,16 @@ import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
-let rays = 0
+let stepRayCount = 0
+let stepCount = 0
+let rayCountTotal = 0
 
-export function getRays (): number {
-  const result = rays
-  rays = 0
+export function getRayCount (): { count: number, average: number, total: number } {
+  stepCount = stepCount + 1
+  rayCountTotal = rayCountTotal + stepRayCount
+  const average = rayCountTotal / stepCount
+  const result = { count: stepRayCount, average: Math.floor(average), total: rayCountTotal }
+  stepRayCount = 0
   return result
 }
 
@@ -22,7 +27,7 @@ export default function raycast ({ start, end, obstacles }: {
     return { entryPoint: end }
   }
   const collisions = Matter.Query.ray(obstacles, start, end)
-  rays = rays + 1
+  stepRayCount = stepRayCount + 1
   const collide = collisions.length > 0
   if (!collide) {
     if (DEBUG.COLLISON) {
@@ -71,7 +76,7 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
   if (dist === 0) return true
   const collisions = Matter.Query.ray(obstacles, start, end)
-  rays = rays + 1
+  stepRayCount = stepRayCount + 1
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
     !collide && new DebugLine({ start, end, color: 'green' })
