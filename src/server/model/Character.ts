@@ -7,7 +7,6 @@ import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
 import { setEngineTimeout } from '../lib/engine'
-import VISION from '../../shared/VISION'
 import { isPointInVisionRange } from '../lib/inRange'
 import { isPointOpen } from '../lib/raycast'
 
@@ -88,6 +87,14 @@ export default class Character extends Actor {
   }
 
   characterCollide ({ actor }: { actor: Actor }): void {
+    this.checkTag({ actor })
+  }
+
+  characterColliding ({ actor }: { actor: Actor }): void {
+    this.checkTag({ actor })
+  }
+
+  checkTag ({ actor }: { actor: Actor }): void {
     if (Character.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {

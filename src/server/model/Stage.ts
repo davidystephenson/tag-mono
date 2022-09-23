@@ -1,11 +1,11 @@
 import Matter from 'matter-js'
-import { wallProps } from '..'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import DebugLine from '../../shared/DebugLine'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
+import { rays } from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
@@ -13,8 +13,13 @@ import Character from './Character'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
-export default class Play {
-  name = 'World'
+export default class Stage {
+  oldTime = Date.now()
+  warningTime = Date.now()
+  warningCount = 0
+  warningDifferenceTotal = 0
+  warnings10: number[] = []
+  initial = true
 
   constructor ({
     centerBot,
@@ -47,6 +52,14 @@ export default class Play {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    const WORLD_SIZE = 3000
+    const WALL_SIZE = WORLD_SIZE * 3
+    const wallProps = [
+      { x: 0, y: WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
+      { x: 0, y: -WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
+      { x: WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE },
+      { x: -WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE }
+    ]
     wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
@@ -131,6 +144,7 @@ export default class Play {
     Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
     console.log('updating distances...')
     Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
+    console.log('Wall.wall.length', Wall.walls.length)
     console.log('setting paths...')
     Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
     console.log('debugging waypoints...')
@@ -211,12 +225,6 @@ export default class Play {
       void new Bot({ x: -marginEdge, y: 0 })
     }
     Matter.Runner.run(runner, engine)
-    let oldTime = Date.now()
-    let warningTime = Date.now()
-    let warningCount = 0
-    let warningDifferenceTotal = 0
-    const warnings10: number[] = []
-    let initial = true
     Matter.Events.on(engine, 'afterUpdate', () => {
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
@@ -233,26 +241,28 @@ export default class Play {
       })
       if (DEBUG.STEP_TIME) {
         const newTime = Date.now()
-        const difference = newTime - oldTime
-        if (initial) {
+        const difference = newTime - this.oldTime
+        if (this.initial) {
           console.log('initial difference:', difference)
-          initial = false
+          this.initial = false
         }
 
         if (difference >= DEBUG.STEP_TIME_LIMIT) {
-          warningCount = warningCount + 1
-          const warningDifference = newTime - warningTime
-          warningDifferenceTotal = warningDifferenceTotal + warningDifference
-          const average = Math.floor(warningDifferenceTotal / warningCount)
-          warnings10.unshift(warningDifference)
-          if (warnings10.length > 10) {
-            warnings10.pop()
+          this.warningCount = this.warningCount + 1
+          const warningDifference = newTime - this.warningTime
+          this.warningDifferenceTotal = this.warningDifferenceTotal + warningDifference
+          const average = Math.floor(this.warningDifferenceTotal / this.warningCount)
+          this.warnings10.unshift(warningDifference)
+          if (this.warnings10.length > 10) {
+            this.warnings10.pop()
           }
-          const average10 = Math.floor(warnings10.reduce((a, b) => a + b, 0) / warnings10.length)
-          console.warn(`Warning ${warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}] <${Bot.botCount} bots>`)
-          warningTime = newTime
+          const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
+          const bodies = Matter.Composite.allBodies(engine.world)
+          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}]
+<${Bot.botCount} bots, ${bodies.length} bodies, ${rays} rays>`)
+          this.warningTime = newTime
         }
-        oldTime = newTime
+        this.oldTime = newTime
       }
       runner.enabled = !Actor.paused
       if (!Actor.paused) {

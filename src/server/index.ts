@@ -2,19 +2,18 @@ import express from 'express'
 import path from 'path'
 import http from 'http'
 import https from 'https'
+import config from './config.json'
 import fs from 'fs'
 import socketIo from 'socket.io'
-import Wall from './model/Wall'
-import { runner } from './lib/engine'
+import DebugCircle from '../shared/DebugCircle'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
-import config from './config.json'
+import { DEBUG } from './lib/debug'
+import { runner } from './lib/engine'
 import Actor from './model/Actor'
 import Bot from './model/Bot'
 import Character from './model/Character'
 import Player from './model/Player'
-import DebugCircle from '../shared/DebugCircle'
-import { DEBUG } from './lib/debug'
-import Play from './model/Play'
+import Stage from './model/Stage'
 
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
@@ -48,11 +47,11 @@ async function updateClients (): Promise<void> {
     if (player == null) {
       throw new Error('player = null')
       /*
-      const shapes: Shape[] = []
-      Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
-      const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
-      socket.emit('updateClient', message)
-      */
+          const shapes: Shape[] = []
+          Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
+          const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
+          socket.emit('updateClient', message)
+          */
     } else {
       if (DEBUG.LOST) {
         Bot.lostPoints.forEach(point => {
@@ -90,17 +89,7 @@ io.on('connection', socket => {
   })
 })
 
-const WORLD_SIZE = 3000
-const WALL_SIZE = WORLD_SIZE * 3
-export const wallProps = [
-  { x: 0, y: WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
-  { x: 0, y: -WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
-  { x: WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE },
-  { x: -WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE }
-]
-wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
-
-void new Play({
+void new Stage({
   centerBot: true,
   country: true,
   countryBots: true,

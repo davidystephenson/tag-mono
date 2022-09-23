@@ -4,6 +4,8 @@ import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
+export let rays = 0
+
 export default function raycast ({ start, end, obstacles }: {
   start: Matter.Vector
   end: Matter.Vector
@@ -14,6 +16,7 @@ export default function raycast ({ start, end, obstacles }: {
     return { entryPoint: end }
   }
   const collisions = Matter.Query.ray(obstacles, start, end)
+  rays = rays + 1
   const collide = collisions.length > 0
   if (!collide) {
     if (DEBUG.COLLISON) {
@@ -62,6 +65,7 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
   if (dist === 0) return true
   const collisions = Matter.Query.ray(obstacles, start, end)
+  rays = rays + 1
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
     !collide && new DebugLine({ start, end, color: 'green' })

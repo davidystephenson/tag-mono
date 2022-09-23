@@ -393,7 +393,7 @@ export default class Bot extends Character {
         const points = [...body.vertices, body.position]
         const noPointInRange = points.every(point => !this.isPointInRange(point))
         if (noPointInRange) return true
-        return points.some(point => Feature.isPointX({
+        return points.some(point => Wall.isPointX({
           start: this.feature.body.position,
           end: point,
           radius: this.radius,
@@ -448,7 +448,7 @@ export default class Bot extends Character {
         const points = [...body.vertices, body.position]
         const noPointInRange = points.every(point => !this.isPointInRange(point))
         if (noPointInRange) return true
-        return points.some(point => Feature.isPointX({
+        return points.some(point => Wall.isPointX({
           start: this.feature.body.position,
           end: point,
           radius: this.radius,
