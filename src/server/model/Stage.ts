@@ -14,12 +14,17 @@ import Wall from './Wall'
 import Waypoint from './Waypoint'
 
 export default class Stage {
+  initial = true
+  collisionStarts = 0
+  activeCollisions = 0
   oldTime = Date.now()
+  steps = 0
+  totalBodies = 0
+  totalCollisions = 0
   warningTime = Date.now()
   warningCount = 0
   warningDifferenceTotal = 0
   warnings10: number[] = []
-  initial = true
 
   constructor ({
     centerBot,
@@ -52,13 +57,12 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
-    const WORLD_SIZE = 3000
-    const WALL_SIZE = WORLD_SIZE * 3
+    const wallSize = size * 3
     const wallProps = [
-      { x: 0, y: WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
-      { x: 0, y: -WORLD_SIZE, width: WALL_SIZE, height: WORLD_SIZE },
-      { x: WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE },
-      { x: -WORLD_SIZE, y: 0, width: WORLD_SIZE, height: WALL_SIZE }
+      { x: 0, y: size, width: wallSize, height: size },
+      { x: 0, y: -size, width: wallSize, height: size },
+      { x: size, y: 0, width: size, height: wallSize },
+      { x: -size, y: 0, width: size, height: wallSize }
     ]
     wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
     const halfSize = size / 2
@@ -115,8 +119,7 @@ export default class Stage {
         new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
       )
     }
-    const EDGE_PADDING = Character.MARGIN
-    const innerSize = size - EDGE_PADDING * 2
+    const innerSize = size - Character.MARGIN * 2
     let xFactor = 2
     let xSegment = innerSize / xFactor
     while (xSegment > VISION_INNER_WIDTH) {
@@ -226,6 +229,10 @@ export default class Stage {
     }
     Matter.Runner.run(runner, engine)
     Matter.Events.on(engine, 'afterUpdate', () => {
+      this.steps = this.steps + 1
+      this.totalCollisions = this.totalCollisions + this.collisionStarts + this.activeCollisions
+      const bodies = Matter.Composite.allBodies(engine.world)
+      this.totalBodies = this.totalBodies + bodies.length
       const rayCount = getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
@@ -258,9 +265,11 @@ export default class Stage {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const bodies = Matter.Composite.allBodies(engine.world)
+          const stepCollisions = this.collisionStarts + this.activeCollisions
+          const averageCollisions = Math.floor(this.totalCollisions / this.steps)
+          const averageBodies = Math.floor(this.totalBodies / this.steps)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}]
-<${Bot.botCount} bots, ${bodies.length} bodies, ${rayCount.count} rays (μ${rayCount.average})>`)
+${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
         }
         this.oldTime = newTime
@@ -276,10 +285,13 @@ export default class Stage {
         }
       }
       Actor.actors.forEach(actor => actor.act())
+      this.collisionStarts = 0
+      this.activeCollisions = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
+        this.collisionStarts = this.collisionStarts + 1
         const actorA = Actor.actors.get(pair.bodyA.id)
         const actorB = Actor.actors.get(pair.bodyB.id)
         if (actorA != null) {
@@ -293,6 +305,7 @@ export default class Stage {
 
     Matter.Events.on(engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
+        this.activeCollisions = this.activeCollisions + 1
         const actorA = Actor.actors.get(pair.bodyA.id)
         const actorB = Actor.actors.get(pair.bodyB.id)
         const delta = engine.timing.lastDelta
