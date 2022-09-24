@@ -10,20 +10,26 @@ import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 
 export default class Player extends Character {
-  static OBSERVER = false
   static players = new Map<string, Player>()
   readonly socket: Socket
 
-  constructor ({ x = 0, y = 0, socket, radius = 15, color = 'green' }: {
+  constructor ({
+    color = 'green',
+    observer,
+    radius = 15,
+    socket,
+    x = 0,
+    y = 0
+  }: {
+    color?: string
+    observer?: boolean
+    radius?: number
+    socket: Socket
     x: number
     y: number
-    socket: Socket
-    angle?: number
-    color?: string
-    radius?: number
   }) {
     super({ x, y, color, radius })
-    if (Player.OBSERVER) {
+    if (observer === true) {
       this.observer = true
       this.loseReady()
     }
@@ -57,6 +63,7 @@ export default class Player extends Character {
   }
 
   act (): void {
+    // this.debugPath()
     super.act()
     if (DEBUG.CLEAR_WAYPOINTS) {
       const visible = Waypoint.waypoints.filter(waypoint => {
@@ -73,4 +80,31 @@ export default class Player extends Character {
       console.log('player speed', this.feature.body.speed)
     }
   }
+
+  // getDist (a: Matter.Vector, b: Matter.Vector): number {
+  // const dx = b.x - a.x
+  // const dy = b.y - a.y
+  // return Math.sqrt(dx * dx + dy * dy)
+  // }
+//
+  // debugPath (): void {
+  // const here = this.feature.body.position
+  // const distances = Waypoint.waypoints.map(waypoint => this.getDist(here, waypoint.position))
+  // const startWaypoint = whichMin(Waypoint.waypoints, distances)
+  // const path = startWaypoint.paths[34]
+  // const originIndex = path.length - 1
+  // path.slice(0, originIndex).forEach((point, i) => {
+  // void new DebugLine({ start: point, end: path[i + 1], color: 'purple' })
+  // })
+  // void new DebugCircle({ x: path[0].x, y: path[0].y, radius: 10, color: 'red' })
+  // void new DebugCircle({ x: path[originIndex].x, y: path[originIndex].y, radius: 10, color: 'green' })
+//
+  // const obstacles = Wall.wallObstacles
+  // const start = here
+  // const end = Waypoint.waypoints[34].position
+  // const collisions = Matter.Query.ray(obstacles, start, end)
+  // const clear = Wall.isPointOpen({ start, end, radius: this.radius, debug: true })
+  // const color = clear ? 'green' : 'red'
+  // void new DebugLine({ start, end, color })
+  // }
 }

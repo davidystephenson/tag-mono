@@ -6,13 +6,28 @@ import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
+import { setEngineTimeout } from '../lib/engine'
+import { isPointInVisionRange } from '../lib/inRange'
+import { isPointOpen } from '../lib/raycast'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
   static it?: Character
   static characters = new Map<number, Character>()
+  static bodies: Matter.Body[] = []
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
+  static isPointOpen ({ start, end, body, radius, debug }: {
+    start: Matter.Vector
+    end: Matter.Vector
+    body: Matter.Body
+    radius: number
+    debug?: boolean
+  }): boolean {
+    const obstacles = Character.bodies.filter(b => b !== body)
+    return isPointOpen({ start, end, radius, debug, obstacles })
+  }
+
   readonly radius: number
   force = 0.0001
   controls = new Input().controls
@@ -30,11 +45,12 @@ export default class Character extends Actor {
     radius?: number
   }) {
     const feature = new CircleFeature({ x, y, radius, color })
+    feature.body.label = 'character'
     super({ feature })
     this.radius = radius
-    this.feature.body.label = 'character'
     Character.characters.set(this.feature.body.id, this)
-    if (Character.characters.size === 1) setTimeout(() => this.makeIt(), 300)
+    Character.bodies.push(this.feature.body)
+    if (Character.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
   }
 
   act (): void {
@@ -65,15 +81,24 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
+    console.log('beReady')
     this.ready = true
     this.setColor('red')
   }
 
   characterCollide ({ actor }: { actor: Actor }): void {
+    this.checkTag({ actor })
+  }
+
+  characterColliding ({ actor }: { actor: Actor }): void {
+    this.checkTag({ actor })
+  }
+
+  checkTag ({ actor }: { actor: Actor }): void {
     if (Character.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
-        this.makeIt()
+        this.makeIt({ predator: it })
       }
     }
   }
@@ -82,7 +107,7 @@ export default class Character extends Actor {
     super.destroy()
     Character.characters.delete(this.feature.body.id)
     if (this.pursuer != null) {
-      this.pursuer.setPath()
+      this.pursuer.setPath({ path: [], label: 'reset' })
     }
   }
 
@@ -96,15 +121,6 @@ export default class Character extends Actor {
     })
   }
 
-  isFeatureVisible (feature: Feature): boolean {
-    const isVisible = feature.isVisible({
-      center: this.feature.body.position,
-      radius: this.radius
-    })
-
-    return isVisible
-  }
-
   getVisibleFeatures (): Feature[] {
     const visibleFeatures: Feature[] = []
     Feature.features.forEach(feature => {
@@ -114,7 +130,30 @@ export default class Character extends Actor {
     return visibleFeatures
   }
 
-  loseIt (): void {
+  isPointCharacterOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return Character.isPointOpen({
+      start: this.feature.body.position,
+      end: point,
+      body: this.feature.body,
+      radius: this.radius,
+      debug
+    })
+  }
+
+  isFeatureVisible (feature: Feature): boolean {
+    const isVisible = feature.isVisible({
+      center: this.feature.body.position,
+      radius: this.radius
+    })
+
+    return isVisible
+  }
+
+  isPointInRange (point: Matter.Vector): boolean {
+    return isPointInVisionRange({ start: this.feature.body.position, end: point })
+  }
+
+  loseIt ({ prey }: { prey: Character }): void {
     this.setColor('green')
   }
 
@@ -123,16 +162,16 @@ export default class Character extends Actor {
     this.setColor('white')
   }
 
-  makeIt (): void {
+  makeIt ({ predator }: { predator: Character }): void {
     if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
     if (Character.it === this) {
       throw new Error('Already it')
     }
-    Character.it?.loseIt()
+    predator.loseIt({ prey: this })
     this.loseReady()
     this.setColor('white')
     Character.it = this
-    setTimeout(this.beReady, 5000)
+    setEngineTimeout(5000, this.beReady)
   }
 
   setColor (color: string): void {

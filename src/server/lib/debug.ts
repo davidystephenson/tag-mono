@@ -4,7 +4,7 @@ export const DEBUG = {
   CLEAR_WAYPOINTS: false,
   COLLISON: false,
   IS_CLEAR: false,
-  IT_CHOICE: false,
+  IT_CHOICE: true,
   LOST: false,
   MAKE_IT: false,
   NOT_IT_CHOICE: false,

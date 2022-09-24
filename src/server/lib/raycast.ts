@@ -2,8 +2,20 @@ import Matter from 'matter-js'
 import DebugLine from '../../shared/DebugLine'
 import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
-import { vectorToPoint } from './engine'
 import { getPerpendicular, getPerpendicularSides } from './math'
+
+let stepRayCount = 0
+let stepCount = 0
+let rayCountTotal = 0
+
+export function getRayCount (): { count: number, average: number, total: number } {
+  stepCount = stepCount + 1
+  rayCountTotal = rayCountTotal + stepRayCount
+  const average = rayCountTotal / stepCount
+  const result = { count: stepRayCount, average: Math.floor(average), total: rayCountTotal }
+  stepRayCount = 0
+  return result
+}
 
 export default function raycast ({ start, end, obstacles }: {
   start: Matter.Vector
@@ -15,6 +27,7 @@ export default function raycast ({ start, end, obstacles }: {
     return { entryPoint: end }
   }
   const collisions = Matter.Query.ray(obstacles, start, end)
+  stepRayCount = stepRayCount + 1
   const collide = collisions.length > 0
   if (!collide) {
     if (DEBUG.COLLISON) {
@@ -40,9 +53,7 @@ export default function raycast ({ start, end, obstacles }: {
   const yExitTime = Math.max(yTime1, yTime2)
   const rayEntryTime = Math.max(xEntryTime, yEntryTime)
   const entryArrow = Matter.Vector.mult(arrow, rayEntryTime)
-  const direction = Matter.Vector.normalise(arrow)
-  const away = Matter.Vector.mult(direction, -15)
-  const entryPoint = Matter.Vector.add(Matter.Vector.add(start, entryArrow), away)
+  const entryPoint = Matter.Vector.add(start, entryArrow)
   const visibleX = start.x - VISION.width < entryPoint.x && entryPoint.x < start.x + VISION.width
   const visibleY = start.y - VISION.height < entryPoint.y && entryPoint.y < start.y + VISION.height
   if (!visibleX || !visibleY) {
@@ -63,10 +74,10 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
   if (dist === 0) return true
   const collisions = Matter.Query.ray(obstacles, start, end)
+  stepRayCount = stepRayCount + 1
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
-    const color = collide ? 'red' : 'green'
-    void new DebugLine({ start, end, color })
+    !collide && new DebugLine({ start, end, color: 'green' })
   }
   return !collide
 }
@@ -113,12 +124,13 @@ export function casterPointClear ({ starts, end, obstacles, caster, debug }: {
   return caster({ casts, obstacles, debug })
 }
 
-export function isSomeStartClear ({ starts, end, obstacles }: {
+export function isSomeStartClear ({ starts, end, obstacles, debug }: {
   starts: Matter.Vector[]
   end: Matter.Vector
   obstacles: Matter.Body[]
+  debug?: boolean
 }): boolean {
-  return casterPointClear({ starts, end, obstacles, caster: isSomeCastClear })
+  return casterPointClear({ starts, end, obstacles, caster: isSomeCastClear, debug })
 }
 
 export function isEveryStartClear ({ starts, end, obstacles, debug }: {
@@ -160,15 +172,18 @@ export function getCircleCasts ({ start, end, startRadius, endRadius }: {
   const [leftStart, rightStart] = getPerpendicularSides({
     point: start, perpendicular: startPerpendicular
   })
-  const endPerpendicular = getPerpendicular({
-    start, end, radius: endRadius - 1
-  })
+  const endPerpendicular = startRadius === endRadius
+    ? startPerpendicular
+    : getPerpendicular({
+      start, end, radius: endRadius - 1
+    })
   const [leftEnd, rightEnd] = getPerpendicularSides({
     point: end, perpendicular: endPerpendicular
   })
+  const center = [start, end]
   const left = [leftStart, leftEnd]
   const right = [rightStart, rightEnd]
-  const casts = [left, right]
+  const casts = [center, left, right]
 
   return casts
 }
@@ -196,9 +211,7 @@ export function isPointShown ({ debug, end, obstacles, radius, start }: {
   radius: number
   start: Matter.Vector
 }): boolean {
-  const sideCasts = getSideCasts({ start, end, radius })
-  const center = [start, end]
-  const casts = [center, ...sideCasts]
+  const casts = getCircleCasts({ start, end, startRadius: radius, endRadius: radius })
 
   return isSomeCastClear({ casts, obstacles, debug })
 }
@@ -213,11 +226,9 @@ export function isCircleShown ({
   debug?: boolean
   obstacles: Matter.Body[]
 }): boolean {
-  const sideCasts = getCircleCasts({
+  const casts = getCircleCasts({
     start, end, startRadius, endRadius
   })
-  const center = [start, end]
-  const casts = [center, ...sideCasts]
 
   return isSomeCastClear({ casts, obstacles, debug })
 }

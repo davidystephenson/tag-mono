@@ -27,12 +27,23 @@ export default class CircleFeature extends Feature {
     CircleFeature.circleFeatures.delete(this.body.id)
   }
 
+  getArea (): number {
+    return Math.PI * this.radius * this.radius
+  }
+
   getSides (point: Matter.Vector): Matter.Vector[] {
     return getSides({
       start: this.body.position,
       end: point,
       radius: this.radius
     })
+  }
+
+  isClear ({ center, radius }: {
+    center: Matter.Vector
+    radius: number
+  }): boolean {
+    return this.isVisible({ center, radius })
   }
 
   isVisible ({ center, radius }: {

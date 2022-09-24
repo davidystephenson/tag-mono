@@ -40,6 +40,15 @@
     "ts-standard": "^11.0.0"
   },
   "engines": {
-    "node": "16.x"
-  }
+    "node": ">=16"
+  },
+  "targets": {
+    "default": {
+      "engines": {
+        "browsers": "> 0.5%, last 2 versions, not dead"
+      },
+      "distDir": "dist"
+    }
+  },
+  "browserslist": "> 0.5%, last 2 versions, not dead"
 }
