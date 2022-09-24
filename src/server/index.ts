@@ -5,14 +5,7 @@ import https from 'https'
 import config from './config.json'
 import fs from 'fs'
 import socketIo from 'socket.io'
-import DebugCircle from '../shared/DebugCircle'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
-import { DEBUG } from './lib/debug'
-import { runner } from './lib/engine'
-import Actor from './model/Actor'
-import Bot from './model/Bot'
-import Character from './model/Character'
-import Player from './model/Player'
 import Stage from './model/Stage'
 
 const app = express()
@@ -41,55 +34,14 @@ server.listen(PORT, () => {
 
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
-  sockets.forEach(socket => {
-    const player = Player.players.get(socket.id)
-
-    if (player == null) {
-      throw new Error('player = null')
-      /*
-          const shapes: Shape[] = []
-          Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
-          const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
-          socket.emit('updateClient', message)
-          */
-    } else {
-      if (DEBUG.LOST) {
-        Bot.lostPoints.forEach(point => {
-          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
-        })
-      }
-
-      player.updateClient()
-    }
-  })
+  sockets.forEach(socket => stage.update(socket))
 }
 
 function tick (): void {
   void updateClients()
 }
 
-io.on('connection', socket => {
-  console.log('connection:', socket.id)
-  socket.emit('socketId', socket.id)
-  const player = new Player({ x: 0, y: -100, socket, observer: true })
-
-  socket.on('updateServer', message => {
-    player.controls = message.controls
-    if (player.controls.up) {
-      Actor.paused = false
-      runner.enabled = !Actor.paused
-    }
-  })
-
-  socket.on('disconnect', () => {
-    console.log('disconnect:', socket.id)
-    const player = Player.players.get(socket.id)
-    if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
-    player?.destroy()
-  })
-})
-
-void new Stage({
+const stage = new Stage<ClientToServerEvents, ServerToClientEvents>({
   centerBot: true,
   country: true,
   countryBots: true,
@@ -100,8 +52,10 @@ void new Stage({
   midpointBots: true,
   townBots: true,
   waypointBots: false,
-  waypointBricks: true,
-  wildBricks: true,
+  waypointBricks: false,
+  wildBricks: false,
   size: 3000,
   town: true
 })
+
+io.on('connection', stage.join)

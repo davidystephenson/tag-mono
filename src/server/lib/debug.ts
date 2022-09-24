@@ -7,7 +7,7 @@ export const DEBUG = {
   IT_CHOICE: true,
   LOST: false,
   MAKE_IT: false,
-  NOT_IT_CHOICE: true,
+  NOT_IT_CHOICE: false,
   PATHING: false,
   POSITION: false,
   SPEED: false,

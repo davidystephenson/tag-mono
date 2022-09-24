@@ -1,4 +1,6 @@
 import Matter from 'matter-js'
+import { RemoteSocket, Socket } from 'socket.io'
+import { EventsMap } from 'socket.io/dist/typed-events'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import DebugLine from '../../shared/DebugLine'
@@ -10,10 +12,11 @@ import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
 import Character from './Character'
+import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
-export default class Stage {
+export default class Stage <ServerToClientEvents, ClientToServerEvents> {
   initial = true
   collisionStarts = 0
   activeCollisions = 0
@@ -198,7 +201,7 @@ export default class Stage {
       void new Brick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (centerBot === true) {
-      void new Bot({ x: -750, y: -240 })
+      void new Bot({ x: 1475, y: -1375 })
     }
 
     if (greekBots === true) greekWalls.forEach(wall => wall.spawnBots())
@@ -230,7 +233,7 @@ export default class Stage {
     Matter.Runner.run(runner, engine)
     Matter.Events.on(engine, 'afterUpdate', () => {
       this.steps = this.steps + 1
-      this.totalCollisions = this.totalCollisions + this.collisionStarts + this.activeCollisions
+      this.totalCollisions = this.totalCollisions + this.collisionStarts // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(engine.world)
       this.totalBodies = this.totalBodies + bodies.length
       const rayCount = getRayCount()
@@ -265,10 +268,10 @@ export default class Stage {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStarts + this.activeCollisions
+          const stepCollisions = this.collisionStarts // + this.activeCollisions
           const averageCollisions = Math.floor(this.totalCollisions / this.steps)
           const averageBodies = Math.floor(this.totalBodies / this.steps)
-          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}) [μ${average}, 10μ${average10}]
+          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${Bot.bodies.length} bots
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
         }
@@ -317,5 +320,48 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       })
     })
+  }
+
+  join (socket: Socket): void {
+    console.log('connection:', socket.id)
+    socket.emit('socketId', socket.id)
+    const player = new Player({ x: 1475, y: -1300, socket, observer: true })
+    console.log('player.feature.body.mass', player.feature.body.mass)
+    socket.on('updateServer', message => {
+      player.controls = message.controls
+      if (player.controls.select) {
+        Actor.paused = false
+        runner.enabled = !Actor.paused
+      }
+    })
+
+    socket.on('disconnect', () => {
+      console.log('disconnect:', socket.id)
+      const player = Player.players.get(socket.id)
+      if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
+      player?.destroy()
+    })
+  }
+
+  update (socket: RemoteSocket<EventsMap & ServerToClientEvents, ClientToServerEvents>): void {
+    const player = Player.players.get(socket.id)
+
+    if (player == null) {
+      throw new Error('player = null')
+      /*
+          const shapes: Shape[] = []
+          Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
+          const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
+          socket.emit('updateClient', message)
+          */
+    } else {
+      if (DEBUG.LOST) {
+        Bot.lostPoints.forEach(point => {
+          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+        })
+      }
+
+      player.updateClient()
+    }
   }
 }

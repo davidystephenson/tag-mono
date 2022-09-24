@@ -53,9 +53,7 @@ export default function raycast ({ start, end, obstacles }: {
   const yExitTime = Math.max(yTime1, yTime2)
   const rayEntryTime = Math.max(xEntryTime, yEntryTime)
   const entryArrow = Matter.Vector.mult(arrow, rayEntryTime)
-  const direction = Matter.Vector.normalise(arrow)
-  const away = Matter.Vector.mult(direction, -15)
-  const entryPoint = Matter.Vector.add(Matter.Vector.add(start, entryArrow), away)
+  const entryPoint = Matter.Vector.add(start, entryArrow)
   const visibleX = start.x - VISION.width < entryPoint.x && entryPoint.x < start.x + VISION.width
   const visibleY = start.y - VISION.height < entryPoint.y && entryPoint.y < start.y + VISION.height
   if (!visibleX || !visibleY) {

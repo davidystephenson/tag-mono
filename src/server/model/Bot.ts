@@ -15,6 +15,7 @@ import raycast from '../lib/raycast'
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
+import Actor from './Actor'
 
 export default class Bot extends Character {
   static botCount = 0
@@ -44,9 +45,13 @@ export default class Bot extends Character {
     if (DEBUG.BOT_CIRCLES) {
       const debugColor = Character.it === this
         ? 'red'
-        : this.blocked
+        : this.blocked && this.moving
           ? 'white'
-          : 'green'
+          : this.blocked
+            ? 'orange'
+            : this.moving
+              ? 'limegreen'
+              : 'green'
 
       void new DebugCircle({
         x: this.feature.body.position.x,
@@ -100,7 +105,7 @@ export default class Bot extends Character {
       const itVisible = this.isFeatureVisible(Character.it.feature)
       if (itVisible) {
         this.blocked = this.isBlocked()
-        const confused = bored || stuck || arriving
+        const confused = stuck || arriving
         const trapped = this.blocked && confused
         if (trapped) {
           return this.unblock()
@@ -109,6 +114,7 @@ export default class Bot extends Character {
           return this.flee()
         }
       } else {
+        this.blocked = false
         this.unblockTries = undefined
       }
     }
@@ -303,8 +309,8 @@ export default class Bot extends Character {
     sign: number
   }): Matter.Vector[] {
     console.log('boxToTriangle')
-    const halfHeight = Math.max(this.radius, 0.5 * scale * box.height)
-    const halfWidth = Math.max(this.radius, 0.5 * scale * box.width)
+    const halfHeight = 0.5 * scale * box.height
+    const halfWidth = 0.5 * scale * box.width
     const topRight = { x: halfWidth, y: -halfHeight }
     const botRight = { x: halfWidth, y: halfHeight }
     const topLeft = { x: -halfWidth, y: -halfHeight }
@@ -476,8 +482,8 @@ export default class Bot extends Character {
       const xMax = Math.min(...leftsEast, eastX)
       const offset = Math.sign(farthestSidePoint.y - botPoint.y) * this.radius
       box.center = { x: 0.5 * xMin + 0.5 * xMax, y: 0.5 * (botPoint.y + offset) + 0.5 * farthestSidePoint.y }
-      box.width = (xMax - xMin) * 0.9
-      box.height = Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.9
+      box.width = Math.max(1,(xMax - xMin) * 0.9)
+      box.height = Math.max(1,Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.9)
       console.log('box', box)
       console.log('botPoint', botPoint)
       console.log('farthestSidePoint', farthestSidePoint)
@@ -494,13 +500,19 @@ export default class Bot extends Character {
       void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'yellow' })
     })
     const queryBounds = Matter.Bounds.create(corners)
-
-    const boxQuery = Matter.Query.region(Feature.bodies, queryBounds)
+    const queryBody = Matter.Bodies.rectangle(box.center.x, box.center.y, box.width, box.height)
+    const boxQuery0 = Matter.Query.region(Feature.bodies, queryBounds)
+    const boxQuery = boxQuery0/* .filter(body => {
+      console.log('queryBody.vertices[0]', queryBody.vertices[0])
+      console.log('body.vertices[0]', body.vertices[0])
+      // @ts-expect-error
+      return Matter.Collision.collides(queryBody, body)
+    }) */
     boxQuery.forEach(body => {
       console.log(body.label, body.position)
       void new DebugCircle({ x: body.position.x, y: body.position.y, radius: 13, color: 'orange' })
     })
-    const isBoxClear = boxQuery.length === 0
+    const isBoxClear = true // boxQuery.length === 0
     if (isBoxClear) {
       console.log('prey.moving test:', prey.moving)
       console.log('prey.blocked test:', prey.blocked)
@@ -509,7 +521,7 @@ export default class Bot extends Character {
       void new DebugCircle({ x: box.center.x, y: box.center.y, radius: 6, color: 'white' })
       if (struggling) {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
-        const scale = 1 // Math.min(1, speed / 4)
+        const scale = Math.min(1, speed / 4)
         console.log('horizontal', horizontal)
         const boxWidth = horizontal ? Math.sign(this.feature.body.position.x - box.center.x) * 0.5 * box.width * (1 - scale) : 0
         const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
@@ -523,7 +535,7 @@ export default class Bot extends Character {
         const maxSize = VISION_WIDTH * 0.5
         const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
         const m = even * Matter.Vector.magnitude(v)
-        const z = 0.02 * m / 5 * size / maxSize
+        const z = (0.5 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
         const velocity = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const direction = vectorToPoint(velocity)
@@ -531,7 +543,7 @@ export default class Bot extends Character {
           x: center.x + boxWidth,
           y: center.y + boxHeight,
           direction,
-          force: Math.min(z, 0.02),
+          force: z,
           vertices: verts
         })
       } else {
@@ -544,8 +556,8 @@ export default class Bot extends Character {
         void new Brick({
           x: box.center.x + boxWidth,
           y: box.center.y + boxHeight,
-          width: Math.max(2 * this.radius, box.width * scale),
-          height: Math.max(2 * this.radius, box.height * scale)
+          width: box.width * scale,
+          height: box.height * scale
         })
       }
     } else {
@@ -556,7 +568,7 @@ export default class Bot extends Character {
       // height: this.radius * 2,
       // width: this.radius * 2
       // })
-      // Actor.paused = true
+      Actor.paused = true
     }
     super.loseIt({ prey })
     this.setPath({ path: [], label: 'reset' })

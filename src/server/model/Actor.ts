@@ -16,7 +16,6 @@ export default class Actor {
     this.feature.actor = this
     this.health = this.feature.getArea()
     this.maximumHealth = this.health
-    console.log(this.feature.body.label, 'health test:', this.health)
     Actor.actors.set(this.feature.body.id, this)
   }
 
