@@ -482,8 +482,12 @@ export default class Bot extends Character {
       const xMax = Math.min(...leftsEast, eastX)
       const offset = Math.sign(farthestSidePoint.y - botPoint.y) * this.radius
       box.center = { x: 0.5 * xMin + 0.5 * xMax, y: 0.5 * (botPoint.y + offset) + 0.5 * farthestSidePoint.y }
-      box.width = Math.max(1,(xMax - xMin) * 0.9)
-      box.height = Math.max(1,Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.9)
+      box.width = (xMax - xMin)
+      box.height = Math.abs(botPoint.y + offset - farthestSidePoint.y) * 0.9
+      if (box.width > 1 || box.height > 1) {
+        box.width = this.radius * 2
+        box.height = this.radius * 2
+      }
       console.log('box', box)
       console.log('botPoint', botPoint)
       console.log('farthestSidePoint', farthestSidePoint)
@@ -535,7 +539,7 @@ export default class Bot extends Character {
         const maxSize = VISION_WIDTH * 0.5
         const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
         const m = even * Matter.Vector.magnitude(v)
-        const z = (0.5 * m / 5 * size / maxSize) ** 3
+        const z = (0.8 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
         const velocity = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const direction = vectorToPoint(velocity)

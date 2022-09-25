@@ -52,8 +52,8 @@ const stage = new Stage<ClientToServerEvents, ServerToClientEvents>({
   midpointBots: true,
   townBots: true,
   waypointBots: false,
-  waypointBricks: false,
-  wildBricks: false,
+  waypointBricks: true,
+  wildBricks: true,
   size: 3000,
   town: true
 })
