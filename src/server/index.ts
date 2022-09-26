@@ -42,15 +42,15 @@ function tick (): void {
 }
 
 const stage = new Stage<ClientToServerEvents, ServerToClientEvents>({
-  centerBot: true,
+  centerBot: false,
   country: true,
-  countryBots: true,
-  cornerBots: true,
+  countryBots: false,
+  cornerBots: false,
   gridBots: false,
   greek: true,
   greekBots: false,
-  midpointBots: true,
-  townBots: true,
+  midpointBots: false,
+  townBots: false,
   waypointBots: false,
   waypointBricks: true,
   wildBricks: true,

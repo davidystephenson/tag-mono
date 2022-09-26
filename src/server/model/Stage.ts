@@ -1,3 +1,4 @@
+import csvAppend from 'csv-append'
 import Matter from 'matter-js'
 import { RemoteSocket, Socket } from 'socket.io'
 import { EventsMap } from 'socket.io/dist/typed-events'
@@ -18,16 +19,21 @@ import Waypoint from './Waypoint'
 
 export default class Stage <ServerToClientEvents, ClientToServerEvents> {
   initial = true
-  collisionStarts = 0
-  activeCollisions = 0
+  collisionEndCount = 0
+  collisionStartCount = 0
+  activeCollisionCount = 0
   oldTime = Date.now()
-  steps = 0
-  totalBodies = 0
-  totalCollisions = 0
+  stepCount = 0
+  totalBodyCount = 0
+  totalCollisionCount = 0
   warningTime = Date.now()
   warningCount = 0
   warningDifferenceTotal = 0
   warnings10: number[] = []
+  xFactor = 2
+  yFactor = 2
+  xSegment: number
+  ySegment: number
 
   constructor ({
     centerBot,
@@ -123,23 +129,23 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
       )
     }
     const innerSize = size - Character.MARGIN * 2
-    let xFactor = 2
-    let xSegment = innerSize / xFactor
-    while (xSegment > VISION_INNER_WIDTH) {
-      xFactor = xFactor + 1
-      xSegment = innerSize / xFactor
+    this.xFactor = 2
+    this.xSegment = innerSize / this.xFactor
+    while (this.xSegment > VISION_INNER_WIDTH) {
+      this.xFactor = this.xFactor + 1
+      this.xSegment = innerSize / this.xFactor
     }
-    let yFactor = 2
-    let ySegment = innerSize / yFactor
-    while (ySegment > VISION_INNER_HEIGHT) {
-      yFactor = yFactor + 1
-      ySegment = innerSize / yFactor
+    this.yFactor = 2
+    this.ySegment = innerSize / this.yFactor
+    while (this.ySegment > VISION_INNER_HEIGHT) {
+      this.yFactor = this.yFactor + 1
+      this.ySegment = innerSize / this.yFactor
     }
     const gridWaypoints: Waypoint[] = []
-    for (let i = 0; i <= xFactor; i++) {
-      for (let j = 0; j <= yFactor; j++) {
-        const x = -innerSize / 2 + i * xSegment
-        const y = -innerSize / 2 + j * ySegment
+    for (let i = 0; i <= this.xFactor; i++) {
+      for (let j = 0; j <= this.yFactor; j++) {
+        const x = -innerSize / 2 + i * this.xSegment
+        const y = -innerSize / 2 + j * this.ySegment
 
         gridWaypoints.push(new Waypoint({ x, y }))
       }
@@ -165,43 +171,43 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
 
     console.log('navigation complete')
     if (wildBricks === true) {
-      void new Brick({ x: -30, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 30, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 0, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 0, y: -30, height: 30, width: 100 })
-      void new Brick({ x: 30, y: 0, height: 30, width: 50 })
-      void new Brick({ x: -30, y: 0, height: 50, width: 30 })
-      void new Brick({ x: -800, y: 0, height: 80, width: 30 })
-      void new Brick({ x: -900, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1000, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1100, y: 0, height: 90, width: 80 })
-      void new Brick({ x: -1200, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1300, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1400, y: 0, height: 50, width: 50 })
-      void new Brick({ x: 0, y: 30, height: 30, width: 30 })
-      void new Brick({ x: 30, y: 30, height: 30, width: 30 })
-      void new Brick({ x: -30, y: 30, height: 30, width: 30 })
-      void new Brick({ x: 800, y: 200, height: 200, width: 100 })
-      void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
-      void new Brick({ x: -1300, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 750, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 800, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 850, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 900, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 950, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1000, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1050, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1100, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1150, y: 1300, height: 100, width: 30 })
-      void new Brick({ x: 1200, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1250, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1300, y: 1300, height: 300, width: 30 })
-      void new Brick({ x: 1350, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1400, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1450, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: -30, y: -30, height: 30, width: 30 })
+      Brick.random({ x: 30, y: -30, height: 30, width: 30 })
+      Brick.random({ x: 0, y: -30, height: 30, width: 30 })
+      Brick.random({ x: 0, y: -30, height: 30, width: 100 })
+      Brick.random({ x: 30, y: 0, height: 30, width: 50 })
+      Brick.random({ x: -30, y: 0, height: 50, width: 30 })
+      Brick.random({ x: -800, y: 0, height: 80, width: 30 })
+      Brick.random({ x: -900, y: 0, height: 50, width: 50 })
+      Brick.random({ x: -1000, y: 0, height: 50, width: 50 })
+      Brick.random({ x: -1100, y: 0, height: 90, width: 80 })
+      Brick.random({ x: -1200, y: 0, height: 50, width: 50 })
+      Brick.random({ x: -1300, y: 0, height: 50, width: 50 })
+      Brick.random({ x: -1400, y: 0, height: 50, width: 50 })
+      Brick.random({ x: 0, y: 30, height: 30, width: 30 })
+      Brick.random({ x: 30, y: 30, height: 30, width: 30 })
+      Brick.random({ x: -30, y: 30, height: 30, width: 30 })
+      Brick.random({ x: 800, y: 200, height: 200, width: 100 })
+      Brick.random({ x: -500, y: 1400, height: 100, width: 200 })
+      Brick.random({ x: -1300, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 750, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 800, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 850, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 900, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 950, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1000, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1050, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1100, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1150, y: 1300, height: 100, width: 30 })
+      Brick.random({ x: 1200, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1250, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1300, y: 1300, height: 300, width: 30 })
+      Brick.random({ x: 1350, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1400, y: 1300, height: 200, width: 30 })
+      Brick.random({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (centerBot === true) {
-      void new Bot({ x: 1475, y: -1375 })
+      void new Bot({ x: 100, y: 0 })
     }
 
     if (greekBots === true) greekWalls.forEach(wall => wall.spawnBots())
@@ -215,7 +221,7 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
     }
     if (waypointBricks === true) {
       Waypoint.waypoints.forEach(waypoint => {
-        void new Brick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+        Brick.random({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
       })
     }
     if (cornerBots === true) {
@@ -231,11 +237,12 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
       void new Bot({ x: -marginEdge, y: 0 })
     }
     Matter.Runner.run(runner, engine)
+    const { append } = csvAppend('data.csv')
     Matter.Events.on(engine, 'afterUpdate', () => {
-      this.steps = this.steps + 1
-      this.totalCollisions = this.totalCollisions + this.collisionStarts // + this.activeCollisions
+      this.stepCount = this.stepCount + 1
+      this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(engine.world)
-      this.totalBodies = this.totalBodies + bodies.length
+      this.totalBodyCount = this.totalBodyCount + bodies.length
       const rayCount = getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
@@ -268,12 +275,27 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStarts // + this.activeCollisions
-          const averageCollisions = Math.floor(this.totalCollisions / this.steps)
-          const averageBodies = Math.floor(this.totalBodies / this.steps)
+          const stepCollisions = this.collisionStartCount // + this.activeCollisions
+          const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
+          const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${Bot.bodies.length} bots
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
+          const record = {
+            count: this.warningCount,
+            step: this.stepCount,
+            time: newTime,
+            difference,
+            warningDifference,
+            activeCollisions: this.activeCollisionCount,
+            collisionStarts: this.collisionStartCount,
+            collisionEnds: this.collisionEndCount,
+            bots: Bot.bodies.length,
+            bodies: bodies.length,
+            raycasts: rayCount.raycasts,
+            clears: rayCount.clears
+          }
+          append(record)
         }
         this.oldTime = newTime
       }
@@ -288,13 +310,13 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       Actor.actors.forEach(actor => actor.act())
-      this.collisionStarts = 0
-      this.activeCollisions = 0
+      this.collisionStartCount = 0
+      this.activeCollisionCount = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
-        this.collisionStarts = this.collisionStarts + 1
+        this.collisionStartCount = this.collisionStartCount + 1
         const actorA = Actor.actors.get(pair.bodyA.id)
         const actorB = Actor.actors.get(pair.bodyB.id)
         if (actorA != null) {
@@ -308,7 +330,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
     Matter.Events.on(engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
-        this.activeCollisions = this.activeCollisions + 1
+        this.activeCollisionCount = this.activeCollisionCount + 1
         const actorA = Actor.actors.get(pair.bodyA.id)
         const actorB = Actor.actors.get(pair.bodyB.id)
         const delta = engine.timing.lastDelta
@@ -320,12 +342,16 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       })
     })
+
+    Matter.Events.on(engine, 'collisionEnd', event => {
+      this.collisionEndCount = this.collisionEndCount + 1
+    })
   }
 
   join (socket: Socket): void {
     console.log('connection:', socket.id)
     socket.emit('socketId', socket.id)
-    const player = new Player({ x: 1475, y: -1300, socket, observer: true })
+    const player = new Player({ x: -100, y: 0, socket })
     console.log('player.feature.body.mass', player.feature.body.mass)
     socket.on('updateServer', message => {
       player.controls = message.controls

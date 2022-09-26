@@ -1,7 +1,25 @@
+import { getRandomRectangleSize } from '../lib/math'
 import Actor from './Actor'
 import Crate from './Crate'
 
 export default class Brick extends Actor {
+  static random ({ x, y, width, height, minimumWidth = 1, minimumHeight = 1 }: {
+    x: number
+    y: number
+    width: number
+    height: number
+    minimumWidth?: number
+    minimumHeight?: number
+  }): Brick {
+    const rectangle = getRandomRectangleSize({
+      minimumWidth: minimumWidth, maximumWidth: width, minimumHeight: minimumHeight, maximumHeight: height
+    })
+
+    return new Brick({
+      x, y, width: rectangle.width, height: rectangle.height
+    })
+  }
+
   constructor ({
     angle = 0,
     color = Actor.SCENERY_COLOR,
@@ -25,11 +43,11 @@ export default class Brick extends Actor {
 
   characterCollide ({ actor }: { actor: Actor }): void {
     super.characterCollide({ actor })
-    this.dent()
+    this.dent({ actor })
   }
 
-  characterColliding({ actor, delta }: { actor: Actor; delta: number }): void {
+  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {
     super.characterColliding({ actor, delta })
-    this.dent(delta)
+    this.dent({ actor, delta })
   }
 }

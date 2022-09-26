@@ -1,10 +1,10 @@
 export const DEBUG = {
-  BOT_CIRCLES: true,
+  BOT_CIRCLES: false,
   CHASE: true,
   CLEAR_WAYPOINTS: false,
   COLLISON: false,
   IS_CLEAR: false,
-  IT_CHOICE: true,
+  IT_CHOICE: false,
   LOST: false,
   MAKE_IT: false,
   NOT_IT_CHOICE: false,

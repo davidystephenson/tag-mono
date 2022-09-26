@@ -45,11 +45,11 @@ export default class Puppet extends Actor {
 
   characterCollide ({ actor }: { actor: Actor }): void {
     super.characterCollide({ actor })
-    this.dent()
+    this.dent({ actor })
   }
 
   characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {
     super.characterColliding({ actor, delta })
-    this.dent(delta)
+    this.dent({ actor, delta })
   }
 }

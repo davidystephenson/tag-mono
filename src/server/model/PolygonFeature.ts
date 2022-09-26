@@ -22,14 +22,13 @@ export default class PolygonFeature extends Feature {
     center: Matter.Vector
     radius: number
   }): boolean {
-    return true
-    // const inRange = this
-    // .body
-    // .vertices
-    // .some(vertex => isPointInVisionRange({
-    // start: center, end: vertex
-    // }))
-    // if (!inRange) return false
-    // return this.isClear({ center, radius })
+    const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
+    const otherScenery = Feature.scenery.filter(obstacle => this.body.id !== obstacle.id)
+    const ends = [...this.body.vertices, this.body.position]
+    return ends.some(vertex => {
+      const inRange = isPointInVisionRange({ start: center, end: vertex })
+      if (!inRange) return false
+      return isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherScenery })
+    })
   }
 }

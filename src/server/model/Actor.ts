@@ -1,3 +1,4 @@
+import { DEBUG } from '../lib/debug'
 import Feature from './Feature'
 
 export default class Actor {
@@ -26,8 +27,12 @@ export default class Actor {
     Actor.actors.delete(this.feature.body.id)
   }
 
-  dent (delta: number = 30): void {
-    this.health = this.health - delta * 0.1
+  dent ({ actor, delta = DEBUG.STEP_TIME_LIMIT }: {
+    actor: Actor
+    delta?: number
+  }): void {
+    console.log('force test:', actor.feature.body.force)
+    this.health = this.health - delta * 0.25
     if (this.health <= 0) {
       this.destroy()
     } else {

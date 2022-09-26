@@ -143,7 +143,7 @@ export default class Character extends Actor {
   isFeatureVisible (feature: Feature): boolean {
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
-      radius: this.radius
+      radius: this.radius * 0.9
     })
 
     return isVisible
