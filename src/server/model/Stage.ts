@@ -257,9 +257,9 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
           engineTimers.delete(key)
         }
       })
+      const newTime = Date.now()
+      const difference = newTime - this.oldTime
       if (DEBUG.STEP_TIME) {
-        const newTime = Date.now()
-        const difference = newTime - this.oldTime
         if (this.initial) {
           console.log('initial difference:', difference)
           this.initial = false
@@ -281,21 +281,6 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${Bot.bodies.length} bots
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
-          const record = {
-            count: this.warningCount,
-            step: this.stepCount,
-            time: newTime,
-            difference,
-            warningDifference,
-            activeCollisions: this.activeCollisionCount,
-            collisionStarts: this.collisionStartCount,
-            collisionEnds: this.collisionEndCount,
-            bots: Bot.bodies.length,
-            bodies: bodies.length,
-            raycasts: rayCount.raycasts,
-            clears: rayCount.clears
-          }
-          append(record)
         }
         this.oldTime = newTime
       }
@@ -310,36 +295,39 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       Actor.actors.forEach(actor => actor.act())
+      const record = {
+        warnings: this.warningCount,
+        steps: this.stepCount,
+        time: newTime,
+        difference,
+        activeCollisions: this.activeCollisionCount,
+        collisionStarts: this.collisionStartCount,
+        collisionEnds: this.collisionEndCount,
+        bots: Bot.bodies.length,
+        bodies: bodies.length,
+        raycasts: rayCount.raycasts,
+        clears: rayCount.clears
+      }
+      append(record)
       this.collisionStartCount = 0
       this.activeCollisionCount = 0
+      this.collisionEndCount = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
-      event.pairs.forEach(pair => {
+      const { pairs } = event
+      pairs.forEach(pair => {
         this.collisionStartCount = this.collisionStartCount + 1
-        const actorA = Actor.actors.get(pair.bodyA.id)
-        const actorB = Actor.actors.get(pair.bodyB.id)
-        if (actorA != null) {
-          actorA.collide({ actor: actorB })
-        }
-        if (actorB != null) {
-          actorB.collide({ actor: actorA })
-        }
+        this.collide({ pair })
       })
     })
 
     Matter.Events.on(engine, 'collisionActive', event => {
-      event.pairs.forEach(pair => {
+      const { pairs } = event
+      pairs.forEach(pair => {
         this.activeCollisionCount = this.activeCollisionCount + 1
-        const actorA = Actor.actors.get(pair.bodyA.id)
-        const actorB = Actor.actors.get(pair.bodyB.id)
         const delta = engine.timing.lastDelta
-        if (actorA != null) {
-          actorA.colliding({ actor: actorB, delta })
-        }
-        if (actorB != null) {
-          actorB.colliding({ actor: actorA, delta })
-        }
+        this.collide({ delta, pair })
       })
     })
 
@@ -348,10 +336,24 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
   }
 
+  collide ({ delta, pair }: {
+    delta?: number
+    pair: Matter.IPair
+  }): void {
+    const actorA = Actor.actors.get(pair.bodyA.id)
+    const actorB = Actor.actors.get(pair.bodyB.id)
+    // @ts-expect-error
+    const { normal } = pair.collision
+    if (actorA != null && actorB != null) {
+      actorA.collide({ actor: actorB, delta, normal })
+      actorB.collide({ actor: actorA, delta, normal })
+    }
+  }
+
   join (socket: Socket): void {
     console.log('connection:', socket.id)
     socket.emit('socketId', socket.id)
-    const player = new Player({ x: -100, y: 0, socket })
+    const player = new Player({ x: -100, y: 0, socket, observer: true })
     console.log('player.feature.body.mass', player.feature.body.mass)
     socket.on('updateServer', message => {
       player.controls = message.controls

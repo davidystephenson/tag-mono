@@ -22,6 +22,7 @@ export function getRayCount (): {
   const average = rayCountTotal / stepCount
   const result = { count: stepRayCount, average: Math.floor(average), total: rayCountTotal, clears: stepClears, raycasts: stepRaycasts }
   stepRayCount = 0
+  stepClears = 0
   return result
 }
 

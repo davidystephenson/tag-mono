@@ -1,3 +1,4 @@
+import Matter from 'matter-js'
 import { getRandomRectangleSize } from '../lib/math'
 import Actor from './Actor'
 import Crate from './Crate'
@@ -41,13 +42,12 @@ export default class Brick extends Actor {
     super({ feature: brick })
   }
 
-  characterCollide ({ actor }: { actor: Actor }): void {
-    super.characterCollide({ actor })
-    this.dent({ actor })
-  }
-
-  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {
-    super.characterColliding({ actor, delta })
-    this.dent({ actor, delta })
+  characterCollide ({ actor, delta, normal }: {
+    actor: Actor
+    delta?: number
+    normal: Matter.Vector
+  }): void {
+    super.characterCollide({ actor, delta, normal })
+    this.dent({ actor, delta, normal })
   }
 }

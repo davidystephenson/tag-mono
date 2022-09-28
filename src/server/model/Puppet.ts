@@ -43,13 +43,12 @@ export default class Puppet extends Actor {
     }
   }
 
-  characterCollide ({ actor }: { actor: Actor }): void {
-    super.characterCollide({ actor })
-    this.dent({ actor })
-  }
-
-  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {
-    super.characterColliding({ actor, delta })
-    this.dent({ actor, delta })
+  characterCollide ({ actor, delta, normal }: {
+    actor: Actor
+    delta?: number
+    normal: Matter.Vector
+  }): void {
+    super.characterCollide({ actor, delta, normal })
+    this.dent({ actor, delta, normal })
   }
 }

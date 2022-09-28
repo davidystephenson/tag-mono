@@ -1,3 +1,4 @@
+import Matter from 'matter-js'
 import { DEBUG } from '../lib/debug'
 import Feature from './Feature'
 
@@ -27,11 +28,28 @@ export default class Actor {
     Actor.actors.delete(this.feature.body.id)
   }
 
-  dent ({ actor, delta = DEBUG.STEP_TIME_LIMIT }: {
+  project (a: Matter.Vector, b: Matter.Vector): Matter.Vector {
+    const dotBB = Matter.Vector.dot(b, b)
+    if (dotBB === 0) return { x: 0, y: 0 }
+    const dotAB = Matter.Vector.dot(a, b)
+    const scale = dotAB / dotBB
+    return Matter.Vector.mult(b, scale)
+  }
+
+  dent ({ actor, delta = DEBUG.STEP_TIME_LIMIT, normal }: {
     actor: Actor
     delta?: number
+    normal: Matter.Vector
   }): void {
-    this.health = this.health - delta * 0.25
+    const projectionA = this.project(this.feature.body.velocity, normal)
+    const projectionB = this.project(actor.feature.body.velocity, normal)
+    const collideVelocity = Matter.Vector.sub(projectionA, projectionB)
+    const collideSpeed = Matter.Vector.magnitude(collideVelocity)
+    const massA = this.feature.body.mass
+    const massB = actor.feature.body.mass
+    const collidePower = collideSpeed * massA * massB
+    const damage = delta * collidePower * 100
+    this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()
     } else {
@@ -40,19 +58,19 @@ export default class Actor {
     }
   }
 
-  characterCollide ({ actor }: { actor: Actor }): void {}
+  characterCollide ({ actor, delta, normal }: {
+    actor: Actor
+    delta?: number
+    normal: Matter.Vector
+  }): void {}
 
-  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {}
-
-  collide ({ actor }: { actor?: Actor }): void {
+  collide ({ actor, delta, normal }: {
+    actor: Actor
+    delta?: number
+    normal: Matter.Vector
+  }): void {
     if (actor?.feature.body.label === 'character') {
-      this.characterCollide({ actor })
-    }
-  }
-
-  colliding ({ actor, delta }: { actor?: Actor, delta: number }): void {
-    if (actor?.feature.body.label === 'character') {
-      this.characterColliding({ actor, delta })
+      this.characterCollide({ actor, delta, normal })
     }
   }
 }
