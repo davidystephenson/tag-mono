@@ -31,7 +31,6 @@ export default class Actor {
     actor: Actor
     delta?: number
   }): void {
-    console.log('force test:', actor.feature.body.force)
     this.health = this.health - delta * 0.25
     if (this.health <= 0) {
       this.destroy()

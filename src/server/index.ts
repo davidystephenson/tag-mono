@@ -50,7 +50,7 @@ const stage = new Stage<ClientToServerEvents, ServerToClientEvents>({
   greek: true,
   greekBots: false,
   midpointBots: false,
-  townBots: false,
+  townBots: true,
   waypointBots: false,
   waypointBricks: true,
   wildBricks: true,
