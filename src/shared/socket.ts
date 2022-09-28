@@ -4,15 +4,17 @@ import DebugLabel from './DebugLabel'
 import DebugLine from './DebugLine'
 import Shape from './Shape'
 
+export interface UpdateMessage {
+  shapes: Record<number, Shape>
+  debugLines: DebugLine[]
+  debugCircles: DebugCircle[]
+  debugLabels: DebugLabel[]
+  torsoId?: number
+}
+
 export interface ServerToClientEvents {
   socketId: (id: string) => void
-  updateClient: ({ shapes }: {
-    shapes: Record<number, Shape>
-    debugLines: DebugLine[]
-    debugCircles: DebugCircle[]
-    debugLabels: DebugLabel[]
-    torsoId?: number
-  }) => void
+  updateClient: ({ shapes }: UpdateMessage) => void
 }
 
 export interface ClientToServerEvents {

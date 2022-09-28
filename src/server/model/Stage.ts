@@ -1,10 +1,11 @@
 import csvAppend from 'csv-append'
 import Matter from 'matter-js'
-import { RemoteSocket, Socket } from 'socket.io'
-import { EventsMap } from 'socket.io/dist/typed-events'
+import Controls from '../../shared/controls'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import DebugLine from '../../shared/DebugLine'
+import Shape from '../../shared/Shape'
+import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
@@ -17,9 +18,8 @@ import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
-export default class Stage <ServerToClientEvents, ClientToServerEvents> {
+export default class Stage {
   initial = true
-  collisionEndCount = 0
   collisionStartCount = 0
   activeCollisionCount = 0
   oldTime = Date.now()
@@ -302,7 +302,6 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         difference,
         activeCollisions: this.activeCollisionCount,
         collisionStarts: this.collisionStartCount,
-        collisionEnds: this.collisionEndCount,
         bots: Bot.bodies.length,
         bodies: bodies.length,
         raycasts: rayCount.raycasts,
@@ -311,7 +310,6 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       append(record)
       this.collisionStartCount = 0
       this.activeCollisionCount = 0
-      this.collisionEndCount = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
@@ -330,10 +328,6 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         this.collide({ delta, pair })
       })
     })
-
-    Matter.Events.on(engine, 'collisionEnd', event => {
-      this.collisionEndCount = this.collisionEndCount + 1
-    })
   }
 
   collide ({ delta, pair }: {
@@ -350,46 +344,50 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
   }
 
-  join (socket: Socket): void {
-    console.log('connection:', socket.id)
-    socket.emit('socketId', socket.id)
-    const player = new Player({ x: -100, y: 0, socket, observer: true })
-    console.log('player.feature.body.mass', player.feature.body.mass)
-    socket.on('updateServer', message => {
-      player.controls = message.controls
-      if (player.controls.select) {
-        Actor.paused = false
-        runner.enabled = !Actor.paused
-      }
-    })
-
-    socket.on('disconnect', () => {
-      console.log('disconnect:', socket.id)
-      const player = Player.players.get(socket.id)
-      if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
-      player?.destroy()
-    })
+  control ({ controls, id }: {
+    controls: Controls
+    id: string
+  }): void {
+    const player = Player.players.get(id)
+    if (player == null) {
+      throw new Error('Player not found')
+    }
+    player.controls = controls
+    if (player.controls.select) {
+      Actor.paused = false
+      runner.enabled = !Actor.paused
+    }
   }
 
-  update (socket: RemoteSocket<EventsMap & ServerToClientEvents, ClientToServerEvents>): void {
-    const player = Player.players.get(socket.id)
+  join (id: string): void {
+    void new Player({ id, observer: true, x: -100, y: 0 })
+  }
 
+  leave (id: string): void {
+    const player = Player.players.get(id)
+    if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
+    player?.destroy()
+  }
+
+  update (id: string): UpdateMessage {
+    const player = Player.players.get(id)
     if (player == null) {
-      throw new Error('player = null')
-      /*
-          const shapes: Shape[] = []
-          Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
-          const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
-          socket.emit('updateClient', message)
-          */
-    } else {
-      if (DEBUG.LOST) {
-        Bot.lostPoints.forEach(point => {
-          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
-        })
-      }
-
-      player.updateClient()
+      throw new Error('Player not found')
     }
+    if (DEBUG.LOST) {
+      Bot.lostPoints.forEach(point => {
+        void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+      })
+    }
+    const visibleFeatures = player.getVisibleFeatures()
+    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
+    const message = {
+      shapes,
+      debugLines: DebugLine.lines,
+      debugCircles: DebugCircle.circles,
+      debugLabels: DebugLabel.labels,
+      torsoId: player.feature.body.id
+    }
+    return message
   }
 }
