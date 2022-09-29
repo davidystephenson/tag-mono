@@ -11,7 +11,7 @@ import Direction from './Direction'
 import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
-import raycast, { isPointOpen, isPointShown } from '../lib/raycast'
+import raycast, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
@@ -125,13 +125,21 @@ export default class Bot extends Character {
   explore (debug = DEBUG.WANDER): Direction | null {
     const debugColor = debug ? 'tan' : undefined
     const openWaypointIds: number[] = []
+    const otherCharacterBodies = Character.bodies.filter(body => body !== this.feature.body)
+    const obstacles = [...Wall.wallObstacles, ...otherCharacterBodies]
     const openTimes = this.searchTimes.filter((time, index) => {
       const point = Waypoint.waypoints[index].position
       const inRange = this.isPointInRange(point)
       if (!inRange) return false
-      const isCharacterOpen = this.isPointCharacterOpen({ point })
-      if (isCharacterOpen) openWaypointIds.push(Waypoint.waypoints[index].id)
-      return isCharacterOpen
+      // const isCharacterOpen = this.isPointCharacterOpen({ point })
+      const isClear = isPointClear({
+        debug,
+        end: point,
+        obstacles,
+        start: this.feature.body.position
+      })
+      if (isClear) openWaypointIds.push(Waypoint.waypoints[index].id)
+      return isClear
     })
     if (openTimes.length === 0) {
       return this.wander()

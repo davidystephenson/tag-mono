@@ -120,20 +120,6 @@ export default class Character extends Actor {
     return visibleFeatures
   }
 
-  isPointCharacterOpen ({ debug, point }: {
-    debug?: boolean
-    point: Matter.Vector
-  }): boolean {
-    const obstacles = Character.bodies.filter(body => body !== this.feature.body)
-    return isPointOpen({
-      debug,
-      end: point,
-      obstacles,
-      radius: this.radius,
-      start: this.feature.body.position
-    })
-  }
-
   isFeatureVisible (feature: Feature): boolean {
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
