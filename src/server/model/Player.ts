@@ -3,15 +3,14 @@ import Shape from '../../shared/Shape'
 import DebugLine from '../../shared/DebugLine'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
-import Wall from './Wall'
 import Waypoint from './Waypoint'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
-  readonly id: string
 
+  readonly id: string
   constructor ({
     color = 'green',
     id,
@@ -64,9 +63,9 @@ export default class Player extends Character {
   act (): void {
     // this.debugPath()
     super.act()
-    if (DEBUG.CLEAR_WAYPOINTS) {
+    if (DEBUG.OPEN_WAYPOINTS) {
       const visible = Waypoint.waypoints.filter(waypoint => {
-        return Wall.isPointOpen({ start: this.feature.body.position, end: waypoint.position, radius: this.radius })
+        return this.isPointWallOpen({ point: waypoint.position })
       })
       visible.forEach(waypoint => {
         void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'black' })

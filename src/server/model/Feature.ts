@@ -1,65 +1,20 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
-import { isPointClear, isPointOpen, isCircleShown, isPointShown } from '../lib/raycast'
 import Actor from './Actor'
 
 export default class Feature {
   static features = new Map<number, Feature>()
   static scenery: Matter.Body[] = []
   static bodies: Matter.Body[] = []
-  static isPointClear ({ start, end, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    debug?: boolean
-  }): boolean {
-    return isPointClear({ start, end, obstacles: Feature.bodies, debug })
-  }
 
-  static isPointOpen ({ start, end, radius, body, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    radius: number
-    body: Matter.Body
-    debug?: boolean
-  }): boolean {
-    const bodies = Feature.bodies.filter(element => element !== body)
-    return isPointOpen({
-      start, end, radius, obstacles: bodies, debug
-    })
-  }
-
-  static isPointShown ({ start, end, radius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    radius: number
-    debug?: boolean
-  }): boolean {
-    return isPointShown({
-      start, end, radius, obstacles: Feature.scenery, debug
-    })
-  }
-
-  static isCircleShown ({ start, end, startRadius, endRadius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    startRadius: number
-    endRadius: number
-    debug?: boolean
-  }): boolean {
-    return isCircleShown({
-      start, end, startRadius, endRadius, obstacles: Feature.scenery, debug
-    })
-  }
-
+  actor?: Actor
   readonly body: Matter.Body
   readonly isObstacle: boolean
-  actor?: Actor
-
-  constructor ({ body, isObstacle = true, density = 0.001, color = 'gray' }: {
+  constructor ({ body, color = 'gray', density = 0.001, isObstacle = true }: {
     body: Matter.Body
-    isObstacle?: boolean
-    density?: number
     color?: string
+    density?: number
+    isObstacle?: boolean
   }) {
     this.body = body
     this.body.render.fillStyle = color
@@ -71,7 +26,6 @@ export default class Feature {
     this.body.frictionAir = 0.01
     Matter.Body.setDensity(this.body, density)
     Feature.features.set(this.body.id, this)
-    // console.log('feature id test:', this.body.id)
     Feature.bodies.push(this.body)
     if (this.isObstacle) Feature.scenery.push(this.body)
   }

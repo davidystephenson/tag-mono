@@ -169,6 +169,14 @@ export function getViewpoints ({ start, end, radius }: {
   return [start, ...sides]
 }
 
+export function project (a: Matter.Vector, b: Matter.Vector): Matter.Vector {
+  const dotBB = Matter.Vector.dot(b, b)
+  if (dotBB === 0) return { x: 0, y: 0 }
+  const dotAB = Matter.Vector.dot(a, b)
+  const scale = dotAB / dotBB
+  return Matter.Vector.mult(b, scale)
+}
+
 export function whichMax <Element> (array: Element[], numbers: number[]): Element {
   if (array.length === 0) {
     console.warn('array', array)

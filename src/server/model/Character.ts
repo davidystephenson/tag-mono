@@ -9,6 +9,7 @@ import Feature from './Feature'
 import { setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
 import { isPointOpen } from '../lib/raycast'
+import Wall from './Wall'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -17,32 +18,21 @@ export default class Character extends Actor {
   static bodies: Matter.Body[] = []
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
-  static isPointOpen ({ start, end, body, radius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    body: Matter.Body
-    radius: number
-    debug?: boolean
-  }): boolean {
-    const obstacles = Character.bodies.filter(b => b !== body)
-    return isPointOpen({ start, end, radius, debug, obstacles })
-  }
 
-  readonly radius: number
-  force = 0.0001
-  controls = new Input().controls
-  ready = true
-  pursuer?: Bot
   blocked = true // Philosophical
-  moving = false
+  controls = new Input().controls
   declare feature: CircleFeature
+  force = 0.0001
+  moving = false
   observer = false
-
-  constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
-    x: number
-    y: number
+  pursuer?: Bot
+  readonly radius: number
+  ready = true
+  constructor ({ color = 'green', radius = 15, x = 0, y = 0 }: {
     color?: string
     radius?: number
+    x: number
+    y: number
   }) {
     const feature = new CircleFeature({ x, y, radius, color })
     feature.body.label = 'character'
@@ -130,13 +120,17 @@ export default class Character extends Actor {
     return visibleFeatures
   }
 
-  isPointCharacterOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Character.isPointOpen({
-      start: this.feature.body.position,
+  isPointCharacterOpen ({ debug, point }: {
+    debug?: boolean
+    point: Matter.Vector
+  }): boolean {
+    const obstacles = Character.bodies.filter(body => body !== this.feature.body)
+    return isPointOpen({
+      debug,
       end: point,
-      body: this.feature.body,
+      obstacles,
       radius: this.radius,
-      debug
+      start: this.feature.body.position
     })
   }
 
@@ -151,6 +145,12 @@ export default class Character extends Actor {
 
   isPointInRange (point: Matter.Vector): boolean {
     return isPointInVisionRange({ start: this.feature.body.position, end: point })
+  }
+
+  isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
+    return isPointOpen({
+      start: this.feature.body.position, end: point, radius: this.radius, obstacles: Wall.wallObstacles, debug
+    })
   }
 
   loseIt ({ prey }: { prey: Character }): void {

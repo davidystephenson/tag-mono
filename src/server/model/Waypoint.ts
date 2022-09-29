@@ -1,4 +1,5 @@
 import Matter, { Vector } from 'matter-js'
+import { isPointOpen } from '../lib/raycast'
 import Character from './Character'
 import Wall from './Wall'
 
@@ -7,14 +8,14 @@ export default class Waypoint {
   static positions: Vector[] = []
   static label = 0
   static ids: number[] = []
+
+  distances: number[] = []
+  neighbors: Waypoint[] = []
+  readonly paths: Vector[][] = []
+  readonly id: number
   readonly x: number
   readonly y: number
   readonly position: Matter.Vector
-  readonly id: number
-  neighbors: Waypoint[] = []
-  distances: number[] = []
-  paths: Vector[][] = []
-
   constructor ({ x, y }: {
     x: number
     y: number
@@ -89,13 +90,24 @@ export default class Waypoint {
     }
   }
 
+  isPointWallOpen ({ start, end }: {
+    start: Matter.Vector
+    end: Matter.Vector
+  }): boolean {
+    return isPointOpen({
+      start,
+      end,
+      radius: Character.MAXIMUM_RADIUS,
+      obstacles: Wall.wallObstacles
+    })
+  }
+
   setNeighbors (): void {
     this.neighbors = Waypoint.waypoints.filter(other => {
       if (other.id === this.id) return false
-      return Wall.isPointOpen({
+      return this.isPointWallOpen({
         start: this.position,
-        end: other.position,
-        radius: Character.MAXIMUM_RADIUS
+        end: other.position
       })
     })
     this.neighbors.forEach(neighbor => {
@@ -132,10 +144,9 @@ export default class Waypoint {
     let pathComplete = false
     while (!pathComplete) {
       const currentPoint = path[path.length - 1]
-      const clear = Wall.isPointOpen({
+      const clear = this.isPointWallOpen({
         start: currentPoint.position,
-        end: goal.position,
-        radius: Character.MAXIMUM_RADIUS
+        end: goal.position
       })
       if (clear) pathComplete = true
       else {

@@ -9,6 +9,7 @@ import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
+import { getRandomRectangleSize } from '../lib/math'
 import { getRayCount } from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
@@ -19,22 +20,21 @@ import Wall from './Wall'
 import Waypoint from './Waypoint'
 
 export default class Stage {
-  initial = true
-  collisionStartCount = 0
   activeCollisionCount = 0
+  collisionStartCount = 0
+  initial = true
   oldTime = Date.now()
   stepCount = 0
   totalBodyCount = 0
   totalCollisionCount = 0
-  warningTime = Date.now()
   warningCount = 0
   warningDifferenceTotal = 0
-  warnings10: number[] = []
+  warningTime = Date.now()
+  readonly warnings10: number[] = []
   xFactor = 2
-  yFactor = 2
   xSegment: number
+  yFactor = 2
   ySegment: number
-
   constructor ({
     centerBot,
     cornerBots,
@@ -171,40 +171,40 @@ export default class Stage {
 
     console.log('navigation complete')
     if (wildBricks === true) {
-      Brick.random({ x: -30, y: -30, height: 30, width: 30 })
-      Brick.random({ x: 30, y: -30, height: 30, width: 30 })
-      Brick.random({ x: 0, y: -30, height: 30, width: 30 })
-      Brick.random({ x: 0, y: -30, height: 30, width: 100 })
-      Brick.random({ x: 30, y: 0, height: 30, width: 50 })
-      Brick.random({ x: -30, y: 0, height: 50, width: 30 })
-      Brick.random({ x: -800, y: 0, height: 80, width: 30 })
-      Brick.random({ x: -900, y: 0, height: 50, width: 50 })
-      Brick.random({ x: -1000, y: 0, height: 50, width: 50 })
-      Brick.random({ x: -1100, y: 0, height: 90, width: 80 })
-      Brick.random({ x: -1200, y: 0, height: 50, width: 50 })
-      Brick.random({ x: -1300, y: 0, height: 50, width: 50 })
-      Brick.random({ x: -1400, y: 0, height: 50, width: 50 })
-      Brick.random({ x: 0, y: 30, height: 30, width: 30 })
-      Brick.random({ x: 30, y: 30, height: 30, width: 30 })
-      Brick.random({ x: -30, y: 30, height: 30, width: 30 })
-      Brick.random({ x: 800, y: 200, height: 200, width: 100 })
-      Brick.random({ x: -500, y: 1400, height: 100, width: 200 })
-      Brick.random({ x: -1300, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 750, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 800, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 850, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 900, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 950, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1000, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1050, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1100, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1150, y: 1300, height: 100, width: 30 })
-      Brick.random({ x: 1200, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1250, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1300, y: 1300, height: 300, width: 30 })
-      Brick.random({ x: 1350, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1400, y: 1300, height: 200, width: 30 })
-      Brick.random({ x: 1450, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
+      this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
+      this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
+      this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
+      this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
+      this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: 800, y: 200, height: 200, width: 100 })
+      this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
+      this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
+      this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
+      this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (centerBot === true) {
       void new Bot({ x: 100, y: 0 })
@@ -221,7 +221,7 @@ export default class Stage {
     }
     if (waypointBricks === true) {
       Waypoint.waypoints.forEach(waypoint => {
-        Brick.random({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+        this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
       })
     }
     if (cornerBots === true) {
@@ -313,16 +313,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
-      const { pairs } = event
-      pairs.forEach(pair => {
+      event.pairs.forEach(pair => {
         this.collisionStartCount = this.collisionStartCount + 1
         this.collide({ pair })
       })
     })
 
     Matter.Events.on(engine, 'collisionActive', event => {
-      const { pairs } = event
-      pairs.forEach(pair => {
+      event.pairs.forEach(pair => {
         this.activeCollisionCount = this.activeCollisionCount + 1
         const delta = engine.timing.lastDelta
         this.collide({ delta, pair })
@@ -367,6 +365,23 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const player = Player.players.get(id)
     if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
     player?.destroy()
+  }
+
+  randomBrick ({ x, y, width, height, minimumWidth = 1, minimumHeight = 1 }: {
+    x: number
+    y: number
+    width: number
+    height: number
+    minimumWidth?: number
+    minimumHeight?: number
+  }): Brick {
+    const rectangle = getRandomRectangleSize({
+      minimumWidth: minimumWidth, maximumWidth: width, minimumHeight: minimumHeight, maximumHeight: height
+    })
+
+    return new Brick({
+      x, y, width: rectangle.width, height: rectangle.height
+    })
   }
 
   update (id: string): UpdateMessage {

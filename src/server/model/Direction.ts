@@ -4,7 +4,6 @@ import DebugLine from '../../shared/DebugLine'
 
 export default class Direction {
   radians: number
-
   constructor ({ start, end, startVelocity = { x: 0, y: 0 }, endVelocity = { x: 0, y: 0 }, debugColor }: {
     start: Matter.Vector
     end: Matter.Vector

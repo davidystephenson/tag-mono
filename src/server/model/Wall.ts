@@ -1,6 +1,5 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { isCircleShown, isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Bot from './Bot'
 import Character from './Character'
 import RectangleFeature from './RectangleFeature'
@@ -9,60 +8,6 @@ import Waypoint from './Waypoint'
 export default class Wall extends RectangleFeature {
   static walls: Wall[] = []
   static wallObstacles: Matter.Body[] = []
-  static isPointClear ({ start, end, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    debug?: boolean
-  }): boolean {
-    return isPointClear({ start, end, obstacles: Wall.wallObstacles, debug })
-  }
-
-  static isPointOpen ({ start, end, radius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    radius: number
-    debug?: boolean
-  }): boolean {
-    return isPointOpen({
-      start, end, radius, obstacles: Wall.wallObstacles, debug
-    })
-  }
-
-  static isPointShown ({ start, end, radius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    radius: number
-    debug?: boolean
-  }): boolean {
-    return isPointShown({
-      start, end, radius, obstacles: Wall.wallObstacles, debug
-    })
-  }
-
-  static isPointX ({ start, end, radius, body, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    radius: number
-    body: Matter.Body
-    debug?: boolean
-  }): boolean {
-    const bodies = Wall.wallObstacles.filter(element => element !== body)
-    return isPointShown({
-      start, end, radius, obstacles: bodies, debug
-    })
-  }
-
-  static isCircleShown ({ start, end, startRadius, endRadius, debug }: {
-    start: Matter.Vector
-    end: Matter.Vector
-    startRadius: number
-    endRadius: number
-    debug?: boolean
-  }): boolean {
-    return isCircleShown({
-      start, end, startRadius, endRadius, obstacles: Wall.wallObstacles, debug
-    })
-  }
 
   readonly x: number
   readonly y: number

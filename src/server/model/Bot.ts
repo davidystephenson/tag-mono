@@ -11,7 +11,7 @@ import Direction from './Direction'
 import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
-import raycast from '../lib/raycast'
+import raycast, { isPointOpen, isPointShown } from '../lib/raycast'
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
@@ -19,20 +19,20 @@ import Puppet from './Puppet'
 export default class Bot extends Character {
   static botCount = 0
   static lostPoints: Matter.Vector[] = []
-  static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
   static oldest: Bot
+  static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
   static TIME_LIMIT = 5000
-  searchTimes: number[] = []
+
   path: Matter.Vector[] = []
   pathTime?: number
   pathLabel?: typeof Bot.pathLabels[number]
+  searchTimes: number[] = []
   unblockTries?: Record<number, boolean>
-
-  constructor ({ x = 0, y = 0, radius = 15, color = 'green' }: {
-    x: number
-    y: number
+  constructor ({ color = 'green', radius = 15, x = 0, y = 0 }: {
     color?: string
     radius?: number
+    x: number
+    y: number
   }) {
     super({ x, y, color, radius })
     this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
@@ -230,39 +230,10 @@ export default class Bot extends Character {
     return visibleCharacters
   }
 
-  isCircleWallShown ({
-    point,
-    radius = this.radius,
-    debug
-  }: {
-    point: Matter.Vector
-    radius?: number
-    debug?: boolean
-  }): boolean {
-    return Wall.isCircleShown({
-      start: this.feature.body.position,
-      end: point,
-      startRadius: this.radius,
-      endRadius: radius,
-      debug
-    })
-  }
-
-  isCircleWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    const inRange = this.isPointInRange(point)
-    if (!inRange) return false
-    const clear = this.isCircleWallShown({ point, debug })
-    return clear
-  }
-
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
     const distance = this.getDistance(point)
     const close = distance < limit
     return close
-  }
-
-  isPointOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Feature.isPointOpen({ start: this.feature.body.position, end: point, radius: this.radius, body: this.feature.body, debug })
   }
 
   isPointReachable ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
@@ -272,16 +243,14 @@ export default class Bot extends Character {
     return clear
   }
 
-  isPointWallClear ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Wall.isPointClear({ start: this.feature.body.position, end: point, debug })
-  }
-
-  isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Wall.isPointOpen({ start: this.feature.body.position, end: point, radius: this.radius, debug })
-  }
-
-  isPointWallShown ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return Wall.isPointShown({ start: this.feature.body.position, radius: this.radius, end: point, debug })
+  isPointWallShown ({ debug, point }: { debug?: boolean, point: Matter.Vector }): boolean {
+    return isPointShown({
+      debug,
+      end: point,
+      obstacles: Wall.wallObstacles,
+      radius: this.radius,
+      start: this.feature.body.position
+    })
   }
 
   isPointWallVisible ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
@@ -399,12 +368,7 @@ export default class Bot extends Character {
         const points = [...body.vertices, body.position]
         const noPointInRange = points.every(point => !this.isPointInRange(point))
         if (noPointInRange) return true
-        return points.some(point => Wall.isPointX({
-          start: this.feature.body.position,
-          end: point,
-          radius: this.radius,
-          body: this.feature.body
-        }))
+        return points.some(point => this.isPointWallShown({ point }))
       })
       const bottoms = boxQuery.map(body => body.bounds.max.y)
       const tops = boxQuery.map(body => body.bounds.min.y)
@@ -457,12 +421,7 @@ export default class Bot extends Character {
         const points = [...body.vertices, body.position]
         const noPointInRange = points.every(point => !this.isPointInRange(point))
         if (noPointInRange) return true
-        return points.some(point => Wall.isPointX({
-          start: this.feature.body.position,
-          end: point,
-          radius: this.radius,
-          body: this.feature.body
-        }))
+        return points.some(point => this.isPointWallShown({ point }))
       })
       const rights = boxQuery.map(body => body.bounds.max.x)
       const lefts = boxQuery.map(body => body.bounds.min.x)
@@ -697,7 +656,13 @@ export default class Bot extends Character {
     }
 
     const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
-      return Wall.isPointOpen({ start: waypoint.position, end: goalPoint, radius: this.radius })
+      return isPointOpen({
+        start: waypoint.position,
+        end: goalPoint,
+        radius: this.radius,
+        obstacles: Wall.wallObstacles
+      })
+      // return Wall.isPointOpen({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
       if (DEBUG.LOST) {
