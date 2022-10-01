@@ -40,15 +40,15 @@ function tick (): void {
   void updateClients()
 }
 const stage = new Stage({
-  centerBot: false,
+  centerBot: true,
   country: true,
-  countryBots: false,
-  cornerBots: false,
+  countryBots: true,
+  cornerBots: true,
   gridBots: true,
   greek: true,
-  greekBots: true,
+  greekBots: false,
   midpointBots: true,
-  townBots: false,
+  townBots: true,
   waypointBots: false,
   waypointBricks: true,
   wildBricks: true,

@@ -73,44 +73,44 @@ export default class Stage {
       { x: size, y: 0, width: size, height: wallSize },
       { x: -size, y: 0, width: size, height: wallSize }
     ]
-    wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
+    wallProps.forEach(props => new Wall({ ...props, waypoints: false, stage: this }))
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
     if (town === true) {
-      const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
-      const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5 })
-      const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
-      const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
-      const FORT = new Wall({ x: -872.5, y: -900, width: 1165, height: 100 })
-      const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210 })
-      const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2 })
-      const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1 })
-      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100 })
-      const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610 })
-      const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810 })
-      const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610 })
-      const BUTCHER = new Wall({ x: -700, y: -500, width: 100, height: 100 })
-      const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100 })
-      const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100 })
-      const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5 })
+      const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000, stage: this })
+      const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5, stage: this })
+      const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310, stage: this })
+      const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1, stage: this })
+      const FORT = new Wall({ x: -872.5, y: -900, width: 1165, height: 100, stage: this })
+      const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210, stage: this })
+      const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2, stage: this })
+      const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1, stage: this })
+      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100, stage: this })
+      const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610, stage: this })
+      const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810, stage: this })
+      const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610, stage: this })
+      const BUTCHER = new Wall({ x: -700, y: -500, width: 100, height: 100, stage: this })
+      const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100, stage: this })
+      const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100, stage: this })
+      const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5, stage: this })
       townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
     }
 
     const greekWalls: Wall[] = []
     if (greek === true) {
-      const alpha = new Wall({ x: -1454.5, y: -755, width: 1, height: 100 })
-      const beta = new Wall({ x: -1408.5, y: -755, width: 1, height: 100 })
-      const gamma = new Wall({ x: -1363, y: -755, width: 1, height: 100 })
-      const delta = new Wall({ x: -1317.5, y: -755, width: 1, height: 100 })
-      const epsilon = new Wall({ x: -1272, y: -755, width: 1, height: 100 })
-      const zeta = new Wall({ x: -1226.5, y: -755, width: 1, height: 100 })
-      const eta = new Wall({ x: -1181, y: -755, width: 1, height: 100 })
-      const theta = new Wall({ x: -1135.5, y: -755, width: 1, height: 100 })
-      const iota = new Wall({ x: -1090, y: -755, width: 1, height: 100 })
-      const kappa = new Wall({ x: -1039.275, y: -801, width: 9.45, height: 8 })
-      const lamda = new Wall({ x: -1039.275, y: -751.5, width: 9.45, height: 1 })
-      const mu = new Wall({ x: -1039.275, y: -705.5, width: 9.45, height: 1 })
+      const alpha = new Wall({ x: -1454.5, y: -755, width: 1, height: 100, stage: this })
+      const beta = new Wall({ x: -1408.5, y: -755, width: 1, height: 100, stage: this })
+      const gamma = new Wall({ x: -1363, y: -755, width: 1, height: 100, stage: this })
+      const delta = new Wall({ x: -1317.5, y: -755, width: 1, height: 100, stage: this })
+      const epsilon = new Wall({ x: -1272, y: -755, width: 1, height: 100, stage: this })
+      const zeta = new Wall({ x: -1226.5, y: -755, width: 1, height: 100, stage: this })
+      const eta = new Wall({ x: -1181, y: -755, width: 1, height: 100, stage: this })
+      const theta = new Wall({ x: -1135.5, y: -755, width: 1, height: 100, stage: this })
+      const iota = new Wall({ x: -1090, y: -755, width: 1, height: 100, stage: this })
+      const kappa = new Wall({ x: -1039.275, y: -801, width: 9.45, height: 8, stage: this })
+      const lamda = new Wall({ x: -1039.275, y: -751.5, width: 9.45, height: 1, stage: this })
+      const mu = new Wall({ x: -1039.275, y: -705.5, width: 9.45, height: 1, stage: this })
       greekWalls.push(alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lamda, mu)
       townWalls.concat(greekWalls)
     }
@@ -118,14 +118,14 @@ export default class Stage {
     const countryWalls: Wall[] = []
     if (country === true) {
       countryWalls.push(
-        new Wall({ x: -1100, y: 400, width: 200, height: 500 }),
-        new Wall({ x: 0, y: -200, width: 100, height: 100 }),
-        new Wall({ x: 1000, y: 200, width: 200, height: 1000 }),
-        new Wall({ x: -400, y: 600, width: 1000, height: 1000 }),
-        new Wall({ x: 450, y: 700, width: 100, height: 800 }),
-        new Wall({ x: -800, y: 1300, width: 400, height: 200 }),
-        new Wall({ x: 300, y: 1300, width: 800, height: 200 }),
-        new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
+        new Wall({ x: -1100, y: 400, width: 200, height: 500, stage: this }),
+        new Wall({ x: 0, y: -200, width: 100, height: 100, stage: this }),
+        new Wall({ x: 1000, y: 200, width: 200, height: 1000, stage: this }),
+        new Wall({ x: -400, y: 600, width: 1000, height: 1000, stage: this }),
+        new Wall({ x: 450, y: 700, width: 100, height: 800, stage: this }),
+        new Wall({ x: -800, y: 1300, width: 400, height: 200, stage: this }),
+        new Wall({ x: 300, y: 1300, width: 800, height: 200, stage: this }),
+        new Wall({ x: -1250, y: 1300, width: 200, height: 50, stage: this })
       )
     }
     const innerSize = size - Character.MARGIN * 2
@@ -207,16 +207,16 @@ export default class Stage {
       this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (centerBot === true) {
-      void new Bot({ x: 100, y: 0 })
+      void new Bot({ x: 100, y: 0, stage: this })
     }
 
     if (greekBots === true) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots === true) townWalls.forEach(wall => wall.spawnBots())
-    if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y }))
+    if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
     if (countryBots === true) countryWalls.forEach(wall => wall.spawnBots())
     if (waypointBots === true) {
       Waypoint.waypoints.forEach(waypoint => {
-        void new Bot({ x: waypoint.x, y: waypoint.y })
+        void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
       })
     }
     if (waypointBricks === true) {
@@ -225,16 +225,16 @@ export default class Stage {
       })
     }
     if (cornerBots === true) {
-      void new Bot({ x: -marginEdge, y: -marginEdge })
-      void new Bot({ x: marginEdge, y: -marginEdge })
-      void new Bot({ x: -marginEdge, y: marginEdge })
-      void new Bot({ x: marginEdge, y: marginEdge })
+      void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: -marginEdge, stage: this })
+      void new Bot({ x: -marginEdge, y: marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: marginEdge, stage: this })
     }
     if (midpointBots === true) {
-      void new Bot({ x: 0, y: -marginEdge })
-      void new Bot({ x: marginEdge, y: 0 })
-      void new Bot({ x: 0, y: marginEdge })
-      void new Bot({ x: -marginEdge, y: 0 })
+      void new Bot({ x: 0, y: -marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: 0, stage: this })
+      void new Bot({ x: 0, y: marginEdge, stage: this })
+      void new Bot({ x: -marginEdge, y: 0, stage: this })
     }
     Matter.Runner.run(runner, engine)
     const { append } = csvAppend('data.csv')
@@ -358,7 +358,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   join (id: string): void {
-    void new Player({ id, observer: true, x: -100, y: 0 })
+    void new Player({ id, observer: true, x: -100, y: 0, stage: this })
   }
 
   leave (id: string): void {
@@ -380,7 +380,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
 
     return new Brick({
-      x, y, width: rectangle.width, height: rectangle.height
+      x, y, width: rectangle.width, height: rectangle.height, stage: this
     })
   }
 

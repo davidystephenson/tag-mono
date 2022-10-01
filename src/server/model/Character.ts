@@ -10,6 +10,7 @@ import { setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
 import { isPointOpen } from '../lib/raycast'
 import Wall from './Wall'
+import Stage from './Stage'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -28,15 +29,16 @@ export default class Character extends Actor {
   pursuer?: Bot
   readonly radius: number
   ready = true
-  constructor ({ color = 'green', radius = 15, x = 0, y = 0 }: {
+  constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
     color?: string
     radius?: number
+    stage: Stage
     x: number
     y: number
   }) {
-    const feature = new CircleFeature({ x, y, radius, color })
+    const feature = new CircleFeature({ x, y, radius, color, stage })
     feature.body.label = 'character'
-    super({ feature })
+    super({ feature, stage })
     this.radius = radius
     Character.characters.set(this.feature.body.id, this)
     Character.bodies.push(this.feature.body)

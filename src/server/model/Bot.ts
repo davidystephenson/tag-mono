@@ -15,6 +15,7 @@ import raycast, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast
 import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
+import Stage from './Stage'
 
 export default class Bot extends Character {
   static botCount = 0
@@ -28,13 +29,14 @@ export default class Bot extends Character {
   pathLabel?: typeof Bot.pathLabels[number]
   searchTimes: number[] = []
   unblockTries?: Record<number, boolean>
-  constructor ({ color = 'green', radius = 15, x = 0, y = 0 }: {
+  constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
     color?: string
     radius?: number
+    stage: Stage
     x: number
     y: number
   }) {
-    super({ x, y, color, radius })
+    super({ x, y, color, radius, stage })
     this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
     Bot.botCount = Bot.botCount + 1
     if (Bot.oldest == null) Bot.oldest = this
@@ -559,6 +561,7 @@ export default class Bot extends Character {
           y: center.y,
           direction,
           force: z,
+          stage: this.stage,
           vertices: verts
         })
       } else {
@@ -580,7 +583,8 @@ export default class Bot extends Character {
           x: box.center.x,
           y: box.center.y,
           width: brickWidth,
-          height: brickHeight
+          height: brickHeight,
+          stage: this.stage
         })
       }
     } else {

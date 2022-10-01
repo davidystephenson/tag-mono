@@ -1,6 +1,7 @@
 import Matter from 'matter-js'
 import { engine } from '../lib/engine'
 import Actor from './Actor'
+import Stage from './Stage'
 
 export default class Feature {
   static features = new Map<number, Feature>()
@@ -10,13 +11,16 @@ export default class Feature {
   actor?: Actor
   readonly body: Matter.Body
   readonly isObstacle: boolean
-  constructor ({ body, color = 'gray', density = 0.001, isObstacle = true }: {
+  readonly stage: Stage
+  constructor ({ body, color = 'gray', density = 0.001, isObstacle = true, stage }: {
     body: Matter.Body
     color?: string
     density?: number
     isObstacle?: boolean
+    stage: Stage
   }) {
     this.body = body
+    this.stage = stage
     this.body.render.fillStyle = color
     this.body.render.strokeStyle = color
     this.isObstacle = isObstacle

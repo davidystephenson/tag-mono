@@ -1,6 +1,7 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../lib/directions'
 import Actor from './Actor'
+import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'
 
 export default class Puppet extends Actor {
@@ -12,6 +13,7 @@ export default class Puppet extends Actor {
     density = Actor.SCENERY_DENSITY,
     direction = EAST_VECTOR,
     force = 0.001,
+    stage,
     targetSpeed = 0.5,
     vertices,
     x,
@@ -21,13 +23,14 @@ export default class Puppet extends Actor {
     density?: number
     direction?: Matter.Vector
     force?: number
+    stage: Stage
     targetSpeed?: number
     vertices: Matter.Vector[]
     x: number
     y: number
   }) {
-    const figure = new VerticesFeature({ x, y, vertices, density, color })
-    super({ feature: figure })
+    const figure = new VerticesFeature({ color, density, stage, vertices, x, y })
+    super({ feature: figure, stage })
     this.feature.body.label = 'figure'
     this.direction = direction
     this.targetSpeed = targetSpeed

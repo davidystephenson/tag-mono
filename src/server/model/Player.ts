@@ -6,6 +6,7 @@ import DebugLabel from '../../shared/DebugLabel'
 import Waypoint from './Waypoint'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
+import Stage from './Stage'
 
 export default class Player extends Character {
   static players = new Map<string, Player>()
@@ -16,6 +17,7 @@ export default class Player extends Character {
     id,
     observer,
     radius = 15,
+    stage,
     x = 0,
     y = 0
   }: {
@@ -23,10 +25,11 @@ export default class Player extends Character {
     id: string
     observer?: boolean
     radius?: number
+    stage: Stage
     x: number
     y: number
   }) {
-    super({ x, y, color, radius })
+    super({ x, y, color, radius, stage })
     if (observer === true) {
       this.observer = true
       this.loseReady()

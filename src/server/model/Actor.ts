@@ -2,6 +2,7 @@ import Matter from 'matter-js'
 import { DEBUG } from '../lib/debug'
 import { project } from '../lib/math'
 import Feature from './Feature'
+import Stage from './Stage'
 
 export default class Actor {
   static actors = new Map<number, Actor>()
@@ -12,10 +13,13 @@ export default class Actor {
   health: number
   readonly feature: Feature
   readonly maximumHealth: number
-  constructor ({ feature }: {
+  readonly stage: Stage
+  constructor ({ feature, stage }: {
     feature: Feature
+    stage: Stage
   }) {
     this.feature = feature
+    this.stage = stage
     this.feature.actor = this
     const area = this.feature.getArea() / 100
     this.health = area * area * area
@@ -58,6 +62,7 @@ export default class Actor {
     const massA = this.feature.body.mass
     const massB = actor.feature.body.mass
     const collidePower = collideSpeed * massA * massB
+    // Damage
     const impact = collidePower * collidePower
     const damage = delta * impact * 1000
     this.health = this.health - damage

@@ -4,21 +4,23 @@ import { isPointInRange } from '../lib/inRange'
 import { getSides } from '../lib/math'
 import { isCircleShown } from '../lib/raycast'
 import Feature from './Feature'
+import Stage from './Stage'
 
 export default class CircleFeature extends Feature {
   static circleFeatures = new Map<number, CircleFeature>()
 
   readonly radius: number
-  constructor ({ color = 'gray', density = 0.001, isObstacle = false, radius, x, y }: {
+  constructor ({ color = 'gray', density = 0.001, isObstacle = false, radius, stage, x, y }: {
     color?: string
     density?: number
     isObstacle?: boolean
     radius: number
+    stage: Stage
     x: number
     y: number
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, isObstacle, density, color })
+    super({ body, color, density, isObstacle, stage })
     this.radius = radius
     CircleFeature.circleFeatures.set(this.body.id, this)
   }
