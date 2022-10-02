@@ -358,7 +358,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   join (id: string): void {
-    void new Player({ id, observer: true, x: -100, y: 0, stage: this })
+    void new Player({ id, observer: false, x: -100, y: 0, stage: this })
   }
 
   leave (id: string): void {

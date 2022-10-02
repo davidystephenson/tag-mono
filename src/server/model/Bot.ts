@@ -16,6 +16,7 @@ import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
 import Stage from './Stage'
+import { compassDirections } from '../lib/directions'
 
 export default class Bot extends Character {
   static botCount = 0
@@ -110,7 +111,14 @@ export default class Bot extends Character {
         if (trapped) {
           return this.unblock()
         }
+        const lookAhead = 300
         if (this.pathLabel !== 'unblock') {
+          if (this.isBlocked(lookAhead)) {
+            const start = this.feature.body.position
+            const direction = this.unblock(lookAhead)
+            if (direction !== null) void new DebugLine({ start, end: direction.end, color: 'white' })
+            return this.unblock(lookAhead)
+          }
           return this.flee()
         }
       } else {
@@ -122,6 +130,25 @@ export default class Bot extends Character {
       return this.explore()
     }
     return this.followPath(debug)
+  }
+
+  getOpenDirections (): Matter.Vector[] {
+    const obstacles = Feature.bodies.filter(body => body !== this.feature.body)
+    const movePoints = compassDirections.map(compassDir => {
+      const arrow = Matter.Vector.mult(compassDir, 400)
+      return Matter.Vector.add(this.feature.body.position, arrow)
+    })
+    const openDirections = [{ x: 0, y: 0 }]
+    movePoints.forEach((point, i) => {
+      const pointClear = isPointClear({
+        debug: false,
+        end: point,
+        obstacles,
+        start: this.feature.body.position
+      })
+      if (pointClear) openDirections.push(compassDirections[i])
+    })
+    return openDirections
   }
 
   explore (debug = DEBUG.WANDER): Direction | null {
@@ -187,13 +214,13 @@ export default class Bot extends Character {
     }
   }
 
-  isBlocked (): boolean {
+  isBlocked (dist = 30): boolean {
     if (Character.it == null) {
       return false
     }
     const vector = Matter.Vector.sub(this.feature.body.position, Character.it.feature.body.position)
     const direction = Matter.Vector.normalise(vector)
-    const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, 30))
+    const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, dist))
     return !this.isPointWallOpen({ point: blockPoint, debug: DEBUG.CHASE })
   }
 
@@ -201,14 +228,15 @@ export default class Bot extends Character {
     return getDistance(this.feature.body.position, point)
   }
 
-  getUnblockPoint (): Matter.Vector | null {
+  getUnblockPoint (minDistance = 0): Matter.Vector | null {
     const eligible = Waypoint.waypoints.filter(waypoint => {
       const tried = this.unblockTries?.[waypoint.id] === true
       if (tried) {
         return false
       }
       const reachable = this.isPointReachable({ point: waypoint.position })
-      return reachable
+      const distance = getDistance(this.feature.body.position,waypoint.position)
+      return reachable && distance > minDistance
     })
     if (eligible.length === 0) return this.loseWay()
     const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
@@ -705,8 +733,8 @@ export default class Bot extends Character {
     return target
   }
 
-  unblock (): Direction | null {
-    const unblockPoint = this.getUnblockPoint()
+  unblock (minDistance = 0): Direction | null {
+    const unblockPoint = this.getUnblockPoint(0)
     if (unblockPoint == null) {
       return this.loseWay()
     }

@@ -4,6 +4,7 @@ import DebugLine from '../../shared/DebugLine'
 
 export default class Direction {
   radians: number
+  end: Matter.Vector
   constructor ({ start, end, startVelocity = { x: 0, y: 0 }, endVelocity = { x: 0, y: 0 }, debugColor }: {
     start: Matter.Vector
     end: Matter.Vector
@@ -27,7 +28,7 @@ export default class Direction {
     const dotProduct = Matter.Vector.dot(towardsStart, targetAcceleration)
     if (dotProduct <= 0) this.radians = Matter.Vector.angle(zero, targetAcceleration)
     else this.radians = Matter.Vector.angle(zero, towardsStart)
-
+    this.end = end
     if (debugColor != null) {
       void new DebugLine({ start: start, end: end, color: debugColor })
     }
