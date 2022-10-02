@@ -95,6 +95,8 @@ export default class Bot extends Character {
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
+        const debugColor = DEBUG.IT_CHOICE ? 'red' : undefined
+        return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
       }
     } else {
       const itVisible = this.isFeatureVisible(this.stage.it.feature)
