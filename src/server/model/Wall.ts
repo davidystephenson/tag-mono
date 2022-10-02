@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-// import Bot from './Bot'
+import Bot from './Bot'
 import Character from './Character'
 import RectangleFeature from './RectangleFeature'
 import Stage from './Stage'
@@ -24,7 +24,7 @@ export default class Wall extends RectangleFeature {
   readonly rightMargin: number
   readonly topMargin: number
   readonly bottomMargin: number
-  constructor ({ color, height = 100, stage, waypoints = true, width = 100, x = 0, y = 0 }: {
+  constructor ({ color = 'blue', height = 100, stage, waypoints = true, width = 100, x = 0, y = 0 }: {
     color?: string
     height: number
     stage: Stage
@@ -103,10 +103,10 @@ export default class Wall extends RectangleFeature {
   }
 
   spawnBots (): void {
-    // void new Bot({ x: this.leftMargin, y: this.topMargin, stage: this.stage })
-    // void new Bot({ x: this.leftMargin, y: this.bottomMargin, stage: this.stage })
-    // void new Bot({ x: this.rightMargin, y: this.topMargin, stage: this.stage })
-    // void new Bot({ x: this.rightMargin, y: this.bottomMargin, stage: this.stage })
+    void new Bot({ x: this.leftMargin, y: this.topMargin, stage: this.stage })
+    void new Bot({ x: this.leftMargin, y: this.bottomMargin, stage: this.stage })
+    void new Bot({ x: this.rightMargin, y: this.topMargin, stage: this.stage })
+    void new Bot({ x: this.rightMargin, y: this.bottomMargin, stage: this.stage })
   }
 
   isVisible ({ center, radius }: {
