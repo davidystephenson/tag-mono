@@ -5,15 +5,24 @@ import { DEBUG } from './debug'
 import { getPerpendicular, getPerpendicularSides } from './math'
 
 let stepRayCount = 0
+let stepClears = 0
+let stepRaycasts = 0
 let stepCount = 0
 let rayCountTotal = 0
 
-export function getRayCount (): { count: number, average: number, total: number } {
+export function getRayCount (): {
+  count: number
+  average: number
+  total: number
+  clears: number
+  raycasts: number
+} {
   stepCount = stepCount + 1
   rayCountTotal = rayCountTotal + stepRayCount
   const average = rayCountTotal / stepCount
-  const result = { count: stepRayCount, average: Math.floor(average), total: rayCountTotal }
+  const result = { count: stepRayCount, average: Math.floor(average), total: rayCountTotal, clears: stepClears, raycasts: stepRaycasts }
   stepRayCount = 0
+  stepClears = 0
   return result
 }
 
@@ -28,6 +37,7 @@ export default function raycast ({ start, end, obstacles }: {
   }
   const collisions = Matter.Query.ray(obstacles, start, end)
   stepRayCount = stepRayCount + 1
+  stepRaycasts = stepRaycasts + 1
   const collide = collisions.length > 0
   if (!collide) {
     if (DEBUG.COLLISON) {
@@ -75,9 +85,14 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   if (dist === 0) return true
   const collisions = Matter.Query.ray(obstacles, start, end)
   stepRayCount = stepRayCount + 1
+  stepClears = stepClears + 1
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
-    !collide && new DebugLine({ start, end, color: 'green' })
+    if (!collide) {
+      void new DebugLine({ start, end, color: 'green' })
+    } else {
+      void new DebugLine({ start, end, color: 'rgba(255, 0, 0, 0.5)' })
+    }
   }
   return !collide
 }

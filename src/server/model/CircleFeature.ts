@@ -2,22 +2,25 @@ import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
 import { getSides } from '../lib/math'
+import { isCircleShown } from '../lib/raycast'
 import Feature from './Feature'
+import Stage from './Stage'
 
 export default class CircleFeature extends Feature {
   static circleFeatures = new Map<number, CircleFeature>()
+
   readonly radius: number
-  constructor ({ x, y, radius, isObstacle = false, density = 0.001, color = 'gray' }: {
+  constructor ({ color = 'gray', density = 0.001, isObstacle = false, radius, stage, x, y }: {
+    color?: string
+    density?: number
+    isObstacle?: boolean
+    radius: number
+    stage: Stage
     x: number
     y: number
-    radius: number
-    isObstacle?: boolean
-    density?: number
-    color?: string
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    // console.log('circleFeature id test:', body.id)
-    super({ body, isObstacle, density, color })
+    super({ body, color, density, isObstacle, stage })
     this.radius = radius
     CircleFeature.circleFeatures.set(this.body.id, this)
   }
@@ -46,8 +49,9 @@ export default class CircleFeature extends Feature {
     return this.isVisible({ center, radius })
   }
 
-  isVisible ({ center, radius }: {
+  isVisible ({ center, debug, radius }: {
     center: Matter.Vector
+    debug?: boolean
     radius: number
   }): boolean {
     const arrow = Matter.Vector.sub(center, this.body.position)
@@ -58,11 +62,13 @@ export default class CircleFeature extends Feature {
       start: center, end: closest, xRange: VISION.width, yRange: VISION.height
     })
     if (!inRange) return false
-    return Feature.isCircleShown({
-      start: center,
+    return isCircleShown({
+      debug,
+      obstacles: Feature.scenery,
       end: this.body.position,
-      startRadius: radius,
-      endRadius: this.radius
+      endRadius: this.radius,
+      start: center,
+      startRadius: radius
     })
   }
 }

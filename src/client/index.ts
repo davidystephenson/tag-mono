@@ -14,6 +14,7 @@ if (context == null) throw new Error('No Canvas')
 const input = new Input()
 const state = new State()
 const camera = new Camera()
+let locked = true
 
 let oldTime = Date.now()
 window.onclick = function () {
@@ -31,10 +32,16 @@ window.onkeydown = function (event: KeyboardEvent) {
 
 window.onkeyup = function (event: KeyboardEvent) {
   input.take({ key: event.key, value: false })
+
+  if (event.key === 'Enter') {
+    locked = false
+  }
 }
 
 window.onwheel = function (event: WheelEvent) {
-  camera.zoom -= 0.001 * event.deltaY
+  if (!locked) {
+    camera.zoom -= 0.001 * event.deltaY
+  }
 }
 
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io()

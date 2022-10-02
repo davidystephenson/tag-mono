@@ -1,12 +1,15 @@
+import csvAppend from 'csv-append'
 import Matter from 'matter-js'
-import { RemoteSocket, Socket } from 'socket.io'
-import { EventsMap } from 'socket.io/dist/typed-events'
+import Controls from '../../shared/controls'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
 import DebugLine from '../../shared/DebugLine'
+import Shape from '../../shared/Shape'
+import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
+import { getRandomRectangleSize } from '../lib/math'
 import { getRayCount } from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
@@ -16,19 +19,22 @@ import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
-export default class Stage <ServerToClientEvents, ClientToServerEvents> {
+export default class Stage {
+  activeCollisionCount = 0
+  collisionStartCount = 0
   initial = true
-  collisionStarts = 0
-  activeCollisions = 0
   oldTime = Date.now()
-  steps = 0
-  totalBodies = 0
-  totalCollisions = 0
-  warningTime = Date.now()
+  stepCount = 0
+  totalBodyCount = 0
+  totalCollisionCount = 0
   warningCount = 0
   warningDifferenceTotal = 0
-  warnings10: number[] = []
-
+  warningTime = Date.now()
+  readonly warnings10: number[] = []
+  xFactor = 2
+  xSegment: number
+  yFactor = 2
+  ySegment: number
   constructor ({
     centerBot,
     cornerBots,
@@ -67,44 +73,44 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
       { x: size, y: 0, width: size, height: wallSize },
       { x: -size, y: 0, width: size, height: wallSize }
     ]
-    wallProps.forEach(props => new Wall({ ...props, waypoints: false }))
+    wallProps.forEach(props => new Wall({ ...props, waypoints: false, stage: this }))
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
     if (town === true) {
-      const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000 })
-      const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5 })
-      const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310 })
-      const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1 })
-      const FORT = new Wall({ x: -872.5, y: -900, width: 1165, height: 100 })
-      const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210 })
-      const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2 })
-      const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1 })
-      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100 })
-      const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610 })
-      const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810 })
-      const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610 })
-      const BUTCHER = new Wall({ x: -700, y: -500, width: 100, height: 100 })
-      const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100 })
-      const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100 })
-      const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5 })
+      const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000, stage: this })
+      const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5, stage: this })
+      const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310, stage: this })
+      const BIT = new Wall({ x: -500, y: -1100, width: 1, height: 1, stage: this })
+      const FORT = new Wall({ x: -872.5, y: -900, width: 1165, height: 100, stage: this })
+      const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210, stage: this })
+      const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2, stage: this })
+      const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1, stage: this })
+      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100, stage: this })
+      const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610, stage: this })
+      const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810, stage: this })
+      const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610, stage: this })
+      const BUTCHER = new Wall({ x: -700, y: -500, width: 100, height: 100, stage: this })
+      const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100, stage: this })
+      const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100, stage: this })
+      const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5, stage: this })
       townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
     }
 
     const greekWalls: Wall[] = []
     if (greek === true) {
-      const alpha = new Wall({ x: -1454.5, y: -755, width: 1, height: 100 })
-      const beta = new Wall({ x: -1408.5, y: -755, width: 1, height: 100 })
-      const gamma = new Wall({ x: -1363, y: -755, width: 1, height: 100 })
-      const delta = new Wall({ x: -1317.5, y: -755, width: 1, height: 100 })
-      const epsilon = new Wall({ x: -1272, y: -755, width: 1, height: 100 })
-      const zeta = new Wall({ x: -1226.5, y: -755, width: 1, height: 100 })
-      const eta = new Wall({ x: -1181, y: -755, width: 1, height: 100 })
-      const theta = new Wall({ x: -1135.5, y: -755, width: 1, height: 100 })
-      const iota = new Wall({ x: -1090, y: -755, width: 1, height: 100 })
-      const kappa = new Wall({ x: -1039.275, y: -801, width: 9.45, height: 8 })
-      const lamda = new Wall({ x: -1039.275, y: -751.5, width: 9.45, height: 1 })
-      const mu = new Wall({ x: -1039.275, y: -705.5, width: 9.45, height: 1 })
+      const alpha = new Wall({ x: -1454.5, y: -755, width: 1, height: 100, stage: this })
+      const beta = new Wall({ x: -1408.5, y: -755, width: 1, height: 100, stage: this })
+      const gamma = new Wall({ x: -1363, y: -755, width: 1, height: 100, stage: this })
+      const delta = new Wall({ x: -1317.5, y: -755, width: 1, height: 100, stage: this })
+      const epsilon = new Wall({ x: -1272, y: -755, width: 1, height: 100, stage: this })
+      const zeta = new Wall({ x: -1226.5, y: -755, width: 1, height: 100, stage: this })
+      const eta = new Wall({ x: -1181, y: -755, width: 1, height: 100, stage: this })
+      const theta = new Wall({ x: -1135.5, y: -755, width: 1, height: 100, stage: this })
+      const iota = new Wall({ x: -1090, y: -755, width: 1, height: 100, stage: this })
+      const kappa = new Wall({ x: -1039.275, y: -801, width: 9.45, height: 8, stage: this })
+      const lamda = new Wall({ x: -1039.275, y: -751.5, width: 9.45, height: 1, stage: this })
+      const mu = new Wall({ x: -1039.275, y: -705.5, width: 9.45, height: 1, stage: this })
       greekWalls.push(alpha, beta, gamma, delta, epsilon, zeta, eta, theta, iota, kappa, lamda, mu)
       townWalls.concat(greekWalls)
     }
@@ -112,34 +118,34 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
     const countryWalls: Wall[] = []
     if (country === true) {
       countryWalls.push(
-        new Wall({ x: -1100, y: 400, width: 200, height: 500 }),
-        new Wall({ x: 0, y: -200, width: 100, height: 100 }),
-        new Wall({ x: 1000, y: 200, width: 200, height: 1000 }),
-        new Wall({ x: -400, y: 600, width: 1000, height: 1000 }),
-        new Wall({ x: 450, y: 700, width: 100, height: 800 }),
-        new Wall({ x: -800, y: 1300, width: 400, height: 200 }),
-        new Wall({ x: 300, y: 1300, width: 800, height: 200 }),
-        new Wall({ x: -1250, y: 1300, width: 200, height: 50 })
+        new Wall({ x: -1100, y: 400, width: 200, height: 500, stage: this }),
+        new Wall({ x: 0, y: -200, width: 100, height: 100, stage: this }),
+        new Wall({ x: 1000, y: 200, width: 200, height: 1000, stage: this }),
+        new Wall({ x: -400, y: 600, width: 1000, height: 1000, stage: this }),
+        new Wall({ x: 450, y: 700, width: 100, height: 800, stage: this }),
+        new Wall({ x: -800, y: 1300, width: 400, height: 200, stage: this }),
+        new Wall({ x: 300, y: 1300, width: 800, height: 200, stage: this }),
+        new Wall({ x: -1250, y: 1300, width: 200, height: 50, stage: this })
       )
     }
     const innerSize = size - Character.MARGIN * 2
-    let xFactor = 2
-    let xSegment = innerSize / xFactor
-    while (xSegment > VISION_INNER_WIDTH) {
-      xFactor = xFactor + 1
-      xSegment = innerSize / xFactor
+    this.xFactor = 2
+    this.xSegment = innerSize / this.xFactor
+    while (this.xSegment > VISION_INNER_WIDTH) {
+      this.xFactor = this.xFactor + 1
+      this.xSegment = innerSize / this.xFactor
     }
-    let yFactor = 2
-    let ySegment = innerSize / yFactor
-    while (ySegment > VISION_INNER_HEIGHT) {
-      yFactor = yFactor + 1
-      ySegment = innerSize / yFactor
+    this.yFactor = 2
+    this.ySegment = innerSize / this.yFactor
+    while (this.ySegment > VISION_INNER_HEIGHT) {
+      this.yFactor = this.yFactor + 1
+      this.ySegment = innerSize / this.yFactor
     }
     const gridWaypoints: Waypoint[] = []
-    for (let i = 0; i <= xFactor; i++) {
-      for (let j = 0; j <= yFactor; j++) {
-        const x = -innerSize / 2 + i * xSegment
-        const y = -innerSize / 2 + j * ySegment
+    for (let i = 0; i <= this.xFactor; i++) {
+      for (let j = 0; j <= this.yFactor; j++) {
+        const x = -innerSize / 2 + i * this.xSegment
+        const y = -innerSize / 2 + j * this.ySegment
 
         gridWaypoints.push(new Waypoint({ x, y }))
       }
@@ -165,77 +171,78 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
 
     console.log('navigation complete')
     if (wildBricks === true) {
-      void new Brick({ x: -30, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 30, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 0, y: -30, height: 30, width: 30 })
-      void new Brick({ x: 0, y: -30, height: 30, width: 100 })
-      void new Brick({ x: 30, y: 0, height: 30, width: 50 })
-      void new Brick({ x: -30, y: 0, height: 50, width: 30 })
-      void new Brick({ x: -800, y: 0, height: 80, width: 30 })
-      void new Brick({ x: -900, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1000, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1100, y: 0, height: 90, width: 80 })
-      void new Brick({ x: -1200, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1300, y: 0, height: 50, width: 50 })
-      void new Brick({ x: -1400, y: 0, height: 50, width: 50 })
-      void new Brick({ x: 0, y: 30, height: 30, width: 30 })
-      void new Brick({ x: 30, y: 30, height: 30, width: 30 })
-      void new Brick({ x: -30, y: 30, height: 30, width: 30 })
-      void new Brick({ x: 800, y: 200, height: 200, width: 100 })
-      void new Brick({ x: -500, y: 1400, height: 100, width: 200 })
-      void new Brick({ x: -1300, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 750, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 800, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 850, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 900, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 950, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1000, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1050, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1100, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1150, y: 1300, height: 100, width: 30 })
-      void new Brick({ x: 1200, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1250, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1300, y: 1300, height: 300, width: 30 })
-      void new Brick({ x: 1350, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1400, y: 1300, height: 200, width: 30 })
-      void new Brick({ x: 1450, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
+      this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
+      this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
+      this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
+      this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
+      this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: 800, y: 200, height: 200, width: 100 })
+      this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
+      this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
+      this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
+      this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (centerBot === true) {
-      void new Bot({ x: 1475, y: -1375 })
+      void new Bot({ x: 100, y: 0, stage: this })
     }
 
     if (greekBots === true) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots === true) townWalls.forEach(wall => wall.spawnBots())
-    if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y }))
+    if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
     if (countryBots === true) countryWalls.forEach(wall => wall.spawnBots())
     if (waypointBots === true) {
       Waypoint.waypoints.forEach(waypoint => {
-        void new Bot({ x: waypoint.x, y: waypoint.y })
+        void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
       })
     }
     if (waypointBricks === true) {
       Waypoint.waypoints.forEach(waypoint => {
-        void new Brick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+        this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
       })
     }
     if (cornerBots === true) {
-      void new Bot({ x: -marginEdge, y: -marginEdge })
-      void new Bot({ x: marginEdge, y: -marginEdge })
-      void new Bot({ x: -marginEdge, y: marginEdge })
-      void new Bot({ x: marginEdge, y: marginEdge })
+      void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: -marginEdge, stage: this })
+      void new Bot({ x: -marginEdge, y: marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: marginEdge, stage: this })
     }
     if (midpointBots === true) {
-      void new Bot({ x: 0, y: -marginEdge })
-      void new Bot({ x: marginEdge, y: 0 })
-      void new Bot({ x: 0, y: marginEdge })
-      void new Bot({ x: -marginEdge, y: 0 })
+      void new Bot({ x: 0, y: -marginEdge, stage: this })
+      void new Bot({ x: marginEdge, y: 0, stage: this })
+      void new Bot({ x: 0, y: marginEdge, stage: this })
+      void new Bot({ x: -marginEdge, y: 0, stage: this })
     }
     Matter.Runner.run(runner, engine)
+    const { append } = csvAppend('data.csv')
     Matter.Events.on(engine, 'afterUpdate', () => {
-      this.steps = this.steps + 1
-      this.totalCollisions = this.totalCollisions + this.collisionStarts // + this.activeCollisions
+      this.stepCount = this.stepCount + 1
+      this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(engine.world)
-      this.totalBodies = this.totalBodies + bodies.length
+      this.totalBodyCount = this.totalBodyCount + bodies.length
       const rayCount = getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
@@ -250,9 +257,9 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
           engineTimers.delete(key)
         }
       })
+      const newTime = Date.now()
+      const difference = newTime - this.oldTime
       if (DEBUG.STEP_TIME) {
-        const newTime = Date.now()
-        const difference = newTime - this.oldTime
         if (this.initial) {
           console.log('initial difference:', difference)
           this.initial = false
@@ -268,9 +275,9 @@ export default class Stage <ServerToClientEvents, ClientToServerEvents> {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStarts // + this.activeCollisions
-          const averageCollisions = Math.floor(this.totalCollisions / this.steps)
-          const averageBodies = Math.floor(this.totalBodies / this.steps)
+          const stepCollisions = this.collisionStartCount // + this.activeCollisions
+          const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
+          const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${Bot.bodies.length} bots
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
@@ -288,80 +295,114 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       Actor.actors.forEach(actor => actor.act())
-      this.collisionStarts = 0
-      this.activeCollisions = 0
+      const record = {
+        warnings: this.warningCount,
+        steps: this.stepCount,
+        time: newTime,
+        difference,
+        activeCollisions: this.activeCollisionCount,
+        collisionStarts: this.collisionStartCount,
+        bots: Bot.bodies.length,
+        bodies: bodies.length,
+        raycasts: rayCount.raycasts,
+        clears: rayCount.clears
+      }
+      append(record)
+      this.collisionStartCount = 0
+      this.activeCollisionCount = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
-        this.collisionStarts = this.collisionStarts + 1
-        const actorA = Actor.actors.get(pair.bodyA.id)
-        const actorB = Actor.actors.get(pair.bodyB.id)
-        if (actorA != null) {
-          actorA.collide({ actor: actorB })
-        }
-        if (actorB != null) {
-          actorB.collide({ actor: actorA })
-        }
+        this.collisionStartCount = this.collisionStartCount + 1
+        this.collide({ pair })
       })
     })
 
     Matter.Events.on(engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
-        this.activeCollisions = this.activeCollisions + 1
-        const actorA = Actor.actors.get(pair.bodyA.id)
-        const actorB = Actor.actors.get(pair.bodyB.id)
+        this.activeCollisionCount = this.activeCollisionCount + 1
         const delta = engine.timing.lastDelta
-        if (actorA != null) {
-          actorA.colliding({ actor: actorB, delta })
-        }
-        if (actorB != null) {
-          actorB.colliding({ actor: actorA, delta })
-        }
+        this.collide({ delta, pair })
       })
     })
   }
 
-  join (socket: Socket): void {
-    console.log('connection:', socket.id)
-    socket.emit('socketId', socket.id)
-    const player = new Player({ x: 1475, y: -1300, socket, observer: true })
-    console.log('player.feature.body.mass', player.feature.body.mass)
-    socket.on('updateServer', message => {
-      player.controls = message.controls
-      if (player.controls.select) {
-        Actor.paused = false
-        runner.enabled = !Actor.paused
-      }
+  collide ({ delta, pair }: {
+    delta?: number
+    pair: Matter.IPair
+  }): void {
+    const actorA = Actor.actors.get(pair.bodyA.id)
+    const actorB = Actor.actors.get(pair.bodyB.id)
+    // @ts-expect-error
+    const { normal } = pair.collision
+    if (actorA != null && actorB != null) {
+      actorA.collide({ actor: actorB, delta, normal })
+      actorB.collide({ actor: actorA, delta, normal })
+    }
+  }
+
+  control ({ controls, id }: {
+    controls: Controls
+    id: string
+  }): void {
+    const player = Player.players.get(id)
+    if (player == null) {
+      throw new Error('Player not found')
+    }
+    player.controls = controls
+    if (player.controls.select) {
+      Actor.paused = false
+      runner.enabled = !Actor.paused
+    }
+  }
+
+  join (id: string): void {
+    void new Player({ id, observer: false, x: -100, y: 0, stage: this })
+  }
+
+  leave (id: string): void {
+    const player = Player.players.get(id)
+    if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
+    player?.destroy()
+  }
+
+  randomBrick ({ x, y, width, height, minimumWidth = 1, minimumHeight = 1 }: {
+    x: number
+    y: number
+    width: number
+    height: number
+    minimumWidth?: number
+    minimumHeight?: number
+  }): Brick {
+    const rectangle = getRandomRectangleSize({
+      minimumWidth: minimumWidth, maximumWidth: width, minimumHeight: minimumHeight, maximumHeight: height
     })
 
-    socket.on('disconnect', () => {
-      console.log('disconnect:', socket.id)
-      const player = Player.players.get(socket.id)
-      if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
-      player?.destroy()
+    return new Brick({
+      x, y, width: rectangle.width, height: rectangle.height, stage: this
     })
   }
 
-  update (socket: RemoteSocket<EventsMap & ServerToClientEvents, ClientToServerEvents>): void {
-    const player = Player.players.get(socket.id)
-
+  update (id: string): UpdateMessage {
+    const player = Player.players.get(id)
     if (player == null) {
-      throw new Error('player = null')
-      /*
-          const shapes: Shape[] = []
-          Feature.features.forEach(feature => shapes.push(new Shape(feature.body)))
-          const message = { shapes, debugLines: DebugLine.lines, debugCircles: DebugCircle.circles }
-          socket.emit('updateClient', message)
-          */
-    } else {
-      if (DEBUG.LOST) {
-        Bot.lostPoints.forEach(point => {
-          void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
-        })
-      }
-
-      player.updateClient()
+      throw new Error('Player not found')
     }
+    if (DEBUG.LOST) {
+      Bot.lostPoints.forEach(point => {
+        void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+      })
+    }
+    const visibleFeatures = player.getVisibleFeatures()
+    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
+    const message = {
+      shapes,
+      debugLines: DebugLine.lines,
+      debugCircles: DebugCircle.circles,
+      debugLabels: DebugLabel.labels,
+      torsoId: player.feature.body.id
+    }
+    return message
   }
 }

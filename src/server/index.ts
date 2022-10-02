@@ -7,12 +7,10 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import Stage from './model/Stage'
-
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
 app.use(staticMiddleware)
-
 function makeServer (): https.Server | http.Server {
   if (config.secure) {
     const key = fs.readFileSync('./sis-key.pem')
@@ -23,7 +21,6 @@ function makeServer (): https.Server | http.Server {
     return new http.Server(app)
   }
 }
-
 const server = makeServer()
 const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
 const PORT = process.env.PORT ?? 3000
@@ -31,31 +28,40 @@ server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
   setInterval(tick, 30)
 })
-
 async function updateClients (): Promise<void> {
   const sockets = await io.fetchSockets()
-  sockets.forEach(socket => stage.update(socket))
-}
+  sockets.forEach(socket => {
+    const message = stage.update(socket.id)
 
+    socket.emit('updateClient', message)
+  })
+}
 function tick (): void {
   void updateClients()
 }
-
-const stage = new Stage<ClientToServerEvents, ServerToClientEvents>({
+const stage = new Stage({
   centerBot: true,
   country: true,
   countryBots: true,
   cornerBots: true,
-  gridBots: false,
+  gridBots: true,
   greek: true,
   greekBots: false,
   midpointBots: true,
   townBots: true,
   waypointBots: false,
-  waypointBricks: false,
-  wildBricks: false,
+  waypointBricks: true,
+  wildBricks: true,
   size: 3000,
   town: true
 })
-
-io.on('connection', stage.join)
+io.on('connection', (socket) => {
+  stage.join(socket.id)
+  socket.on('updateServer', message => {
+    stage.control({ id: socket.id, controls: message.controls })
+  })
+  socket.on('disconnect', () => {
+    console.log('disconnect:', socket.id)
+    stage.leave(socket.id)
+  })
+})

@@ -1,34 +1,36 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../lib/directions'
 import Actor from './Actor'
+import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'
 
 export default class Puppet extends Actor {
   readonly direction: Matter.Vector
   readonly targetSpeed: number
   readonly force: number
-
   constructor ({
-    x,
-    y,
-    vertices,
+    color = Actor.SCENERY_COLOR,
     density = Actor.SCENERY_DENSITY,
-    targetSpeed = 0.5,
-    force = 0.001,
     direction = EAST_VECTOR,
-    color = Actor.SCENERY_COLOR
+    force = 0.001,
+    stage,
+    targetSpeed = 0.5,
+    vertices,
+    x,
+    y
   }: {
+    color?: string
+    density?: number
+    direction?: Matter.Vector
+    force?: number
+    stage: Stage
+    targetSpeed?: number
+    vertices: Matter.Vector[]
     x: number
     y: number
-    vertices: Matter.Vector[]
-    density?: number
-    targetSpeed?: number
-    force?: number
-    direction?: Matter.Vector
-    color?: string
   }) {
-    const figure = new VerticesFeature({ x, y, vertices, density, color })
-    super({ feature: figure })
+    const figure = new VerticesFeature({ color, density, stage, vertices, x, y })
+    super({ feature: figure, stage })
     this.feature.body.label = 'figure'
     this.direction = direction
     this.targetSpeed = targetSpeed
@@ -43,13 +45,12 @@ export default class Puppet extends Actor {
     }
   }
 
-  characterCollide ({ actor }: { actor: Actor }): void {
-    super.characterCollide({ actor })
-    this.dent()
-  }
-
-  characterColliding ({ actor, delta }: { actor: Actor, delta: number }): void {
-    super.characterColliding({ actor, delta })
-    this.dent(delta)
+  characterCollide ({ actor, delta, normal }: {
+    actor: Actor
+    delta?: number
+    normal: Matter.Vector
+  }): void {
+    super.characterCollide({ actor, delta, normal })
+    this.dent({ actor, delta, normal })
   }
 }

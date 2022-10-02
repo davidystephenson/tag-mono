@@ -1,20 +1,21 @@
 import Matter from 'matter-js'
 import PolygonFeature from './PolygonFeature'
+import Stage from './Stage'
 
 export default class RectangleFeature extends PolygonFeature {
-  width: number
-  height: number
-
-  constructor ({ x, y, width, height, density = 0.001, color = 'gray' }: {
+  readonly height: number
+  readonly width: number
+  constructor ({ color = 'gray', density = 0.001, height, stage, width, x, y }: {
+    color?: string
+    density?: number
+    height: number
+    stage: Stage
+    width: number
     x: number
     y: number
-    width: number
-    height: number
-    density?: number
-    color?: string
   }) {
     const body = Matter.Bodies.rectangle(x, y, width, height)
-    super({ body, density, color })
+    super({ body, density, color, stage })
     this.width = width
     this.height = height
   }
