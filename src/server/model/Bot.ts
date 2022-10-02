@@ -1,9 +1,7 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import Wall from './Wall'
 import DebugLine from '../../shared/DebugLine'
-import Waypoint from './Waypoint'
 import DebugCircle from '../../shared/DebugCircle'
 import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
@@ -13,14 +11,10 @@ import Player from './Player'
 import { DEBUG } from '../lib/debug'
 import raycast, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Brick from './Brick'
-import Feature from './Feature'
 import Puppet from './Puppet'
 import Stage from './Stage'
 
 export default class Bot extends Character {
-  static botCount = 0
-  static lostPoints: Matter.Vector[] = []
-  static oldest: Bot
   static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
   static TIME_LIMIT = 5000
 
@@ -37,14 +31,14 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, color, radius, stage })
-    this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
-    Bot.botCount = Bot.botCount + 1
-    if (Bot.oldest == null) Bot.oldest = this
+    this.searchTimes = this.stage.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
+    this.stage.botCount = this.stage.botCount + 1
+    if (this.stage.oldest == null) this.stage.oldest = this
   }
 
   act (): void {
     if (DEBUG.BOT_CIRCLES) {
-      const debugColor = Character.it === this
+      const debugColor = this.stage.it === this
         ? 'red'
         : this.blocked && this.moving
           ? 'white'
@@ -77,10 +71,10 @@ export default class Bot extends Character {
   }
 
   chooseDirection (): Direction | null {
-    if (Character.it == null) {
+    if (this.stage.it == null) {
       return null
     }
-    const isIt = Character.it === this
+    const isIt = this.stage.it === this
     const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
     const stuck = this.isStuck()
     const bored = this.path.length === 0
@@ -88,7 +82,7 @@ export default class Bot extends Character {
 
     if (isIt) {
       const visibleCharacters: Character[] = []
-      Character.characters.forEach(character => {
+      this.stage.characters.forEach(character => {
         const isVisible =
           character !== this &&
           character.ready &&
@@ -103,7 +97,7 @@ export default class Bot extends Character {
         this.setPath({ path: [point], label: 'pursue' })
       }
     } else {
-      const itVisible = this.isFeatureVisible(Character.it.feature)
+      const itVisible = this.isFeatureVisible(this.stage.it.feature)
       if (itVisible) {
         this.blocked = this.isBlocked()
         const trapped = this.blocked && (bored || stuck || arriving)
@@ -127,10 +121,10 @@ export default class Bot extends Character {
   explore (debug = DEBUG.WANDER): Direction | null {
     const debugColor = debug ? 'tan' : undefined
     const openWaypointIds: number[] = []
-    const otherCharacterBodies = Character.bodies.filter(body => body !== this.feature.body)
-    const obstacles = [...Wall.wallObstacles, ...otherCharacterBodies]
+    const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
+    const obstacles = [...this.stage.wallBodies, ...otherCharacterBodies]
     const openTimes = this.searchTimes.filter((time, index) => {
-      const point = Waypoint.waypoints[index].position
+      const point = this.stage.waypoints[index].position
       const inRange = this.isPointInRange(point)
       if (!inRange) return false
       // const isCharacterOpen = this.isPointCharacterOpen({ point })
@@ -140,7 +134,7 @@ export default class Bot extends Character {
         obstacles,
         start: this.feature.body.position
       })
-      if (isClear) openWaypointIds.push(Waypoint.waypoints[index].id)
+      if (isClear) openWaypointIds.push(this.stage.waypoints[index].id)
       return isClear
     })
     if (openTimes.length === 0) {
@@ -150,7 +144,7 @@ export default class Bot extends Character {
     const earlyVisibleIds = openWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
     const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
     const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
-    const waypoint = Waypoint.waypoints[earlyFarId]
+    const waypoint = this.stage.waypoints[earlyFarId]
 
     this.searchTimes[waypoint.id] = Date.now()
     this.setPath({ path: [waypoint.position], label: 'explore' })
@@ -159,11 +153,11 @@ export default class Bot extends Character {
 
   flee (): Direction | null {
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
-    if (Character.it == null) {
+    if (this.stage.it == null) {
       throw new Error('Fleeing from no one')
     }
     this.setPath({ path: [], label: 'flee' })
-    return Character.it.getDirection({ end: this.feature.body.position, debugColor })
+    return this.stage.it.getDirection({ end: this.feature.body.position, debugColor })
   }
 
   followPath (debug?: boolean): Direction | null {
@@ -188,10 +182,10 @@ export default class Bot extends Character {
   }
 
   isBlocked (): boolean {
-    if (Character.it == null) {
+    if (this.stage.it == null) {
       return false
     }
-    const vector = Matter.Vector.sub(this.feature.body.position, Character.it.feature.body.position)
+    const vector = Matter.Vector.sub(this.feature.body.position, this.stage.it.feature.body.position)
     const direction = Matter.Vector.normalise(vector)
     const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, 30))
     return !this.isPointWallOpen({ point: blockPoint, debug: DEBUG.CHASE })
@@ -202,7 +196,7 @@ export default class Bot extends Character {
   }
 
   getUnblockPoint (): Matter.Vector | null {
-    const eligible = Waypoint.waypoints.filter(waypoint => {
+    const eligible = this.stage.waypoints.filter(waypoint => {
       const tried = this.unblockTries?.[waypoint.id] === true
       if (tried) {
         return false
@@ -213,10 +207,10 @@ export default class Bot extends Character {
     if (eligible.length === 0) return this.loseWay()
     const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
     if (far.length === 0) return this.loseWay()
-    if (Character.it == null || Character.it === this) {
+    if (this.stage.it == null || this.stage.it === this) {
       throw new Error('No it to unblock from')
     }
-    const itAngle = getAngle(this.feature.body.position, Character.it.feature.body.position)
+    const itAngle = getAngle(this.feature.body.position, this.stage.it.feature.body.position)
     const differences = far.map(waypoint => {
       const angle = getAngle(this.feature.body.position, waypoint.position)
       return getAngleDifference(angle, itAngle)
@@ -228,7 +222,7 @@ export default class Bot extends Character {
   }
 
   getOpenCharacters (): Character[] {
-    const characters = Character.characters.values()
+    const characters = this.stage.characters.values()
     const visibleCharacters = []
     for (const character of characters) {
       const isVisible =
@@ -257,7 +251,7 @@ export default class Bot extends Character {
     return isPointShown({
       debug,
       end: point,
-      obstacles: Wall.wallObstacles,
+      obstacles: this.stage.wallBodies,
       radius: this.radius,
       start: this.feature.body.position
     })
@@ -323,7 +317,7 @@ export default class Bot extends Character {
     const southEast = { x: eastX, y: southY }
     const southWest = { x: westX, y: southY }
     const northWest = { x: westX, y: northY }
-    const obstacles = Feature.bodies.filter(body => body.id !== this.feature.body.id)
+    const obstacles = this.stage.bodies.filter(body => body.id !== this.feature.body.id)
     const northHit = raycast({ start: botPoint, end: north, obstacles })
     const southHit = raycast({ start: botPoint, end: south, obstacles })
     const westHit = raycast({ start: botPoint, end: west, obstacles })
@@ -547,14 +541,14 @@ export default class Bot extends Character {
         const absVerts = verts.map(vert => ({ x: vert.x + box.center.x, y: vert.y + box.center.y }))
         const center = Matter.Vertices.centre(absVerts)
         console.log('center test:', center)
-        const v = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
+        const v = this.stage.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
         const maxSize = VISION_WIDTH * 0.5
         const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
         const m = even * Matter.Vector.magnitude(v)
         const z = (0.8 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
-        const velocity = Character.it?.feature.body.velocity ?? { x: 0, y: 0 }
+        const velocity = this.stage.it?.feature.body.velocity ?? { x: 0, y: 0 }
         const direction = vectorToPoint(velocity)
         void new Puppet({
           x: center.x,
@@ -612,8 +606,8 @@ export default class Bot extends Character {
     if (DEBUG.LOST) {
       const position = props?.goal ?? this.feature.body.position
       const point = vectorToPoint(position)
-      Bot.lostPoints.push(point)
-      console.warn(`Lost ${Bot.lostPoints.length}:`, this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
+      this.stage.lostPoints.push(point)
+      console.warn(`Lost ${this.stage.lostPoints.length}:`, this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
       Player.players.forEach(player => {
         void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
       })
@@ -657,7 +651,7 @@ export default class Bot extends Character {
 
       return goalPoint
     }
-    const visibleFromStart = Waypoint.waypoints.filter(waypoint => {
+    const visibleFromStart = this.stage.waypoints.filter(waypoint => {
       return this.isPointReachable({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
@@ -667,14 +661,13 @@ export default class Bot extends Character {
       return this.loseWay()
     }
 
-    const visibleFromEnd = Waypoint.waypoints.filter(waypoint => {
+    const visibleFromEnd = this.stage.waypoints.filter(waypoint => {
       return isPointOpen({
         start: waypoint.position,
         end: goalPoint,
         radius: this.radius,
-        obstacles: Wall.wallObstacles
+        obstacles: this.stage.wallBodies
       })
-      // return Wall.isPointOpen({ start: waypoint.position, end: goalPoint, radius: this.radius })
     })
     if (visibleFromEnd.length === 0) {
       if (DEBUG.LOST) {
@@ -719,8 +712,8 @@ export default class Bot extends Character {
     const debugColor = debug ? 'tan' : undefined
     const visibleWaypointIds: number[] = []
     const visibleTimes = this.searchTimes.filter((time, index) => {
-      const isVisible = this.isPointWallVisible({ point: Waypoint.waypoints[index].position })
-      if (isVisible) visibleWaypointIds.push(Waypoint.waypoints[index].id)
+      const isVisible = this.isPointWallVisible({ point: this.stage.waypoints[index].position })
+      if (isVisible) visibleWaypointIds.push(this.stage.waypoints[index].id)
       return isVisible
     })
 
@@ -731,7 +724,7 @@ export default class Bot extends Character {
     const earlyVisibleIds = visibleWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
     const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
     const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
-    const waypoint = Waypoint.waypoints[earlyFarId]
+    const waypoint = this.stage.waypoints[earlyFarId]
     if (waypoint == null) {
       return null
     }

@@ -3,7 +3,6 @@ import Shape from '../../shared/Shape'
 import DebugLine from '../../shared/DebugLine'
 import DebugCircle from '../../shared/DebugCircle'
 import DebugLabel from '../../shared/DebugLabel'
-import Waypoint from './Waypoint'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 import Stage from './Stage'
@@ -67,7 +66,7 @@ export default class Player extends Character {
     // this.debugPath()
     super.act()
     if (DEBUG.OPEN_WAYPOINTS) {
-      const visible = Waypoint.waypoints.filter(waypoint => {
+      const visible = this.stage.waypoints.filter(waypoint => {
         return this.isPointWallOpen({ point: waypoint.position })
       })
       visible.forEach(waypoint => {

@@ -4,10 +4,6 @@ import Actor from './Actor'
 import Stage from './Stage'
 
 export default class Feature {
-  static features = new Map<number, Feature>()
-  static scenery: Matter.Body[] = []
-  static bodies: Matter.Body[] = []
-
   actor?: Actor
   readonly body: Matter.Body
   readonly isObstacle: boolean
@@ -29,9 +25,9 @@ export default class Feature {
     this.body.friction = 0
     this.body.frictionAir = 0.01
     Matter.Body.setDensity(this.body, density)
-    Feature.features.set(this.body.id, this)
-    Feature.bodies.push(this.body)
-    if (this.isObstacle) Feature.scenery.push(this.body)
+    this.stage.features.set(this.body.id, this)
+    this.stage.bodies.push(this.body)
+    if (this.isObstacle) this.stage.scenery.push(this.body)
   }
 
   getArea (): number {
@@ -54,7 +50,9 @@ export default class Feature {
 
   destroy (): void {
     Matter.Composite.remove(engine.world, this.body)
-    Feature.features.delete(this.body.id)
-    if (this.isObstacle) Feature.scenery = Feature.scenery.filter(obstacle => obstacle.id !== this.body.id)
+    this.stage.features.delete(this.body.id)
+    if (this.isObstacle) {
+      this.stage.scenery = this.stage.scenery.filter(obstacle => obstacle.id !== this.body.id)
+    }
   }
 }

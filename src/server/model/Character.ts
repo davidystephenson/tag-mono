@@ -9,14 +9,9 @@ import Feature from './Feature'
 import { setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
 import { isPointOpen } from '../lib/raycast'
-import Wall from './Wall'
 import Stage from './Stage'
 
 export default class Character extends Actor {
-  static polygons = ['frame', 'rock']
-  static it?: Character
-  static characters = new Map<number, Character>()
-  static bodies: Matter.Body[] = []
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
 
@@ -40,9 +35,9 @@ export default class Character extends Actor {
     feature.body.label = 'character'
     super({ feature, stage })
     this.radius = radius
-    Character.characters.set(this.feature.body.id, this)
-    Character.bodies.push(this.feature.body)
-    if (Character.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
+    this.stage.characterBodies.push(this.feature.body)
+    this.stage.characters.set(this.feature.body.id, this)
+    if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
   }
 
   act (): void {
@@ -87,7 +82,7 @@ export default class Character extends Actor {
   }
 
   checkTag ({ actor }: { actor: Actor }): void {
-    if (Character.it === actor) {
+    if (this.stage.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
         this.makeIt({ predator: it })
@@ -97,7 +92,7 @@ export default class Character extends Actor {
 
   destroy (): void {
     super.destroy()
-    Character.characters.delete(this.feature.body.id)
+    this.stage.characters.delete(this.feature.body.id)
     if (this.pursuer != null) {
       this.pursuer.setPath({ path: [], label: 'reset' })
     }
@@ -115,7 +110,7 @@ export default class Character extends Actor {
 
   getVisibleFeatures (): Feature[] {
     const visibleFeatures: Feature[] = []
-    Feature.features.forEach(feature => {
+    this.stage.features.forEach(feature => {
       const isVisible = this.isFeatureVisible(feature)
       if (isVisible) visibleFeatures.push(feature)
     })
@@ -137,7 +132,7 @@ export default class Character extends Actor {
 
   isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     return isPointOpen({
-      start: this.feature.body.position, end: point, radius: this.radius, obstacles: Wall.wallObstacles, debug
+      start: this.feature.body.position, end: point, radius: this.radius, obstacles: this.stage.wallBodies, debug
     })
   }
 
@@ -152,13 +147,13 @@ export default class Character extends Actor {
 
   makeIt ({ predator }: { predator: Character }): void {
     if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
-    if (Character.it === this) {
+    if (this.stage.it === this) {
       throw new Error('Already it')
     }
     predator.loseIt({ prey: this })
     this.loseReady()
     this.setColor('white')
-    Character.it = this
+    this.stage.it = this
     setEngineTimeout(5000, this.beReady)
   }
 

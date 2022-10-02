@@ -7,9 +7,6 @@ import Stage from './Stage'
 import Waypoint from './Waypoint'
 
 export default class Wall extends RectangleFeature {
-  static walls: Wall[] = []
-  static wallObstacles: Matter.Body[] = []
-
   readonly x: number
   readonly y: number
   readonly width: number
@@ -50,23 +47,23 @@ export default class Wall extends RectangleFeature {
     this.topMargin = this.topSide - Character.MARGIN
     this.bottomMargin = this.bottomSide + Character.MARGIN
     Matter.Body.setStatic(this.body, true)
-    Wall.walls.push(this)
-    Wall.wallObstacles.push(this.body)
+    this.stage.walls.push(this)
+    this.stage.wallBodies.push(this.body)
     if (waypoints) {
       this.body.vertices.forEach(corner => {
         const isLeft = corner.x < this.x
         const isTop = corner.y < this.y
         if (isLeft) {
           if (isTop) {
-            void new Waypoint({ x: this.leftMargin, y: this.topMargin })
+            void new Waypoint({ stage: this.stage, x: this.leftMargin, y: this.topMargin })
           } else {
-            void new Waypoint({ x: this.leftMargin, y: this.bottomMargin })
+            void new Waypoint({ stage: this.stage, x: this.leftMargin, y: this.bottomMargin })
           }
         } else {
           if (isTop) {
-            void new Waypoint({ x: this.rightMargin, y: this.topMargin })
+            void new Waypoint({ stage: this.stage, x: this.rightMargin, y: this.topMargin })
           } else {
-            void new Waypoint({ x: this.rightMargin, y: this.bottomMargin })
+            void new Waypoint({ stage: this.stage, x: this.rightMargin, y: this.bottomMargin })
           }
         }
       })
@@ -79,8 +76,8 @@ export default class Wall extends RectangleFeature {
         }
         for (let i = 1; i < factor; i++) {
           const y = this.topSide + (this.height / factor) * i
-          void new Waypoint({ x: this.leftMargin, y })
-          void new Waypoint({ x: this.rightMargin, y })
+          void new Waypoint({ stage: this.stage, x: this.leftMargin, y })
+          void new Waypoint({ stage: this.stage, x: this.rightMargin, y })
         }
       }
       if (this.width > VISION_INNER_WIDTH) {
@@ -93,10 +90,10 @@ export default class Wall extends RectangleFeature {
         for (let i = 1; i < factor; i++) {
           const x = this.leftSide + (this.width / factor) * i
           const top = this.topMargin
-          void new Waypoint({ x, y: top })
+          void new Waypoint({ stage: this.stage, x, y: top })
 
           const bottom = this.bottomMargin
-          void new Waypoint({ x, y: bottom })
+          void new Waypoint({ stage: this.stage, x, y: bottom })
         }
       }
     }

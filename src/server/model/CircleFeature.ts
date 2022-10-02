@@ -7,8 +7,6 @@ import Feature from './Feature'
 import Stage from './Stage'
 
 export default class CircleFeature extends Feature {
-  static circleFeatures = new Map<number, CircleFeature>()
-
   readonly radius: number
   constructor ({ color = 'gray', density = 0.001, isObstacle = false, radius, stage, x, y }: {
     color?: string
@@ -22,12 +20,6 @@ export default class CircleFeature extends Feature {
     const body = Matter.Bodies.circle(x, y, radius)
     super({ body, color, density, isObstacle, stage })
     this.radius = radius
-    CircleFeature.circleFeatures.set(this.body.id, this)
-  }
-
-  destroy (): void {
-    super.destroy()
-    CircleFeature.circleFeatures.delete(this.body.id)
   }
 
   getArea (): number {
@@ -64,7 +56,7 @@ export default class CircleFeature extends Feature {
     if (!inRange) return false
     return isCircleShown({
       debug,
-      obstacles: Feature.scenery,
+      obstacles: this.stage.scenery,
       end: this.body.position,
       endRadius: this.radius,
       start: center,

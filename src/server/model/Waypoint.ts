@@ -1,31 +1,28 @@
 import Matter, { Vector } from 'matter-js'
 import { isPointOpen } from '../lib/raycast'
 import Character from './Character'
-import Wall from './Wall'
+import Stage from './Stage'
 
 export default class Waypoint {
-  static waypoints: Waypoint[] = []
-  static positions: Vector[] = []
-  static label = 0
-  static ids: number[] = []
-
   distances: number[] = []
+  readonly id: number
   neighbors: Waypoint[] = []
   readonly paths: Vector[][] = []
-  readonly id: number
+  readonly position: Matter.Vector
+  readonly stage: Stage
   readonly x: number
   readonly y: number
-  readonly position: Matter.Vector
-  constructor ({ x, y }: {
+  constructor ({ stage, x, y }: {
+    stage: Stage
     x: number
     y: number
   }) {
+    this.stage = stage
     this.x = x
     this.y = y
     this.position = { x, y }
-    this.id = Waypoint.waypoints.length
-    Waypoint.label = Waypoint.label + 1
-    const obstacle = Wall.walls.find(wall => {
+    this.id = this.stage.waypoints.length
+    const obstacle = this.stage.walls.find(wall => {
       const dX = Math.abs(this.x - wall.x)
       const dY = Math.abs(this.y - wall.y)
       const overX = dX > wall.halfWidth
@@ -84,9 +81,7 @@ export default class Waypoint {
       return false
     })
     if (obstacle == null) {
-      Waypoint.waypoints.push(this)
-      Waypoint.positions.push(this.position)
-      Waypoint.ids.push(this.id)
+      this.stage.waypoints.push(this)
     }
   }
 
@@ -98,12 +93,12 @@ export default class Waypoint {
       start,
       end,
       radius: Character.MAXIMUM_RADIUS,
-      obstacles: Wall.wallObstacles
+      obstacles: this.stage.wallBodies
     })
   }
 
   setNeighbors (): void {
-    this.neighbors = Waypoint.waypoints.filter(other => {
+    this.neighbors = this.stage.waypoints.filter(other => {
       if (other.id === this.id) return false
       return this.isPointWallOpen({
         start: this.position,
@@ -118,7 +113,7 @@ export default class Waypoint {
 
   updateDistances (): void {
     this.distances[this.id] = 0
-    Waypoint.waypoints.forEach(goal => {
+    this.stage.waypoints.forEach(goal => {
       this.neighbors.forEach(neighbor => {
         const oldDistance = this.distances[goal.id]
         const newDistance = this.distances[neighbor.id] + neighbor.distances[goal.id]
@@ -129,7 +124,7 @@ export default class Waypoint {
 
   setPaths (): void {
     this.paths[this.id] = [this.position]
-    Waypoint.waypoints.forEach(other => {
+    this.stage.waypoints.forEach(other => {
       if (other.id !== this.id) {
         // console.log('setting path from', this.id, 'to', other.id)
         const waypointPath = this.getWaypointPath(other)

@@ -5,8 +5,6 @@ import Feature from './Feature'
 import Stage from './Stage'
 
 export default class Actor {
-  static actors = new Map<number, Actor>()
-  static paused = false
   static SCENERY_DENSITY = 0.00003
   static SCENERY_COLOR = 'rgba(0, 255, 255, 1)'
 
@@ -24,7 +22,7 @@ export default class Actor {
     const area = this.feature.getArea() / 100
     this.health = area * area * area
     this.maximumHealth = this.health
-    Actor.actors.set(this.feature.body.id, this)
+    this.stage.actors.set(this.feature.body.id, this)
   }
 
   act (): void {}
@@ -47,7 +45,7 @@ export default class Actor {
 
   destroy (): void {
     this.feature.destroy()
-    Actor.actors.delete(this.feature.body.id)
+    this.stage.actors.delete(this.feature.body.id)
   }
 
   dent ({ actor, delta = DEBUG.STEP_TIME_LIMIT, normal }: {

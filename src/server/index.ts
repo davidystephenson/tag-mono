@@ -7,6 +7,22 @@ import fs from 'fs'
 import socketIo from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import Stage from './model/Stage'
+const stage = new Stage({
+  centerBot: true,
+  country: true,
+  countryBots: true,
+  cornerBots: true,
+  gridBots: true,
+  greek: true,
+  greekBots: false,
+  midpointBots: true,
+  townBots: true,
+  waypointBots: false,
+  waypointBricks: true,
+  wildBricks: true,
+  size: 3000,
+  town: true
+})
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)
@@ -39,22 +55,6 @@ async function updateClients (): Promise<void> {
 function tick (): void {
   void updateClients()
 }
-const stage = new Stage({
-  centerBot: true,
-  country: true,
-  countryBots: true,
-  cornerBots: true,
-  gridBots: true,
-  greek: true,
-  greekBots: false,
-  midpointBots: true,
-  townBots: true,
-  waypointBots: false,
-  waypointBricks: true,
-  wildBricks: true,
-  size: 3000,
-  town: true
-})
 io.on('connection', (socket) => {
   stage.join(socket.id)
   socket.on('updateServer', message => {

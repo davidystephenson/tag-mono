@@ -15,22 +15,37 @@ import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
 import Character from './Character'
+import Feature from './Feature'
 import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
 
 export default class Stage {
   activeCollisionCount = 0
+  actors = new Map<number, Actor>()
+  bodies: Matter.Body[] = []
+  botCount = 0
+  characters = new Map<number, Character>()
+  characterBodies: Matter.Body[] = []
   collisionStartCount = 0
+  features = new Map<number, Feature>()
   initial = true
+  it?: Character
+  lostPoints: Matter.Vector[] = []
+  oldest?: Bot
   oldTime = Date.now()
+  paused = false
+  scenery: Matter.Body[] = []
   stepCount = 0
   totalBodyCount = 0
   totalCollisionCount = 0
+  wallBodies: Matter.Body[] = []
+  walls: Wall[] = []
   warningCount = 0
   warningDifferenceTotal = 0
   warningTime = Date.now()
   readonly warnings10: number[] = []
+  waypoints: Waypoint[] = []
   xFactor = 2
   xSegment: number
   yFactor = 2
@@ -147,20 +162,20 @@ export default class Stage {
         const x = -innerSize / 2 + i * this.xSegment
         const y = -innerSize / 2 + j * this.ySegment
 
-        gridWaypoints.push(new Waypoint({ x, y }))
+        gridWaypoints.push(new Waypoint({ stage: this, x, y }))
       }
     }
     console.log('begin navigation')
-    Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
+    this.waypoints.forEach(waypoint => { waypoint.distances = this.waypoints.map(() => Infinity) })
     console.log('setting neighbors...')
-    Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
+    this.waypoints.forEach(waypoint => waypoint.setNeighbors())
     console.log('updating distances...')
-    Waypoint.waypoints.forEach(() => Waypoint.waypoints.forEach(waypoint => waypoint.updateDistances()))
-    console.log('Wall.wall.length', Wall.walls.length)
+    this.waypoints.forEach(() => this.waypoints.forEach(waypoint => waypoint.updateDistances()))
+    console.log('Wall.wall.length', this.walls.length)
     console.log('setting paths...')
-    Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
+    this.waypoints.forEach(waypoint => waypoint.setPaths())
     console.log('debugging waypoints...')
-    Waypoint.waypoints.forEach(waypoint => {
+    this.waypoints.forEach(waypoint => {
       if (DEBUG.WAYPOINT_LABELS) {
         const y = DEBUG.WAYPOINT_CIRCLES ? waypoint.y + 20 : waypoint.y
         void new DebugLabel({
@@ -215,12 +230,12 @@ export default class Stage {
     if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
     if (countryBots === true) countryWalls.forEach(wall => wall.spawnBots())
     if (waypointBots === true) {
-      Waypoint.waypoints.forEach(waypoint => {
+      this.waypoints.forEach(waypoint => {
         void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
       })
     }
     if (waypointBricks === true) {
-      Waypoint.waypoints.forEach(waypoint => {
+      this.waypoints.forEach(waypoint => {
         this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
       })
     }
@@ -278,23 +293,23 @@ export default class Stage {
           const stepCollisions = this.collisionStartCount // + this.activeCollisions
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
-          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${Bot.bodies.length} bots
+          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
           this.warningTime = newTime
         }
         this.oldTime = newTime
       }
-      runner.enabled = !Actor.paused
-      if (!Actor.paused) {
+      runner.enabled = !this.paused
+      if (!this.paused) {
         DebugLine.lines = []
         DebugCircle.circles = []
         if (DEBUG.WAYPOINT_CIRCLES) {
-          Waypoint.waypoints.forEach(waypoint => {
+          this.waypoints.forEach(waypoint => {
             void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
           })
         }
       }
-      Actor.actors.forEach(actor => actor.act())
+      this.actors.forEach(actor => actor.act())
       const record = {
         warnings: this.warningCount,
         steps: this.stepCount,
@@ -302,7 +317,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         difference,
         activeCollisions: this.activeCollisionCount,
         collisionStarts: this.collisionStartCount,
-        bots: Bot.bodies.length,
+        characters: this.characters.size,
         bodies: bodies.length,
         raycasts: rayCount.raycasts,
         clears: rayCount.clears
@@ -332,8 +347,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     delta?: number
     pair: Matter.IPair
   }): void {
-    const actorA = Actor.actors.get(pair.bodyA.id)
-    const actorB = Actor.actors.get(pair.bodyB.id)
+    const actorA = this.actors.get(pair.bodyA.id)
+    const actorB = this.actors.get(pair.bodyB.id)
     // @ts-expect-error
     const { normal } = pair.collision
     if (actorA != null && actorB != null) {
@@ -352,18 +367,18 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
     player.controls = controls
     if (player.controls.select) {
-      Actor.paused = false
-      runner.enabled = !Actor.paused
+      this.paused = false
+      runner.enabled = !this.paused
     }
   }
 
   join (id: string): void {
-    void new Player({ id, observer: true, x: -100, y: 0, stage: this })
+    void new Player({ id, observer: false, x: -100, y: 0, stage: this })
   }
 
   leave (id: string): void {
     const player = Player.players.get(id)
-    if (Character.it === player) Bot.oldest?.makeIt({ predator: Bot.oldest })
+    if (this.it === player) this.oldest?.makeIt({ predator: this.oldest })
     player?.destroy()
   }
 
@@ -390,7 +405,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       throw new Error('Player not found')
     }
     if (DEBUG.LOST) {
-      Bot.lostPoints.forEach(point => {
+      this.lostPoints.forEach(point => {
         void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
       })
     }

@@ -10,7 +10,7 @@ export default class PolygonFeature extends Feature {
     radius: number
   }): boolean {
     const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
-    const otherBodies = Feature.bodies.filter(obstacle => this.body.id !== obstacle.id)
+    const otherBodies = this.stage.bodies.filter(obstacle => this.body.id !== obstacle.id)
     return this.body.vertices.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
       if (!inRange) return false
@@ -23,7 +23,7 @@ export default class PolygonFeature extends Feature {
     radius: number
   }): boolean {
     const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
-    const otherScenery = Feature.scenery.filter(obstacle => this.body.id !== obstacle.id)
+    const otherScenery = this.stage.scenery.filter(obstacle => this.body.id !== obstacle.id)
     const ends = [...this.body.vertices, this.body.position]
     return ends.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
