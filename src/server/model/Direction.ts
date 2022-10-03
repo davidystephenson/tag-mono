@@ -1,15 +1,24 @@
 import Matter from 'matter-js'
 import Controls, { getRadiansControls } from '../../shared/controls'
-import DebugLine from '../../shared/DebugLine'
+import Line from '../../shared/Line'
+import Stage from './Stage'
 
 export default class Direction {
   radians: number
-  constructor ({ start, end, startVelocity = { x: 0, y: 0 }, endVelocity = { x: 0, y: 0 }, debugColor }: {
-    start: Matter.Vector
+  constructor ({
+    color,
+    end,
+    endVelocity = { x: 0, y: 0 },
+    stage,
+    start,
+    startVelocity = { x: 0, y: 0 }
+  }: {
+    color?: string
     end: Matter.Vector
-    startVelocity?: Matter.Vector
     endVelocity?: Matter.Vector
-    debugColor?: string
+    stage: Stage
+    start: Matter.Vector
+    startVelocity?: Matter.Vector
   }) {
     const vector = Matter.Vector.sub(end, start)
     const distance = Matter.Vector.magnitude(vector)
@@ -28,8 +37,8 @@ export default class Direction {
     if (dotProduct <= 0) this.radians = Matter.Vector.angle(zero, targetAcceleration)
     else this.radians = Matter.Vector.angle(zero, towardsStart)
 
-    if (debugColor != null) {
-      void new DebugLine({ start: start, end: end, color: debugColor })
+    if (color != null) {
+      void new Line({ end, color, stage, start })
     }
   }
 

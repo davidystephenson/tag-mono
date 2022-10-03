@@ -1,8 +1,5 @@
 import Character from './Character'
-import Shape from '../../shared/Shape'
-import DebugLine from '../../shared/DebugLine'
-import DebugCircle from '../../shared/DebugCircle'
-import DebugLabel from '../../shared/DebugLabel'
+import Line from '../../shared/Line'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 import Stage from './Stage'
@@ -49,19 +46,6 @@ export default class Player extends Character {
     }
   }
 
-  updateClient (): void {
-    const visibleFeatures = this.getVisibleFeatures()
-    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
-    const message = {
-      shapes,
-      debugLines: DebugLine.lines,
-      debugCircles: DebugCircle.circles,
-      debugLabels: DebugLabel.labels,
-      torsoId: this.feature.body.id
-    }
-    console.log(message)
-  }
-
   act (): void {
     // this.debugPath()
     super.act()
@@ -70,7 +54,12 @@ export default class Player extends Character {
         return this.isPointWallOpen({ point: waypoint.position })
       })
       visible.forEach(waypoint => {
-        void new DebugLine({ start: this.feature.body.position, end: waypoint.position, color: 'black' })
+        void new Line({
+          color: 'black',
+          end: waypoint.position,
+          stage: this.stage,
+          start: this.feature.body.position
+        })
       })
     }
     if (DEBUG.POSITION) {

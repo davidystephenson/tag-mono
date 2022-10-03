@@ -68,9 +68,9 @@ socket.on('updateClient', message => {
     }
   })
   state.shapes = newShapes
-  state.debugCircles = message.debugCircles
-  state.debugLines = message.debugLines
-  state.debugLabels = message.debugLabels
+  state.circles = message.circles
+  state.lines = message.lines
+  state.labels = message.labels
   const reply = {
     id: state.id,
     controls: input.controls
@@ -113,7 +113,6 @@ const draw = function (): void {
     context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      console.log('shape.fillStyle:', shape.render.fillStyle, context.fillStyle)
       const upper = context.fillStyle.toUpperCase()
       const red = upper.slice(1, 3)
       const green = upper.slice(3, 5)
@@ -127,13 +126,13 @@ const draw = function (): void {
       context.fillText(blue, shape.ix - camera.x, shape.iy - camera.y + 11)
     }
   })
-  state.debugCircles.forEach(circle => {
+  state.circles.forEach(circle => {
     context.fillStyle = circle.color
     context.beginPath()
     context.arc(circle.x - camera.x, circle.y - camera.y, circle.radius, 0, 2 * Math.PI)
     context.fill()
   })
-  state.debugLines.forEach(line => {
+  state.lines.forEach(line => {
     context.strokeStyle = line.color
     context.lineWidth = 1
     context.beginPath()
@@ -141,7 +140,7 @@ const draw = function (): void {
     context.lineTo(line.end.x - camera.x, line.end.y - camera.y)
     context.stroke()
   })
-  state.debugLabels.forEach(label => {
+  state.labels.forEach(label => {
     context.fillStyle = label.color
     context.lineWidth = 4
     context.font = '10px sans'

@@ -100,19 +100,20 @@ export default class Character extends Actor {
 
   getDirection ({
     end,
-    debugColor,
+    color,
     velocity = { x: 0, y: 0 }
   }: {
     end: Matter.Vector
+    color?: string
     velocity?: Matter.Vector
-    debugColor?: string
   }): Direction {
     return new Direction({
-      start: this.feature.body.position,
+      color,
       end,
-      startVelocity: this.feature.body.velocity,
       endVelocity: velocity,
-      debugColor
+      stage: this.stage,
+      start: this.feature.body.position,
+      startVelocity: this.feature.body.velocity
     })
   }
 

@@ -1,14 +1,14 @@
 import Controls from './controls'
-import DebugCircle from './DebugCircle'
-import DebugLabel from './DebugLabel'
-import DebugLine from './DebugLine'
+import Circle from './Circle'
+import Label from './Label'
+import Line from './Line'
 import Shape from './Shape'
 
 export interface UpdateMessage {
   shapes: Record<number, Shape>
-  debugLines: DebugLine[]
-  debugCircles: DebugCircle[]
-  debugLabels: DebugLabel[]
+  lines: Line[]
+  circles: Circle[]
+  labels: Label[]
   torsoId?: number
 }
 

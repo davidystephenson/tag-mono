@@ -1,8 +1,8 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import DebugLine from '../../shared/DebugLine'
-import DebugCircle from '../../shared/DebugCircle'
+import Line from '../../shared/Line'
+import Circle from '../../shared/Circle'
 import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
 import { getDistance, vectorToPoint } from '../lib/engine'
 import Direction from './Direction'
@@ -48,11 +48,12 @@ export default class Bot extends Character {
               ? 'limegreen'
               : 'green'
 
-      void new DebugCircle({
-        x: this.feature.body.position.x,
-        y: this.feature.body.position.y,
+      void new Circle({
+        color: debugColor,
         radius: 7,
-        color: debugColor
+        stage: this.stage,
+        x: this.feature.body.position.x,
+        y: this.feature.body.position.y
       })
     }
     const choice = this.chooseControls()
@@ -96,7 +97,7 @@ export default class Bot extends Character {
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
         const debugColor = DEBUG.IT_CHOICE ? 'red' : undefined
-        return this.getDirection({ end: point, velocity: close.feature.body.velocity, debugColor })
+        return this.getDirection({ end: point, velocity: close.feature.body.velocity, color: debugColor })
       }
     } else {
       const itVisible = this.isFeatureVisible(this.stage.it.feature)
@@ -150,7 +151,7 @@ export default class Bot extends Character {
 
     this.searchTimes[waypoint.id] = Date.now()
     this.setPath({ path: [waypoint.position], label: 'explore' })
-    return this.getDirection({ end: this.path[0], debugColor })
+    return this.getDirection({ end: this.path[0], color: debugColor })
   }
 
   flee (): Direction | null {
@@ -159,7 +160,7 @@ export default class Bot extends Character {
       throw new Error('Fleeing from no one')
     }
     this.setPath({ path: [], label: 'flee' })
-    return this.stage.it.getDirection({ end: this.feature.body.position, debugColor })
+    return this.stage.it.getDirection({ end: this.feature.body.position, color: debugColor })
   }
 
   followPath (debug?: boolean): Direction | null {
@@ -167,19 +168,23 @@ export default class Bot extends Character {
     if (debugging) {
       const originIndex = this.path.length - 1
       this.path.slice(0, originIndex).forEach((point, i) => {
-        void new DebugLine({ start: point, end: this.path[i + 1], color: 'purple' })
+        void new Line({
+          color: 'purple', stage: this.stage, start: point, end: this.path[i + 1]
+        })
       })
-      void new DebugCircle({ x: this.path[0].x, y: this.path[0].y, radius: 5, color: 'purple' })
+      void new Circle({
+        color: 'purple', radius: 5, stage: this.stage, x: this.path[0].x, y: this.path[0].y
+      })
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
       const target = this.pathfind({ goal: this.path[0] })
       if (target == null) return this.loseWay()
       const debugColor = debugging ? 'red' : undefined
-      return this.getDirection({ end: target, debugColor })
+      return this.getDirection({ end: target, color: debugColor })
     } else {
       const debugColor = debug === true ? 'green' : undefined
-      return this.getDirection({ end: target, debugColor })
+      return this.getDirection({ end: target, color: debugColor })
     }
   }
 
@@ -306,7 +311,9 @@ export default class Bot extends Character {
 
   loseIt ({ prey }: { prey: Character }): void {
     const botPoint = vectorToPoint(this.feature.body.position)
-    void new DebugCircle({ x: botPoint.x, y: botPoint.y, radius: 15, color: 'red' })
+    void new Circle({
+      color: 'red', radius: 15, stage: this.stage, x: botPoint.x, y: botPoint.y
+    })
     const northY = this.feature.body.position.y - VISION_HEIGHT
     const southY = this.feature.body.position.y + VISION_HEIGHT
     const westX = this.feature.body.position.x - VISION_WIDTH
@@ -326,7 +333,9 @@ export default class Bot extends Character {
     const eastHit = raycast({ start: botPoint, end: east, obstacles })
     const sideEntryPoints = [northHit.entryPoint, eastHit.entryPoint, southHit.entryPoint, westHit.entryPoint]
     console.log('sideEntryPoints', sideEntryPoints)
-    sideEntryPoints.forEach(point => new DebugCircle({ x: point.x, y: point.y, radius: 7, color: 'limegreen' }))
+    sideEntryPoints.forEach(point => new Circle({
+      color: 'limegreen', radius: 7, stage: this.stage, x: point.x, y: point.y
+    }))
     const sideDistances = sideEntryPoints.map(point => getDistance(botPoint, point))
     const [northDistance, eastDistance, southDistance, westDistance] = sideDistances
     const maximum = Math.max(...sideDistances)
@@ -335,12 +344,38 @@ export default class Bot extends Character {
     const sideNorthEast = { x: botPoint.x + eastDistance, y: botPoint.y - northDistance }
     const sideSouthEast = { x: botPoint.x + eastDistance, y: botPoint.y + southDistance }
     const sideSouthWest = { x: botPoint.x - westDistance, y: botPoint.y + southDistance }
-    void new DebugLine({ start: sideNorthWest, end: sideNorthEast, color: sideIndex === 0 ? 'white' : 'limegreen' })
-    void new DebugLine({ start: sideNorthEast, end: sideSouthEast, color: sideIndex === 1 ? 'white' : 'limegreen' })
-    void new DebugLine({ start: sideSouthEast, end: sideSouthWest, color: sideIndex === 2 ? 'white' : 'limegreen' })
-    void new DebugLine({ start: sideSouthWest, end: sideNorthWest, color: sideIndex === 3 ? 'white' : 'limegreen' })
+    void new Line({
+      color: sideIndex === 0 ? 'white' : 'limegreen',
+      end: sideNorthEast,
+      stage: this.stage,
+      start: sideNorthWest
+    })
+    void new Line({
+      color: sideIndex === 1 ? 'white' : 'limegreen',
+      end: sideSouthEast,
+      stage: this.stage,
+      start: sideNorthEast
+    })
+    void new Line({
+      color: sideIndex === 2 ? 'white' : 'limegreen',
+      end: sideSouthWest,
+      stage: this.stage,
+      start: sideSouthEast
+    })
+    void new Line({
+      color: sideIndex === 3 ? 'white' : 'limegreen',
+      end: sideNorthWest,
+      stage: this.stage,
+      start: sideSouthWest
+    })
     const farthestSidePoint = sideEntryPoints[sideIndex]
-    void new DebugCircle({ x: farthestSidePoint.x, y: farthestSidePoint.y, radius: 5, color: 'white' })
+    void new Circle({
+      color: 'white',
+      radius: 5,
+      stage: this.stage,
+      x: farthestSidePoint.x,
+      y: farthestSidePoint.y
+    })
     const horizontal = [1, 3].includes(sideIndex)
     const box = { center: botPoint, height: 2 * this.radius, width: 2 * this.radius }
     const visibleFeatures = this.getVisibleFeatures()
@@ -361,9 +396,16 @@ export default class Bot extends Character {
         const botSouth = { x: botPoint.x - this.radius, y: southY }
         corners.push(...[northWest, botNorth, botSouth, southWest])
       }
-      corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
+      corners.forEach(corner => new Circle({
+        color: 'red', radius: 10, stage: this.stage, x: corner.x, y: corner.y
+      }))
       corners.forEach((corner, index, corners) => {
-        void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'red' })
+        void new Line({
+          color: 'red',
+          end: corners[(index + 1) % corners.length],
+          stage: this.stage,
+          start: corners[index]
+        })
       })
       const queryBounds = Matter.Bounds.create(corners)
       const boxQuery0 = Matter.Query.region(visibleBodies, queryBounds)
@@ -391,7 +433,13 @@ export default class Bot extends Character {
         const rightsLeft = rights.filter(x => x < botPoint.x - this.radius)
         farthestSidePoint.x = Math.max(...rightsLeft, farthestSidePoint.x)
       }
-      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'magenta' }))
+      boxQuery.forEach(body => new Circle({
+        color: 'magenta',
+        radius: 15,
+        stage: this.stage,
+        x: body.position.x,
+        y: body.position.y
+      }))
       const yMin = Math.max(...bottomsAbove, northY)
       const yMax = Math.min(...topsBelow, southY)
       const offset = Math.sign(farthestSidePoint.x - botPoint.x) * this.radius * 1
@@ -417,9 +465,20 @@ export default class Bot extends Character {
         const botWest = { x: westX, y: botPoint.y - this.radius }
         corners.push(...[northWest, northEast, botEast, botWest])
       }
-      corners.forEach(corner => new DebugCircle({ x: corner.x, y: corner.y, radius: 10, color: 'red' }))
+      corners.forEach(corner => new Circle({
+        color: 'red',
+        radius: 10,
+        stage: this.stage,
+        x: corner.x,
+        y: corner.y
+      }))
       corners.forEach((corner, index, corners) => {
-        void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'red' })
+        void new Line({
+          color: 'red',
+          end: corners[(index + 1) % corners.length],
+          stage: this.stage,
+          start: corners[index]
+        })
       })
       const queryBounds = Matter.Bounds.create(corners)
       const boxQuery0 = Matter.Query.region(visibleBodies, queryBounds)
@@ -445,7 +504,13 @@ export default class Bot extends Character {
         const bottomsAbove = bottoms.filter(y => y < botPoint.y - this.radius)
         farthestSidePoint.y = Math.max(...bottomsAbove, farthestSidePoint.y)
       }
-      boxQuery.forEach(body => new DebugCircle({ x: body.position.x, y: body.position.y, radius: 15, color: 'magenta' }))
+      boxQuery.forEach(body => new Circle({
+        color: 'magenta',
+        radius: 15,
+        stage: this.stage,
+        x: body.position.x,
+        y: body.position.y
+      }))
       const xMin = Math.max(...rightsWest, westX)
       const xMax = Math.min(...leftsEast, eastX)
       const offset = Math.sign(farthestSidePoint.y - botPoint.y) * this.radius
@@ -465,7 +530,12 @@ export default class Bot extends Character {
     const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
     corners.forEach((corner, index, corners) => {
       // void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
-      void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'yellow' })
+      void new Line({
+        color: 'yellow',
+        end: corners[(index + 1) % corners.length],
+        stage: this.stage,
+        start: corners[index]
+      })
     })
     const boxArea = box.width * box.height
     const minimumArea = this.radius * 2 * this.radius * 2
@@ -516,7 +586,13 @@ export default class Bot extends Character {
       const struggling = prey.moving && prey.blocked
       console.log('struggling test:', struggling)
       console.log('unscaled box test:', box)
-      void new DebugCircle({ x: box.center.x, y: box.center.y, radius: 6, color: 'white' })
+      void new Circle({
+        color: 'white',
+        radius: 6,
+        stage: this.stage,
+        x: box.center.x,
+        y: box.center.y
+      })
       const halfWidth = 0.5 * box.width
       const halfHeight = 0.5 * box.height
       const northEastCorner = { x: box.center.x + halfWidth, y: box.center.y - halfHeight }
@@ -526,7 +602,12 @@ export default class Bot extends Character {
       const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
       corners.forEach((corner, index, corners) => {
         // void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
-        void new DebugLine({ start: corners[index], end: corners[(index + 1) % corners.length], color: 'aqua' })
+        void new Line({
+          color: 'aqua',
+          end: corners[(index + 1) % corners.length],
+          stage: this.stage,
+          start: corners[index]
+        })
       })
       if (struggling) {
         const speed = Matter.Vector.magnitude(this.feature.body.velocity)
@@ -611,7 +692,12 @@ export default class Bot extends Character {
       this.stage.lostPoints.push(point)
       console.warn(`Lost ${this.stage.lostPoints.length}:`, this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
       Player.players.forEach(player => {
-        void new DebugLine({ start: player.feature.body.position, end: point, color: 'yellow' })
+        void new Line({
+          color: 'yellow',
+          end: point,
+          stage: this.stage,
+          start: player.feature.body.position
+        })
       })
     }
     this.setPath({ path: [], label: 'lost' })
@@ -707,7 +793,7 @@ export default class Bot extends Character {
     }
     this.setPath({ path: [unblockPoint], label: 'unblock' })
     const debugColor = DEBUG.NOT_IT_CHOICE ? 'limegreen' : undefined
-    return this.getDirection({ end: this.path[0], debugColor })
+    return this.getDirection({ end: this.path[0], color: debugColor })
   }
 
   wander (debug = DEBUG.WANDER): Direction | null {
@@ -733,7 +819,7 @@ export default class Bot extends Character {
 
     this.searchTimes[waypoint.id] = Date.now()
     this.setPath({ path: [waypoint.position], label: 'wander' })
-    return this.getDirection({ end: this.path[0], debugColor })
+    return this.getDirection({ end: this.path[0], color: debugColor })
   }
 
   takeInput (controls: Partial<Controls>): void {

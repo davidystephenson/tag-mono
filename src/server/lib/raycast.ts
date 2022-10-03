@@ -1,5 +1,4 @@
 import Matter from 'matter-js'
-import DebugLine from '../../shared/DebugLine'
 import VISION from '../../shared/VISION'
 import { DEBUG } from './debug'
 import { getPerpendicular, getPerpendicularSides } from './math'
@@ -41,7 +40,7 @@ export default function raycast ({ start, end, obstacles }: {
   const collide = collisions.length > 0
   if (!collide) {
     if (DEBUG.COLLISON) {
-      void new DebugLine({ start, end, color: 'purple' })
+      // void new Line({ start, end, color: 'purple' })
     }
     return { entryPoint: end }
   }
@@ -89,9 +88,9 @@ export function isPointClear ({ start, end, obstacles, debug }: {
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
     if (!collide) {
-      void new DebugLine({ start, end, color: 'green' })
+      // void new Line({ start, end, color: 'green' })
     } else {
-      void new DebugLine({ start, end, color: 'rgba(255, 0, 0, 0.5)' })
+      // void new Line({ start, end, color: 'rgba(255, 0, 0, 0.5)' })
     }
   }
   return !collide

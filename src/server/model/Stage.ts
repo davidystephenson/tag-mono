@@ -1,9 +1,9 @@
 import csvAppend from 'csv-append'
 import Matter from 'matter-js'
 import Controls from '../../shared/controls'
-import DebugCircle from '../../shared/DebugCircle'
-import DebugLabel from '../../shared/DebugLabel'
-import DebugLine from '../../shared/DebugLine'
+import Circle from '../../shared/Circle'
+import Label from '../../shared/Label'
+import Line from '../../shared/Line'
 import Shape from '../../shared/Shape'
 import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
@@ -27,10 +27,13 @@ export default class Stage {
   botCount = 0
   characters = new Map<number, Character>()
   characterBodies: Matter.Body[] = []
+  circles: Circle[] = []
   collisionStartCount = 0
   features = new Map<number, Feature>()
   initial = true
   it?: Character
+  labels: Label[] = []
+  lines: Line[] = []
   lostPoints: Matter.Vector[] = []
   oldest?: Bot
   oldTime = Date.now()
@@ -178,8 +181,8 @@ export default class Stage {
     this.waypoints.forEach(waypoint => {
       if (DEBUG.WAYPOINT_LABELS) {
         const y = DEBUG.WAYPOINT_CIRCLES ? waypoint.y + 20 : waypoint.y
-        void new DebugLabel({
-          x: waypoint.x, y, text: String(waypoint.id), color: 'white'
+        void new Label({
+          color: 'white', stage: this, text: String(waypoint.id), x: waypoint.x, y
         })
       }
     })
@@ -301,11 +304,17 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       }
       runner.enabled = !this.paused
       if (!this.paused) {
-        DebugLine.lines = []
-        DebugCircle.circles = []
+        this.lines = []
+        this.circles = []
         if (DEBUG.WAYPOINT_CIRCLES) {
           this.waypoints.forEach(waypoint => {
-            void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
+            void new Circle({
+              color: 'blue',
+              radius: 5,
+              stage: this,
+              x: waypoint.x,
+              y: waypoint.y
+            })
           })
         }
       }
@@ -406,16 +415,22 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
     if (DEBUG.LOST) {
       this.lostPoints.forEach(point => {
-        void new DebugCircle({ x: point.x, y: point.y, radius: 5, color: 'yellow' })
+        void new Circle({
+          color: 'yellow',
+          radius: 5,
+          stage: this,
+          x: point.x,
+          y: point.y
+        })
       })
     }
     const visibleFeatures = player.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => new Shape(feature.body))
     const message = {
       shapes,
-      debugLines: DebugLine.lines,
-      debugCircles: DebugCircle.circles,
-      debugLabels: DebugLabel.labels,
+      lines: this.lines,
+      circles: this.circles,
+      labels: this.labels,
       torsoId: player.feature.body.id
     }
     return message

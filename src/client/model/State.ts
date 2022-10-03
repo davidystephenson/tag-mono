@@ -1,13 +1,13 @@
 import Shape from '../../shared/Shape'
-import DebugLine from '../../shared/DebugLine'
-import DebugCircle from '../../shared/DebugCircle'
-import DebugLabel from '../../shared/DebugLabel'
+import Line from '../../shared/Line'
+import Circle from '../../shared/Circle'
+import Label from '../../shared/Label'
 
 export default class State {
   shapes = new Map<number, Shape>()
-  debugLines: DebugLine[] = []
-  debugCircles: DebugCircle[] = []
-  debugLabels: DebugLabel[] = []
+  lines: Line[] = []
+  circles: Circle[] = []
+  labels: Label[] = []
   id?: string
   torsoId?: number
 }

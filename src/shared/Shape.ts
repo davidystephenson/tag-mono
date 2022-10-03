@@ -3,17 +3,16 @@ import { vectorToPoint } from '../server/lib/engine'
 
 export default class Shape {
   readonly circleRadius?: number
-  readonly socketid?: string
+  deleted = false
   readonly id: number
-  render: Matter.IBodyRenderOptions
-  x: number
-  y: number
+  ivertices: Matter.Vector[]
   ix: number
   iy: number
+  render: Matter.IBodyRenderOptions
+  readonly socketid?: string
   vertices: Matter.Vector[]
-  ivertices: Matter.Vector[]
-  deleted = false
-
+  x: number
+  y: number
   constructor (body: Matter.Body) {
     this.circleRadius = body.circleRadius
     this.x = body.position.x
