@@ -10,7 +10,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
 import { getRandomRectangleSize } from '../lib/math'
-import { getRayCount } from '../lib/raycast'
+import Raycast from '../lib/raycast'
 import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
@@ -38,6 +38,7 @@ export default class Stage {
   oldest?: Bot
   oldTime = Date.now()
   paused = false
+  raycast: Raycast
   scenery: Matter.Body[] = []
   stepCount = 0
   totalBodyCount = 0
@@ -84,6 +85,7 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    this.raycast = new Raycast({ stage: this })
     const wallSize = size * 3
     const wallProps = [
       { x: 0, y: size, width: wallSize, height: size },
@@ -261,7 +263,7 @@ export default class Stage {
       this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(engine.world)
       this.totalBodyCount = this.totalBodyCount + bodies.length
-      const rayCount = getRayCount()
+      const rayCount = this.raycast.getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
         const action = value[1]

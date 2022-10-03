@@ -9,7 +9,6 @@ import Direction from './Direction'
 import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
-import getHit, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
@@ -131,7 +130,7 @@ export default class Bot extends Character {
       const inRange = this.isPointInRange(point)
       if (!inRange) return false
       // const isCharacterOpen = this.isPointCharacterOpen({ point })
-      const isClear = isPointClear({
+      const isClear = this.stage.raycast.isPointClear({
         debug,
         end: point,
         obstacles,
@@ -255,7 +254,7 @@ export default class Bot extends Character {
   }
 
   isPointWallShown ({ debug, point }: { debug?: boolean, point: Matter.Vector }): boolean {
-    return isPointShown({
+    return this.stage.raycast.isPointShown({
       debug,
       end: point,
       obstacles: this.stage.wallBodies,
@@ -327,10 +326,10 @@ export default class Bot extends Character {
     const southWest = { x: westX, y: southY }
     const northWest = { x: westX, y: northY }
     const obstacles = this.stage.bodies.filter(body => body.id !== this.feature.body.id)
-    const northHit = getHit({ start: botPoint, end: north, obstacles })
-    const southHit = getHit({ start: botPoint, end: south, obstacles })
-    const westHit = getHit({ start: botPoint, end: west, obstacles })
-    const eastHit = getHit({ start: botPoint, end: east, obstacles })
+    const northHit = this.stage.raycast.getHit({ start: botPoint, end: north, obstacles })
+    const southHit = this.stage.raycast.getHit({ start: botPoint, end: south, obstacles })
+    const westHit = this.stage.raycast.getHit({ start: botPoint, end: west, obstacles })
+    const eastHit = this.stage.raycast.getHit({ start: botPoint, end: east, obstacles })
     const sideEntryPoints = [northHit.entryPoint, eastHit.entryPoint, southHit.entryPoint, westHit.entryPoint]
     console.log('sideEntryPoints', sideEntryPoints)
     sideEntryPoints.forEach(point => new Circle({
@@ -750,7 +749,7 @@ export default class Bot extends Character {
     }
 
     const visibleFromEnd = this.stage.waypoints.filter(waypoint => {
-      return isPointOpen({
+      return this.stage.raycast.isPointOpen({
         start: waypoint.position,
         end: goalPoint,
         radius: this.radius,

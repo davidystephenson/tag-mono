@@ -1,5 +1,4 @@
 import Matter, { Vector } from 'matter-js'
-import { isPointOpen } from '../lib/raycast'
 import Character from './Character'
 import Stage from './Stage'
 
@@ -89,7 +88,7 @@ export default class Waypoint {
     start: Matter.Vector
     end: Matter.Vector
   }): boolean {
-    return isPointOpen({
+    return this.stage.raycast.isPointOpen({
       start,
       end,
       radius: Character.MAXIMUM_RADIUS,

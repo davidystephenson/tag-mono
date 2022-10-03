@@ -1,7 +1,6 @@
 import Matter from 'matter-js'
 import { isPointInVisionRange } from '../lib/inRange'
 import { getViewpoints } from '../lib/math'
-import { isSomeStartClear } from '../lib/raycast'
 import Feature from './Feature'
 
 export default class PolygonFeature extends Feature {
@@ -14,7 +13,12 @@ export default class PolygonFeature extends Feature {
     return this.body.vertices.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
       if (!inRange) return false
-      return isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherBodies, debug: true })
+      return this.stage.raycast.isSomeStartClear({
+        starts: viewpoints,
+        end: vertex,
+        obstacles: otherBodies,
+        debug: true
+      })
     })
   }
 
@@ -28,7 +32,11 @@ export default class PolygonFeature extends Feature {
     return ends.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
       if (!inRange) return false
-      return isSomeStartClear({ starts: viewpoints, end: vertex, obstacles: otherScenery })
+      return this.stage.raycast.isSomeStartClear({
+        starts: viewpoints,
+        end: vertex,
+        obstacles: otherScenery
+      })
     })
   }
 }

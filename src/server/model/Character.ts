@@ -8,7 +8,6 @@ import Direction from './Direction'
 import Feature from './Feature'
 import { setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
-import { isPointOpen } from '../lib/raycast'
 import Stage from './Stage'
 
 export default class Character extends Actor {
@@ -140,7 +139,7 @@ export default class Character extends Actor {
   }
 
   isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
-    return isPointOpen({
+    return this.stage.raycast.isPointOpen({
       start: this.feature.body.position, end: point, radius: this.radius, obstacles: this.stage.wallBodies, debug
     })
   }

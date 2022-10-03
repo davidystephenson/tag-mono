@@ -2,7 +2,6 @@ import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
 import { getSides } from '../lib/math'
-import { isCircleShown } from '../lib/raycast'
 import Feature from './Feature'
 import Stage from './Stage'
 
@@ -54,7 +53,7 @@ export default class CircleFeature extends Feature {
       start: center, end: closest, xRange: VISION.width, yRange: VISION.height
     })
     if (!inRange) return false
-    return isCircleShown({
+    return this.stage.raycast.isCircleShown({
       debug,
       obstacles: this.stage.scenery,
       end: this.body.position,
