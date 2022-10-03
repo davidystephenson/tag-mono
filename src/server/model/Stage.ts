@@ -10,7 +10,7 @@ import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
 import { engine, engineTimers, runner } from '../lib/engine'
 import { getRandomRectangleSize } from '../lib/math'
-import Raycast from '../lib/raycast'
+import Raycast from './Raycast'
 import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
@@ -260,10 +260,10 @@ export default class Stage {
     const { append } = csvAppend('data.csv')
     Matter.Events.on(engine, 'afterUpdate', () => {
       this.stepCount = this.stepCount + 1
+      this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
       this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(engine.world)
       this.totalBodyCount = this.totalBodyCount + bodies.length
-      const rayCount = this.raycast.getRayCount()
       engineTimers.forEach((value, index) => {
         const endTime = value[0]
         const action = value[1]
@@ -298,8 +298,9 @@ export default class Stage {
           const stepCollisions = this.collisionStartCount // + this.activeCollisions
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
+          const averageRays = this.raycast.rayCountTotal / this.stepCount
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
-${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${rayCount.count} rays (μ${rayCount.average})`)
+${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${this.raycast.stepRayCount} rays (μ${averageRays})`)
           this.warningTime = newTime
         }
         this.oldTime = newTime
@@ -330,12 +331,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         collisionStarts: this.collisionStartCount,
         characters: this.characters.size,
         bodies: bodies.length,
-        raycasts: rayCount.raycasts,
-        clears: rayCount.clears
+        raycasts: this.raycast.stepRaycasts,
+        clears: this.raycast.stepClears
       }
       append(record)
       this.collisionStartCount = 0
       this.activeCollisionCount = 0
+      this.raycast.stepRayCount = 0
+      this.raycast.stepClears = 0
     })
 
     Matter.Events.on(engine, 'collisionStart', event => {

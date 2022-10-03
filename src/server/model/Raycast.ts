@@ -1,40 +1,17 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
-import Stage from '../model/Stage'
-import { DEBUG } from './debug'
-import { getPerpendicular, getPerpendicularSides } from './math'
+import Stage from './Stage'
+import { DEBUG } from '../lib/debug'
+import { getPerpendicular, getPerpendicularSides } from '../lib/math'
 
 export default class Raycast {
   stage: Stage
   stepRayCount = 0
   stepClears = 0
   stepRaycasts = 0
-  stepCount = 0
   rayCountTotal = 0
   constructor ({ stage }: { stage: Stage }) {
     this.stage = stage
-  }
-
-  getRayCount (): {
-    count: number
-    average: number
-    total: number
-    clears: number
-    raycasts: number
-  } {
-    this.stepCount = this.stepCount + 1
-    this.rayCountTotal = this.rayCountTotal + this.stepRayCount
-    const average = this.rayCountTotal / this.stepCount
-    const result = {
-      count: this.stepRayCount,
-      average: Math.floor(average),
-      total: this.rayCountTotal,
-      clears: this.stepClears,
-      raycasts: this.stepRaycasts
-    }
-    this.stepRayCount = 0
-    this.stepClears = 0
-    return result
   }
 
   raycast ({ end, obstacles, start }: {
