@@ -9,7 +9,7 @@ import Direction from './Direction'
 import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
-import raycast, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
+import getHit, { isPointClear, isPointOpen, isPointShown } from '../lib/raycast'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
@@ -327,10 +327,10 @@ export default class Bot extends Character {
     const southWest = { x: westX, y: southY }
     const northWest = { x: westX, y: northY }
     const obstacles = this.stage.bodies.filter(body => body.id !== this.feature.body.id)
-    const northHit = raycast({ start: botPoint, end: north, obstacles })
-    const southHit = raycast({ start: botPoint, end: south, obstacles })
-    const westHit = raycast({ start: botPoint, end: west, obstacles })
-    const eastHit = raycast({ start: botPoint, end: east, obstacles })
+    const northHit = getHit({ start: botPoint, end: north, obstacles })
+    const southHit = getHit({ start: botPoint, end: south, obstacles })
+    const westHit = getHit({ start: botPoint, end: west, obstacles })
+    const eastHit = getHit({ start: botPoint, end: east, obstacles })
     const sideEntryPoints = [northHit.entryPoint, eastHit.entryPoint, southHit.entryPoint, westHit.entryPoint]
     console.log('sideEntryPoints', sideEntryPoints)
     sideEntryPoints.forEach(point => new Circle({

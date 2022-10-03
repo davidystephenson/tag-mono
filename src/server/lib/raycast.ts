@@ -25,7 +25,16 @@ export function getRayCount (): {
   return result
 }
 
-export default function raycast ({ start, end, obstacles }: {
+function raycast ({ end, obstacles, start }: {
+  end: Matter.Vector
+  obstacles: Matter.Body[]
+  start: Matter.Vector
+}): Matter.ICollision[] {
+  stepRayCount = stepRayCount + 1
+  return Matter.Query.ray(obstacles, start, end)
+}
+
+export default function getHit ({ start, end, obstacles }: {
   start: Matter.Vector
   end: Matter.Vector
   obstacles: Matter.Body[]
@@ -34,8 +43,7 @@ export default function raycast ({ start, end, obstacles }: {
   if (dist === 0) {
     return { entryPoint: end }
   }
-  const collisions = Matter.Query.ray(obstacles, start, end)
-  stepRayCount = stepRayCount + 1
+  const collisions = raycast({ end, start, obstacles })
   stepRaycasts = stepRaycasts + 1
   const collide = collisions.length > 0
   if (!collide) {
@@ -82,8 +90,7 @@ export function isPointClear ({ start, end, obstacles, debug }: {
 }): boolean {
   const dist = Matter.Vector.magnitude(Matter.Vector.sub(end, start))
   if (dist === 0) return true
-  const collisions = Matter.Query.ray(obstacles, start, end)
-  stepRayCount = stepRayCount + 1
+  const collisions = raycast({ end, start, obstacles })
   stepClears = stepClears + 1
   const collide = collisions.length > 0
   if (debug === true || DEBUG.IS_CLEAR) {
