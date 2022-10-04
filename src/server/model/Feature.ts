@@ -1,5 +1,4 @@
 import Matter from 'matter-js'
-import { engine } from '../lib/engine'
 import Actor from './Actor'
 import Stage from './Stage'
 
@@ -20,7 +19,7 @@ export default class Feature {
     this.body.render.fillStyle = color
     this.body.render.strokeStyle = color
     this.isObstacle = isObstacle
-    Matter.Composite.add(engine.world, this.body)
+    Matter.Composite.add(this.stage.engine.world, this.body)
     this.body.restitution = 0
     this.body.friction = 0
     this.body.frictionAir = 0.01
@@ -49,7 +48,7 @@ export default class Feature {
   }
 
   destroy (): void {
-    Matter.Composite.remove(engine.world, this.body)
+    Matter.Composite.remove(this.stage.engine.world, this.body)
     this.stage.features.delete(this.body.id)
     if (this.isObstacle) {
       this.stage.scenery = this.stage.scenery.filter(obstacle => obstacle.id !== this.body.id)

@@ -8,7 +8,6 @@ import Shape from '../../shared/Shape'
 import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
-import { engine, engineTimers, runner } from '../lib/engine'
 import { getRandomRectangleSize } from '../lib/math'
 import Raycast from './Raycast'
 import Actor from './Actor'
@@ -29,6 +28,7 @@ export default class Stage {
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
   collisionStartCount = 0
+  engine = Matter.Engine.create()
   features = new Map<number, Feature>()
   initial = true
   it?: Character
@@ -39,8 +39,10 @@ export default class Stage {
   oldTime = Date.now()
   paused = false
   raycast: Raycast
+  runner = Matter.Runner.create()
   scenery: Matter.Body[] = []
   stepCount = 0
+  timers = new Map<number, [number, () => void]>()
   totalBodyCount = 0
   totalCollisionCount = 0
   wallBodies: Matter.Body[] = []
@@ -85,6 +87,7 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
     const wallSize = size * 3
     const wallProps = [
@@ -256,25 +259,25 @@ export default class Stage {
       void new Bot({ x: 0, y: marginEdge, stage: this })
       void new Bot({ x: -marginEdge, y: 0, stage: this })
     }
-    Matter.Runner.run(runner, engine)
+    Matter.Runner.run(this.runner, this.engine)
     const { append } = csvAppend('data.csv')
-    Matter.Events.on(engine, 'afterUpdate', () => {
+    Matter.Events.on(this.engine, 'afterUpdate', () => {
       this.stepCount = this.stepCount + 1
       this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
       this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
-      const bodies = Matter.Composite.allBodies(engine.world)
+      const bodies = Matter.Composite.allBodies(this.engine.world)
       this.totalBodyCount = this.totalBodyCount + bodies.length
-      engineTimers.forEach((value, index) => {
+      this.timers.forEach((value, index) => {
         const endTime = value[0]
         const action = value[1]
-        if (engine.timing.timestamp > endTime) {
+        if (this.engine.timing.timestamp > endTime) {
           action()
         }
       })
-      Array.from(engineTimers.entries()).forEach(([key, value]) => {
+      Array.from(this.timers.entries()).forEach(([key, value]) => {
         const endTime = value[0]
-        if (engine.timing.timestamp > endTime) {
-          engineTimers.delete(key)
+        if (this.engine.timing.timestamp > endTime) {
+          this.timers.delete(key)
         }
       })
       const newTime = Date.now()
@@ -305,7 +308,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
         this.oldTime = newTime
       }
-      runner.enabled = !this.paused
+      this.runner.enabled = !this.paused
       if (!this.paused) {
         this.lines = []
         this.circles = []
@@ -341,17 +344,17 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       this.raycast.stepClears = 0
     })
 
-    Matter.Events.on(engine, 'collisionStart', event => {
+    Matter.Events.on(this.engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
         this.collisionStartCount = this.collisionStartCount + 1
         this.collide({ pair })
       })
     })
 
-    Matter.Events.on(engine, 'collisionActive', event => {
+    Matter.Events.on(this.engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
         this.activeCollisionCount = this.activeCollisionCount + 1
-        const delta = engine.timing.lastDelta
+        const delta = this.engine.timing.lastDelta
         this.collide({ delta, pair })
       })
     })
@@ -382,7 +385,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     player.controls = controls
     if (player.controls.select) {
       this.paused = false
-      runner.enabled = !this.paused
+      this.runner.enabled = !this.paused
     }
   }
 
@@ -411,6 +414,12 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     return new Brick({
       x, y, width: rectangle.width, height: rectangle.height, stage: this
     })
+  }
+
+  timeout (delay: number, action: () => void): void {
+    const startTime = this.engine.timing.timestamp
+    const endTime = startTime + delay
+    this.timers.set(this.timers.size, [endTime, action])
   }
 
   update (id: string): UpdateMessage {

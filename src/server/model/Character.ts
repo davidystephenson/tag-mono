@@ -6,7 +6,6 @@ import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
-import { setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
 import Stage from './Stage'
 
@@ -162,7 +161,7 @@ export default class Character extends Actor {
     this.loseReady()
     this.setColor('white')
     this.stage.it = this
-    setEngineTimeout(5000, this.beReady)
+    this.stage.timeout(5000, this.beReady)
   }
 
   setColor (color: string): void {
