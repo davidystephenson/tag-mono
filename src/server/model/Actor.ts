@@ -61,8 +61,8 @@ export default class Actor {
     const massB = actor.feature.body.mass
     const collidePower = collideSpeed * massA * massB
     // Damage
-    const impact = collidePower * collidePower
-    const damage = delta * impact * 1000
+    const impact = collidePower * collidePower * collidePower
+    const damage = delta * impact * 50000
     this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()
