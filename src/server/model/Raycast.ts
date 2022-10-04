@@ -3,6 +3,7 @@ import VISION from '../../shared/VISION'
 import Stage from './Stage'
 import { DEBUG } from '../lib/debug'
 import { getPerpendicular, getPerpendicularSides } from '../lib/math'
+import Line from '../../shared/Line'
 
 export default class Raycast {
   stage: Stage
@@ -37,7 +38,7 @@ export default class Raycast {
     const collide = collisions.length > 0
     if (!collide) {
       if (DEBUG.COLLISON) {
-        // void new Line({ start, end, color: 'purple' })
+        void new Line({ color: 'purple', end, stage: this.stage, start })
       }
       return { entryPoint: end }
     }
@@ -84,9 +85,9 @@ export default class Raycast {
     const collide = collisions.length > 0
     if (debug === true || DEBUG.IS_CLEAR) {
       if (!collide) {
-        // void new Line({ start, end, color: 'green' })
+        void new Line({ color: 'green', end, stage: this.stage, start })
       } else {
-        // void new Line({ start, end, color: 'rgba(255, 0, 0, 0.5)' })
+        void new Line({ color: 'rgba(255, 0, 0, 0.5)', end, stage: this.stage, start })
       }
     }
     return !collide

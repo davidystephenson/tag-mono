@@ -295,7 +295,7 @@ export default class Stage {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStartCount // + this.activeCollisions
+          const stepCollisions = this.collisionStartCount + this.activeCollisionCount
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           const averageRays = this.raycast.rayCountTotal / this.stepCount
