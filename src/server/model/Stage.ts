@@ -15,6 +15,7 @@ import Actor from './Actor'
 import Bot from './Bot'
 import Brick from './Brick'
 import Character from './Character'
+import Feature from './Feature'
 import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
@@ -30,6 +31,7 @@ export default class Stage {
   warningCount = 0
   warningDifferenceTotal = 0
   warningTime = Date.now()
+  size = 0
   readonly warnings10: number[] = []
   xFactor = 2
   xSegment: number
@@ -66,6 +68,7 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    this.size = size
     const wallSize = size * 3
     const wallProps = [
       { x: 0, y: size, width: wallSize, height: size },
@@ -128,7 +131,7 @@ export default class Stage {
         new Wall({ x: -1250, y: 1300, width: 200, height: 50, stage: this })
       )
     }
-    const innerSize = size - Character.MARGIN * 2
+    const innerSize = size - 10 // Character.MARGIN * 2
     this.xFactor = 2
     this.xSegment = innerSize / this.xFactor
     while (this.xSegment > VISION_INNER_WIDTH) {
@@ -146,12 +149,23 @@ export default class Stage {
       for (let j = 0; j <= this.yFactor; j++) {
         const x = -innerSize / 2 + i * this.xSegment
         const y = -innerSize / 2 + j * this.ySegment
-
-        gridWaypoints.push(new Waypoint({ x, y }))
+        const size = 30
+        const points = [
+          { x: x + size, y: y + size },
+          { x: x - size, y: y + size },
+          { x: x + size, y: y - size },
+          { x: x - size, y: y - size }
+        ]
+        const verts = Matter.Vertices.create(points, Feature.bodies[0])
+        const bounds = Matter.Bounds.create(verts)
+        const clear = Matter.Query.region(Feature.bodies, bounds).length === 0
+        if (clear) gridWaypoints.push(new Waypoint({ x, y }))
       }
     }
+    Waypoint.grid = gridWaypoints
     console.log('begin navigation')
     Waypoint.waypoints.forEach(waypoint => { waypoint.distances = Waypoint.waypoints.map(() => Infinity) })
+    /*
     console.log('setting neighbors...')
     Waypoint.waypoints.forEach(waypoint => waypoint.setNeighbors())
     console.log('updating distances...')
@@ -160,6 +174,7 @@ export default class Stage {
     console.log('setting paths...')
     Waypoint.waypoints.forEach(waypoint => waypoint.setPaths())
     console.log('debugging waypoints...')
+    */
     Waypoint.waypoints.forEach(waypoint => {
       if (DEBUG.WAYPOINT_LABELS) {
         const y = DEBUG.WAYPOINT_CIRCLES ? waypoint.y + 20 : waypoint.y
@@ -290,6 +305,11 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         DebugCircle.circles = []
         if (DEBUG.WAYPOINT_CIRCLES) {
           Waypoint.waypoints.forEach(waypoint => {
+            void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
+          })
+        }
+        if (DEBUG.GRID_CIRCLES) {
+          Waypoint.grid.forEach(waypoint => {
             void new DebugCircle({ x: waypoint.x, y: waypoint.y, radius: 5, color: 'blue' })
           })
         }

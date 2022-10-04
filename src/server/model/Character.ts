@@ -6,11 +6,12 @@ import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
-import { setEngineTimeout } from '../lib/engine'
+import { getDistance, setEngineTimeout } from '../lib/engine'
 import { isPointInVisionRange } from '../lib/inRange'
 import { isPointOpen } from '../lib/raycast'
 import Wall from './Wall'
 import Stage from './Stage'
+import Waypoint from './Waypoint'
 
 export default class Character extends Actor {
   static polygons = ['frame', 'rock']
@@ -47,6 +48,16 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
+    if (Character.it === this) {
+      const max = { dist: 0 }
+      Waypoint.waypoints.forEach(waypoint => {
+        const dist = getDistance(this.feature.body.position, waypoint.position)
+        if (dist > max.dist) {
+          max.dist = dist
+          Waypoint.flee = waypoint
+        }
+      })
+    }
     if (this.ready || this.observer) {
       const vector = { x: 0, y: 0 }
       this.moving = false

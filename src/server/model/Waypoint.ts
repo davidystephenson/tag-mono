@@ -8,6 +8,8 @@ export default class Waypoint {
   static positions: Vector[] = []
   static label = 0
   static ids: number[] = []
+  static grid: Waypoint[]
+  static flee: Waypoint
 
   distances: number[] = []
   neighbors: Waypoint[] = []

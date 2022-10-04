@@ -1,4 +1,4 @@
-import Matter from 'matter-js'
+import Matter, { Vector } from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
 import Wall from './Wall'
@@ -16,7 +16,6 @@ import Brick from './Brick'
 import Feature from './Feature'
 import Puppet from './Puppet'
 import Stage from './Stage'
-import { compassDirections } from '../lib/directions'
 
 export default class Bot extends Character {
   static botCount = 0
@@ -29,6 +28,8 @@ export default class Bot extends Character {
   pathTime?: number
   pathLabel?: typeof Bot.pathLabels[number]
   searchTimes: number[] = []
+  lastItPos: Matter.Vector = { x: 0, y: 0 }
+  evadeTarget: Matter.Vector = { x: 0, y: 0 }
   unblockTries?: Record<number, boolean>
   constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
     color?: string
@@ -39,6 +40,8 @@ export default class Bot extends Character {
   }) {
     super({ x, y, color, radius, stage })
     this.searchTimes = Waypoint.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
+    this.lastItPos = { x, y }
+    this.evadeTarget = { x, y }
     Bot.botCount = Bot.botCount + 1
     if (Bot.oldest == null) Bot.oldest = this
   }
@@ -82,73 +85,100 @@ export default class Bot extends Character {
       return null
     }
     const isIt = Character.it === this
-    const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
-    const stuck = this.isStuck()
-    const bored = this.path.length === 0
-    const arriving = !bored && this.isPointClose({ point: this.path[0], limit: 15 })
-
     if (isIt) {
       const visibleCharacters: Character[] = []
       Character.characters.forEach(character => {
         const isVisible =
-          character !== this &&
-          character.ready &&
-          this.isFeatureVisible(character.feature)
+            character !== this &&
+            character.ready &&
+            this.isFeatureVisible(character.feature)
         if (isVisible) visibleCharacters.push(character)
       })
       if (visibleCharacters.length > 0) {
         const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
         const close = whichMin(visibleCharacters, distances)
         close.pursuer = this
-        const point = vectorToPoint(close.feature.body.position)
-        this.setPath({ path: [point], label: 'pursue' })
+        const end = vectorToPoint(close.feature.body.position)
+        return this.getDirection({ end })
       }
+    }
+    const start = this.feature.body.position
+    const itVisible = this.isFeatureVisible(Character.it.feature)
+    const avoid = { position: this.lastItPos }
+    if (itVisible) {
+      this.lastItPos = Character.it.feature.body.position
+      const itVelocity = Character.it.feature.body.velocity
+      avoid.position = Matter.Vector.add(this.lastItPos, Matter.Vector.mult(itVelocity, 5))
     } else {
-      const itVisible = this.isFeatureVisible(Character.it.feature)
-      if (itVisible) {
-        this.blocked = this.isBlocked()
-        const trapped = this.blocked && (bored || stuck || arriving)
-        if (trapped) {
-          return this.unblock()
-        }
-        const lookAhead = 300
-        if (this.pathLabel !== 'unblock') {
-          if (this.isBlocked(lookAhead)) {
-            const start = this.feature.body.position
-            const direction = this.unblock(lookAhead)
-            if (direction !== null) void new DebugLine({ start, end: direction.end, color: 'white' })
-            return this.unblock(lookAhead)
-          }
-          return this.flee()
-        }
-      } else {
-        this.blocked = false
-        this.unblockTries = undefined
+      const nearCharacter = this.getNearCharacter()
+      if (nearCharacter != null) {
+        avoid.position = nearCharacter.feature.body.position
+        const distance = getDistance(start, avoid.position)
+        if (distance < 100) return this.getDirection({ end: this.evadeTarget })
       }
     }
-    if (stuck || bored || arriving) {
-      return this.explore()
-    }
-    return this.followPath(debug)
+    const away = Matter.Vector.normalise(Matter.Vector.sub(start, avoid.position))
+    const dirPoints = this.getDirectionPoints(away)
+    const max = { dist: -Infinity, point: { x: 0, y: 0 } }
+    dirPoints.forEach(point => {
+      const dist = getDistance(point, start)
+      if (dist > max.dist) {
+        max.dist = dist
+        max.point = point
+      }
+    })
+    this.evadeTarget = max.point
+    // void new DebugLine({ start: start, end: this.evadeTarget, color: 'yellow' })
+    return this.getDirection({ end: this.evadeTarget })
   }
 
-  getOpenDirections (): Matter.Vector[] {
-    const obstacles = Feature.bodies.filter(body => body !== this.feature.body)
-    const movePoints = compassDirections.map(compassDir => {
-      const arrow = Matter.Vector.mult(compassDir, 400)
-      return Matter.Vector.add(this.feature.body.position, arrow)
+  getDirectionPoints (direction: Matter.Vector): Vector[] {
+    const start = this.feature.body.position
+    const options = Waypoint.waypoints.map(waypoint => {
+      const position = waypoint.position
+      const distance = getDistance(position, start)
+      const optionDir = Matter.Vector.normalise(Matter.Vector.sub(waypoint.position, start))
+      const dot = Matter.Vector.dot(optionDir, direction)
+      return { position, distance, dot }
     })
-    const openDirections = [{ x: 0, y: 0 }]
-    movePoints.forEach((point, i) => {
-      const pointClear = isPointClear({
-        debug: false,
-        end: point,
-        obstacles,
-        start: this.feature.body.position
+    options.sort((x, y) => y.distance - x.distance)
+    const points: Vector[] = []
+    options.every(option => {
+      if (option.dot > 0.5) {
+        if (this.isPointReachable({ point: option.position })) {
+          points.push(option.position)
+        }
+      }
+      if (points.length > 4) return false
+      return true
+    })
+    if (points.length === 0 && options.length > 0) {
+      options.sort((x, y) => y.dot - x.dot)
+      options.every(option => {
+        if (this.isPointReachable({ point: option.position })) {
+          points.push(option.position)
+        }
+        if (points.length > 4) return false
+        return true
       })
-      if (pointClear) openDirections.push(compassDirections[i])
+    }
+    if (points.length === 0) return [Matter.Vector.add(start, direction)]
+    return points
+  }
+
+  getNearCharacter (): Character | null {
+    const min = { dist: Infinity, character: this as Character }
+    Character.characters.forEach(character => {
+      if (character.feature.body.id !== this.feature.body.id) {
+        const dist = getDistance(this.feature.body.position, character.feature.body.position)
+        if (dist < min.dist) {
+          min.dist = dist
+          min.character = character
+        }
+      }
     })
-    return openDirections
+    if (min.dist < Infinity) return min.character
+    return null
   }
 
   explore (debug = DEBUG.WANDER): Direction | null {
@@ -160,7 +190,6 @@ export default class Bot extends Character {
       const point = Waypoint.waypoints[index].position
       const inRange = this.isPointInRange(point)
       if (!inRange) return false
-      // const isCharacterOpen = this.isPointCharacterOpen({ point })
       const isClear = isPointClear({
         debug,
         end: point,
@@ -214,7 +243,7 @@ export default class Bot extends Character {
     }
   }
 
-  isBlocked (dist = 30): boolean {
+  isBlocked (dist = 50): boolean {
     if (Character.it == null) {
       return false
     }
@@ -235,7 +264,7 @@ export default class Bot extends Character {
         return false
       }
       const reachable = this.isPointReachable({ point: waypoint.position })
-      const distance = getDistance(this.feature.body.position,waypoint.position)
+      const distance = getDistance(this.feature.body.position, waypoint.position)
       return reachable && distance > minDistance
     })
     if (eligible.length === 0) return this.loseWay()
@@ -337,6 +366,14 @@ export default class Bot extends Character {
   }
 
   loseIt ({ prey }: { prey: Character }): void {
+    // this.makeBrick({ prey })
+    this.blocked = false
+    this.unblockTries = undefined
+    this.setPath({ path: [], label: 'reset' })
+    super.loseIt({ prey })
+  }
+
+  makeBrick ({ prey }: { prey: Character }): void {
     const botPoint = vectorToPoint(this.feature.body.position)
     void new DebugCircle({ x: botPoint.x, y: botPoint.y, radius: 15, color: 'red' })
     const northY = this.feature.body.position.y - VISION_HEIGHT
@@ -624,10 +661,6 @@ export default class Bot extends Character {
       // width: this.radius * 2
       // })
     }
-    this.blocked = false
-    this.unblockTries = undefined
-    this.setPath({ path: [], label: 'reset' })
-    super.loseIt({ prey })
   }
 
   setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {
