@@ -18,8 +18,8 @@ const stage = new Stage({
   midpointBots: true,
   townBots: true,
   waypointBots: false,
-  waypointBricks: true,
-  wildBricks: true,
+  waypointBricks: false,
+  wildBricks: false,
   size: 3000,
   town: true
 })

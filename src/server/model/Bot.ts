@@ -19,6 +19,9 @@ export default class Bot extends Character {
   pathLabel?: typeof Bot.pathLabels[number]
   searchTimes: number[] = []
   unblockTries?: Record<number, boolean>
+  lastItPos = { x: 0, y: 0 }
+  evadeTarget = { x: 0, y: 0 }
+
   constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
     color?: string
     radius?: number
@@ -95,25 +98,107 @@ export default class Bot extends Character {
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, color: debugColor })
       }
     } else {
+      const start = this.feature.body.position
       const itVisible = this.isFeatureVisible(this.stage.it.feature)
+      const avoid = { position: this.lastItPos }
       if (itVisible) {
-        this.blocked = this.isBlocked()
-        const trapped = this.blocked && (bored || stuck || arriving)
-        if (trapped) {
-          return this.unblock()
-        }
-        if (this.pathLabel !== 'unblock') {
-          return this.flee()
-        }
+        this.lastItPos = this.stage.it.feature.body.position
+        const itVelocity = this.stage.it.feature.body.velocity
+        avoid.position = Matter.Vector.add(this.lastItPos, Matter.Vector.mult(itVelocity, 5))
       } else {
-        this.blocked = false
-        this.unblockTries = undefined
+        const inRangeWaypoints = this.stage.waypoints.filter(waypoint => {
+          return this.isPointInRange(waypoint.position)
+        })
+        const inRangeWaypointIds = inRangeWaypoints.map(waypoint => waypoint.id)
+        const inRangeTimes = inRangeWaypointIds.map(id => this.searchTimes[id])
+        const inRangeTime = Math.min(...inRangeTimes)
+        const inRangeVisibleIds = inRangeWaypointIds.filter(id => this.searchTimes[id] === inRangeTime)
+        const inRangeDistances = inRangeVisibleIds.map(id => this.getDistance(this.feature.body.position))
+        const inRangeFarId = whichMax(inRangeVisibleIds, inRangeDistances)
+        const waypoint = this.stage.waypoints[inRangeFarId]
+        const arrow = Matter.Vector.sub(start, waypoint.position)
+        avoid.position = Matter.Vector.add(start, arrow)
+        /*
+        const nearCharacter = this.getNearCharacter()
+        if (nearCharacter != null) {
+          avoid.position = nearCharacter.feature.body.position
+        }
+        */
       }
+      const away = Matter.Vector.normalise(Matter.Vector.sub(start, avoid.position))
+      const dirPoints = this.getDirectionPoints(away)
+      const max = { dist: -Infinity, point: { x: 0, y: 0 } }
+      dirPoints.forEach(point => {
+        const dist = getDistance(point, start)
+        if (dist > max.dist) {
+          max.dist = dist
+          max.point = point
+        }
+      })
+      this.evadeTarget = max.point
+      this.stage.line({ start: start, end: avoid.position, color: 'red' })
+      this.stage.line({ start: start, end: this.evadeTarget, color: 'yellow' })
+      // console.log('avoid.position', avoid.position, 'start', start)
+      // const distance = getDistance(avoid.position, start)
+      // console.log('distance', distance)
+      return this.getDirection({ end: this.evadeTarget })
     }
+    /*
     if (stuck || bored || arriving) {
       return this.explore()
     }
+    */
     return this.followPath(debug)
+  }
+
+  getDirectionPoints (direction: Matter.Vector): Matter.Vector[] {
+    const start = this.feature.body.position
+    const oldOptions = this.stage.waypoints.map(waypoint => {
+      const position = waypoint.position
+      const distance = getDistance(position, start)
+      const optionDir = Matter.Vector.normalise(Matter.Vector.sub(waypoint.position, start))
+      const dot = Matter.Vector.dot(optionDir, direction)
+      return { position, distance, dot }
+    })
+    // const options = oldOptions.filter(option => this.isPointInRange(option.position))
+    const options = oldOptions
+    options.sort((x, y) => y.distance - x.distance)
+    const points: Matter.Vector[] = []
+    options.every(option => {
+      if (option.dot > 0.5) {
+        if (this.stage.raycast.isPointClear({ start, end: option.position, obstacles: this.stage.wallBodies })) {
+          points.push(option.position)
+        }
+      }
+      if (points.length > 4) return false
+      return true
+    })
+    if (points.length === 0 && options.length > 0) {
+      options.sort((x, y) => y.dot - x.dot)
+      options.every(option => {
+        if (this.stage.raycast.isPointClear({ start, end: option.position, obstacles: this.stage.wallBodies })) {
+          points.push(option.position)
+        }
+        if (points.length > 4) return false
+        return true
+      })
+    }
+    if (points.length === 0) return [Matter.Vector.add(start, direction)]
+    return points
+  }
+
+  getNearCharacter (): Character | undefined {
+    const min: { dist: number, character?: Character } = { dist: Infinity }
+    this.stage.characters.forEach(character => {
+      if (character.feature.body.id !== this.feature.body.id) {
+        const dist = getDistance(this.feature.body.position, character.feature.body.position)
+        if (dist < min.dist) {
+          min.dist = dist
+          min.character = character
+        }
+      }
+    })
+    if (min.character != null) return min.character
   }
 
   explore (debug = DEBUG.WANDER): Direction | null {
@@ -305,6 +390,14 @@ export default class Bot extends Character {
   }
 
   loseIt ({ prey }: { prey: Character }): void {
+    // this.makeScenery({prey})
+    this.blocked = false
+    this.unblockTries = undefined
+    this.setPath({ path: [], label: 'reset' })
+    super.loseIt({ prey })
+  }
+
+  makeScenery ({ prey }: {prey: Character }): void {
     const botPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
       color: 'red', radius: 15, x: botPoint.x, y: botPoint.y
@@ -654,10 +747,6 @@ export default class Bot extends Character {
       // width: this.radius * 2
       // })
     }
-    this.blocked = false
-    this.unblockTries = undefined
-    this.setPath({ path: [], label: 'reset' })
-    super.loseIt({ prey })
   }
 
   setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {
