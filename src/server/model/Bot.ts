@@ -138,9 +138,6 @@ export default class Bot extends Character {
       this.evadeTarget = max.point
       this.stage.line({ start: start, end: avoid.position, color: 'red' })
       this.stage.line({ start: start, end: this.evadeTarget, color: 'yellow' })
-      // console.log('avoid.position', avoid.position, 'start', start)
-      // const distance = getDistance(avoid.position, start)
-      // console.log('distance', distance)
       return this.getDirection({ end: this.evadeTarget })
     }
     /*
