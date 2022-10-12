@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import { isPointInRange } from '../lib/inRange'
-import { getSides } from '../lib/math'
+import { getSides } from '../../shared/math'
 import Feature from './Feature'
 import Stage from './Stage'
 

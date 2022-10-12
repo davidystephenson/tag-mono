@@ -8,7 +8,7 @@ import Shape from '../../shared/Shape'
 import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
 import { DEBUG } from '../lib/debug'
-import { getRandomRectangleSize } from '../lib/math'
+import { getRandomRectangleSize } from '../../shared/math'
 import Raycast from './Raycast'
 import Actor from './Actor'
 import Bot from './Bot'
@@ -301,7 +301,7 @@ export default class Stage {
           const stepCollisions = this.collisionStartCount + this.activeCollisionCount
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
-          const averageRays = this.raycast.rayCountTotal / this.stepCount
+          const averageRays = Math.floor(this.raycast.rayCountTotal / this.stepCount)
           console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${this.raycast.stepRayCount} rays (μ${averageRays})`)
           this.warningTime = newTime
@@ -314,10 +314,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         this.circles = []
         if (DEBUG.WAYPOINT_CIRCLES) {
           this.waypoints.forEach(waypoint => {
-            void new Circle({
+            this.circle({
               color: 'blue',
               radius: 5,
-              stage: this,
               x: waypoint.x,
               y: waypoint.y
             })
@@ -360,6 +359,16 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
   }
 
+  circle ({ color = 'black', radius, x, y }: {
+    color: string
+    radius: number
+    x: number
+    y: number
+  }): void {
+    const circle = new Circle({ color, radius, x, y })
+    this.circles.push(circle)
+  }
+
   collide ({ delta, pair }: {
     delta?: number
     pair: Matter.IPair
@@ -399,6 +408,15 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     player?.destroy()
   }
 
+  line ({ color = 'black', end, start }: {
+    color: string
+    end: Matter.Vector
+    start: Matter.Vector
+  }): void {
+    const line = new Line({ color, end, start })
+    this.lines.push(line)
+  }
+
   randomBrick ({ x, y, width, height, minimumWidth = 1, minimumHeight = 1 }: {
     x: number
     y: number
@@ -429,10 +447,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
     if (DEBUG.LOST) {
       this.lostPoints.forEach(point => {
-        void new Circle({
+        this.circle({
           color: 'yellow',
           radius: 5,
-          stage: this,
           x: point.x,
           y: point.y
         })

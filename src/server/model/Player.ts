@@ -1,5 +1,4 @@
 import Character from './Character'
-import Line from '../../shared/Line'
 import Controls, { Control, controlValues } from '../../shared/controls'
 import { DEBUG } from '../lib/debug'
 import Stage from './Stage'
@@ -54,10 +53,9 @@ export default class Player extends Character {
         return this.isPointWallOpen({ point: waypoint.position })
       })
       visible.forEach(waypoint => {
-        void new Line({
+        this.stage.line({
           color: 'black',
           end: waypoint.position,
-          stage: this.stage,
           start: this.feature.body.position
         })
       })

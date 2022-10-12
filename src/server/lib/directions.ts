@@ -1,4 +1,4 @@
-import { SQRT_ONE_2 } from './fractions'
+import { SQRT_ONE_2 } from '../../shared/fractions'
 
 export const NORTH_VECTOR = { x: 0, y: -1 }
 export const NORTH_E_VECTOR = { x: SQRT_ONE_2, y: -SQRT_ONE_2 }

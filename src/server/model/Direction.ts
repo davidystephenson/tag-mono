@@ -1,6 +1,5 @@
 import Matter from 'matter-js'
 import Controls, { getRadiansControls } from '../../shared/controls'
-import Line from '../../shared/Line'
 import Stage from './Stage'
 
 export default class Direction {
@@ -38,7 +37,7 @@ export default class Direction {
     else this.radians = Matter.Vector.angle(zero, towardsStart)
 
     if (color != null) {
-      void new Line({ end, color, stage, start })
+      stage.line({ end, color, start })
     }
   }
 

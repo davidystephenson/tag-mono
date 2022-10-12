@@ -40,6 +40,7 @@ function makeServer (): https.Server | http.Server {
 const server = makeServer()
 const io = new socketIo.Server<ClientToServerEvents, ServerToClientEvents>(server)
 const PORT = process.env.PORT ?? 3000
+console.warn('PORT set as', PORT)
 server.listen(PORT, () => {
   console.log(`Listening on :${PORT}`)
   setInterval(tick, 30)

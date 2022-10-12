@@ -98,6 +98,11 @@ export function getAngleDifference (a: number, b: number): number {
   return 1 - absoluteDifference
 }
 
+export function getDistance (a: Matter.Vector, b: Matter.Vector): number {
+  const vector = Matter.Vector.sub(b, a)
+  return Matter.Vector.magnitude(vector)
+}
+
 export function getPerpendicular ({ start, end, radius }: {
   start: Matter.Vector
   end: Matter.Vector
@@ -221,4 +226,8 @@ export function whichMin <Element> (array: Element[], numbers: number[]): Elemen
   const element = array[index]
 
   return element
+}
+
+export function vectorToPoint (vector: Matter.Vector): Matter.Vector {
+  return { x: vector.x, y: vector.y }
 }

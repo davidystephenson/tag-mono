@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { DEBUG } from '../lib/debug'
-import { project } from '../lib/math'
+import { project } from '../../shared/math'
 import Feature from './Feature'
 import Stage from './Stage'
 

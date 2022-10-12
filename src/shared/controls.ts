@@ -1,4 +1,4 @@
-import { getDirectional } from '../server/lib/math'
+import { getDirectional } from './math'
 
 export const keyToControl = {
   w: 'up',

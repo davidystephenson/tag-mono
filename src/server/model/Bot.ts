@@ -1,12 +1,9 @@
 import Matter from 'matter-js'
 import Character from './Character'
 import Controls, { STILL } from '../../shared/controls'
-import Line from '../../shared/Line'
-import Circle from '../../shared/Circle'
 import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
-import { getDistance, vectorToPoint } from '../lib/engine'
 import Direction from './Direction'
-import { getAngle, getAngleDifference, whichMax, whichMin } from '../lib/math'
+import { getAngle, getAngleDifference, getDistance, vectorToPoint, whichMax, whichMin } from '../../shared/math'
 import Player from './Player'
 import { DEBUG } from '../lib/debug'
 import Brick from './Brick'
@@ -47,10 +44,9 @@ export default class Bot extends Character {
               ? 'limegreen'
               : 'green'
 
-      void new Circle({
+      this.stage.circle({
         color: debugColor,
         radius: 7,
-        stage: this.stage,
         x: this.feature.body.position.x,
         y: this.feature.body.position.y
       })
@@ -167,12 +163,12 @@ export default class Bot extends Character {
     if (debugging) {
       const originIndex = this.path.length - 1
       this.path.slice(0, originIndex).forEach((point, i) => {
-        void new Line({
-          color: 'purple', stage: this.stage, start: point, end: this.path[i + 1]
+        this.stage.line({
+          color: 'purple', start: point, end: this.path[i + 1]
         })
       })
-      void new Circle({
-        color: 'purple', radius: 5, stage: this.stage, x: this.path[0].x, y: this.path[0].y
+      this.stage.circle({
+        color: 'purple', radius: 5, x: this.path[0].x, y: this.path[0].y
       })
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
@@ -310,8 +306,8 @@ export default class Bot extends Character {
 
   loseIt ({ prey }: { prey: Character }): void {
     const botPoint = vectorToPoint(this.feature.body.position)
-    void new Circle({
-      color: 'red', radius: 15, stage: this.stage, x: botPoint.x, y: botPoint.y
+    this.stage.circle({
+      color: 'red', radius: 15, x: botPoint.x, y: botPoint.y
     })
     const northY = this.feature.body.position.y - VISION_HEIGHT
     const southY = this.feature.body.position.y + VISION_HEIGHT
@@ -332,8 +328,8 @@ export default class Bot extends Character {
     const eastHit = this.stage.raycast.getHit({ start: botPoint, end: east, obstacles })
     const sideEntryPoints = [northHit.entryPoint, eastHit.entryPoint, southHit.entryPoint, westHit.entryPoint]
     console.log('sideEntryPoints', sideEntryPoints)
-    sideEntryPoints.forEach(point => new Circle({
-      color: 'limegreen', radius: 7, stage: this.stage, x: point.x, y: point.y
+    sideEntryPoints.forEach(point => this.stage.circle({
+      color: 'limegreen', radius: 7, x: point.x, y: point.y
     }))
     const sideDistances = sideEntryPoints.map(point => getDistance(botPoint, point))
     const [northDistance, eastDistance, southDistance, westDistance] = sideDistances
@@ -343,35 +339,30 @@ export default class Bot extends Character {
     const sideNorthEast = { x: botPoint.x + eastDistance, y: botPoint.y - northDistance }
     const sideSouthEast = { x: botPoint.x + eastDistance, y: botPoint.y + southDistance }
     const sideSouthWest = { x: botPoint.x - westDistance, y: botPoint.y + southDistance }
-    void new Line({
+    this.stage.line({
       color: sideIndex === 0 ? 'white' : 'limegreen',
       end: sideNorthEast,
-      stage: this.stage,
       start: sideNorthWest
     })
-    void new Line({
+    this.stage.line({
       color: sideIndex === 1 ? 'white' : 'limegreen',
       end: sideSouthEast,
-      stage: this.stage,
       start: sideNorthEast
     })
-    void new Line({
+    this.stage.line({
       color: sideIndex === 2 ? 'white' : 'limegreen',
       end: sideSouthWest,
-      stage: this.stage,
       start: sideSouthEast
     })
-    void new Line({
+    this.stage.line({
       color: sideIndex === 3 ? 'white' : 'limegreen',
       end: sideNorthWest,
-      stage: this.stage,
       start: sideSouthWest
     })
     const farthestSidePoint = sideEntryPoints[sideIndex]
-    void new Circle({
+    this.stage.circle({
       color: 'white',
       radius: 5,
-      stage: this.stage,
       x: farthestSidePoint.x,
       y: farthestSidePoint.y
     })
@@ -395,14 +386,13 @@ export default class Bot extends Character {
         const botSouth = { x: botPoint.x - this.radius, y: southY }
         corners.push(...[northWest, botNorth, botSouth, southWest])
       }
-      corners.forEach(corner => new Circle({
-        color: 'red', radius: 10, stage: this.stage, x: corner.x, y: corner.y
+      corners.forEach(corner => this.stage.circle({
+        color: 'red', radius: 10, x: corner.x, y: corner.y
       }))
       corners.forEach((corner, index, corners) => {
-        void new Line({
+        this.stage.line({
           color: 'red',
           end: corners[(index + 1) % corners.length],
-          stage: this.stage,
           start: corners[index]
         })
       })
@@ -432,10 +422,9 @@ export default class Bot extends Character {
         const rightsLeft = rights.filter(x => x < botPoint.x - this.radius)
         farthestSidePoint.x = Math.max(...rightsLeft, farthestSidePoint.x)
       }
-      boxQuery.forEach(body => new Circle({
+      boxQuery.forEach(body => this.stage.circle({
         color: 'magenta',
         radius: 15,
-        stage: this.stage,
         x: body.position.x,
         y: body.position.y
       }))
@@ -464,18 +453,16 @@ export default class Bot extends Character {
         const botWest = { x: westX, y: botPoint.y - this.radius }
         corners.push(...[northWest, northEast, botEast, botWest])
       }
-      corners.forEach(corner => new Circle({
+      corners.forEach(corner => this.stage.circle({
         color: 'red',
         radius: 10,
-        stage: this.stage,
         x: corner.x,
         y: corner.y
       }))
       corners.forEach((corner, index, corners) => {
-        void new Line({
+        this.stage.line({
           color: 'red',
           end: corners[(index + 1) % corners.length],
-          stage: this.stage,
           start: corners[index]
         })
       })
@@ -503,10 +490,9 @@ export default class Bot extends Character {
         const bottomsAbove = bottoms.filter(y => y < botPoint.y - this.radius)
         farthestSidePoint.y = Math.max(...bottomsAbove, farthestSidePoint.y)
       }
-      boxQuery.forEach(body => new Circle({
+      boxQuery.forEach(body => this.stage.circle({
         color: 'magenta',
         radius: 15,
-        stage: this.stage,
         x: body.position.x,
         y: body.position.y
       }))
@@ -528,11 +514,9 @@ export default class Bot extends Character {
     const northWestCorner = { x: box.center.x - halfWidth, y: box.center.y - halfHeight }
     const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
     corners.forEach((corner, index, corners) => {
-      // void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
-      void new Line({
+      this.stage.line({
         color: 'yellow',
         end: corners[(index + 1) % corners.length],
-        stage: this.stage,
         start: corners[index]
       })
     })
@@ -585,10 +569,9 @@ export default class Bot extends Character {
       const struggling = prey.moving && prey.blocked
       console.log('struggling test:', struggling)
       console.log('unscaled box test:', box)
-      void new Circle({
+      this.stage.circle({
         color: 'white',
         radius: 6,
-        stage: this.stage,
         x: box.center.x,
         y: box.center.y
       })
@@ -601,10 +584,9 @@ export default class Bot extends Character {
       const corners = [northWestCorner, northEastCorner, southEastCorner, southWestCorner]
       corners.forEach((corner, index, corners) => {
         // void new DebugCircle({ x: corner.x, y: corner.y, radius: 6, color: 'yellow' })
-        void new Line({
+        this.stage.line({
           color: 'aqua',
           end: corners[(index + 1) % corners.length],
-          stage: this.stage,
           start: corners[index]
         })
       })
@@ -691,10 +673,9 @@ export default class Bot extends Character {
       this.stage.lostPoints.push(point)
       console.warn(`Lost ${this.stage.lostPoints.length}:`, this.feature.body.id, Math.floor(point.x), Math.floor(point.y))
       Player.players.forEach(player => {
-        void new Line({
+        this.stage.line({
           color: 'yellow',
           end: point,
-          stage: this.stage,
           start: player.feature.body.position
         })
       })
