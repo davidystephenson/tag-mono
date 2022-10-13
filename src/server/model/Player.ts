@@ -1,6 +1,5 @@
 import Character from './Character'
 import Controls, { Control, controlValues } from '../../shared/controls'
-import { DEBUG } from '../lib/debug'
 import Stage from './Stage'
 
 export default class Player extends Character {
@@ -46,7 +45,7 @@ export default class Player extends Character {
   act (): void {
     // this.debugPath()
     super.act()
-    if (DEBUG.OPEN_WAYPOINTS) {
+    if (this.stage.debugOpenWaypoints) {
       const visible = this.stage.waypoints.filter(waypoint => {
         return this.isPointWallOpen({ point: waypoint.position })
       })
@@ -58,10 +57,10 @@ export default class Player extends Character {
         })
       })
     }
-    if (DEBUG.POSITION) {
+    if (this.stage.debugPosition) {
       console.log('player position', this.feature.body.position)
     }
-    if (DEBUG.SPEED) {
+    if (this.stage.debugSpeed) {
       console.log('player speed', this.feature.body.speed)
     }
   }

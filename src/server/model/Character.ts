@@ -1,6 +1,5 @@
 import Matter from 'matter-js'
 import Input from '../../shared/Input'
-import { DEBUG } from '../lib/debug'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
@@ -131,7 +130,6 @@ export default class Character extends Actor {
       center: this.feature.body.position,
       radius: this.radius * 0.9
     })
-
     return isVisible
   }
 
@@ -155,7 +153,7 @@ export default class Character extends Actor {
   }
 
   makeIt ({ predator }: { predator: Character }): void {
-    if (DEBUG.MAKE_IT) console.log('makeIt', this.feature.body.id)
+    if (this.stage.debugMakeIt) console.log('makeIt', this.feature.body.id)
     if (this.stage.it === this) {
       throw new Error('Already it')
     }

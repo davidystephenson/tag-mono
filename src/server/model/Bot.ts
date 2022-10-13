@@ -5,7 +5,6 @@ import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
 import Direction from './Direction'
 import { getAngle, getAngleDifference, getDistance, vectorToPoint, whichMax, whichMin } from '../../shared/math'
 import Player from './Player'
-import { DEBUG } from '../lib/debug'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
@@ -32,7 +31,7 @@ export default class Bot extends Character {
   }
 
   act (): void {
-    if (DEBUG.BOT_CIRCLES) {
+    if (this.stage.debugBotCircles) {
       const debugColor = this.stage.it === this
         ? 'red'
         : this.blocked && this.moving
@@ -70,7 +69,6 @@ export default class Bot extends Character {
       return null
     }
     const isIt = this.stage.it === this
-    const debug = isIt ? DEBUG.IT_CHOICE : DEBUG.NOT_IT_CHOICE
     const stuck = this.isStuck()
     const bored = this.path.length === 0
     const arriving = !bored && this.isPointClose({ point: this.path[0], limit: 15 })
@@ -90,7 +88,7 @@ export default class Bot extends Character {
         close.pursuer = this
         const point = vectorToPoint(close.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
-        const debugColor = DEBUG.IT_CHOICE ? 'red' : undefined
+        const debugColor = this.stage.debugItChoice ? 'red' : undefined
         return this.getDirection({ end: point, velocity: close.feature.body.velocity, color: debugColor })
       }
     } else {
@@ -112,10 +110,11 @@ export default class Bot extends Character {
     if (stuck || bored || arriving) {
       return this.explore()
     }
+    const debug = isIt ? this.stage.debugItChoice : this.stage.debugNotItChoice
     return this.followPath(debug)
   }
 
-  explore (debug = DEBUG.WANDER): Direction | null {
+  explore (debug = this.stage.debugWander): Direction | null {
     const debugColor = debug ? 'tan' : undefined
     const openWaypointIds: number[] = []
     const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
@@ -149,7 +148,7 @@ export default class Bot extends Character {
   }
 
   flee (): Direction | null {
-    const debugColor = DEBUG.NOT_IT_CHOICE ? 'orange' : undefined
+    const debugColor = this.stage.debugNotItChoice ? 'orange' : undefined
     if (this.stage.it == null) {
       throw new Error('Fleeing from no one')
     }
@@ -164,7 +163,7 @@ export default class Bot extends Character {
   }
 
   followPath (debug?: boolean): Direction | null {
-    const debugging = debug === true || DEBUG.PATHING
+    const debugging = debug === true || this.stage.debugPathing
     if (debugging) {
       const originIndex = this.path.length - 1
       this.path.slice(0, originIndex).forEach((point, i) => {
@@ -195,7 +194,7 @@ export default class Bot extends Character {
     const vector = Matter.Vector.sub(this.feature.body.position, this.stage.it.feature.body.position)
     const direction = Matter.Vector.normalise(vector)
     const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, 30))
-    return !this.isPointWallOpen({ point: blockPoint, debug: DEBUG.CHASE })
+    return !this.isPointWallOpen({ point: blockPoint, debug: this.stage.debugChase })
   }
 
   getDistance (point: Matter.Vector): number {
@@ -672,7 +671,7 @@ export default class Bot extends Character {
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
-    if (DEBUG.LOST) {
+    if (this.stage.debugLost) {
       const position = props?.goal ?? this.feature.body.position
       const point = vectorToPoint(position)
       this.stage.lostPoints.push(point)
@@ -728,7 +727,7 @@ export default class Bot extends Character {
       return this.isPointReachable({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
-      if (DEBUG.LOST) {
+      if (this.stage.debugLost) {
         console.warn('Invisible path start')
       }
       return this.loseWay()
@@ -743,7 +742,7 @@ export default class Bot extends Character {
       })
     })
     if (visibleFromEnd.length === 0) {
-      if (DEBUG.LOST) {
+      if (this.stage.debugLost) {
         console.warn('Invisible path goal')
       }
       return this.loseWay()
@@ -777,11 +776,11 @@ export default class Bot extends Character {
       return this.loseWay()
     }
     this.setPath({ path: [unblockPoint], label: 'unblock' })
-    const debugColor = DEBUG.NOT_IT_CHOICE ? 'limegreen' : undefined
+    const debugColor = this.stage.debugNotItChoice ? 'limegreen' : undefined
     return this.getDirection({ end: this.path[0], color: debugColor })
   }
 
-  wander (debug = DEBUG.WANDER): Direction | null {
+  wander (debug = this.stage.debugWander): Direction | null {
     const debugColor = debug ? 'tan' : undefined
     const visibleWaypointIds: number[] = []
     const visibleTimes = this.searchTimes.filter((time, index) => {

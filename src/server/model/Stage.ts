@@ -7,7 +7,6 @@ import Line from '../../shared/Line'
 import Shape from '../../shared/Shape'
 import { UpdateMessage } from '../../shared/socket'
 import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { DEBUG } from '../lib/debug'
 import { getRandomRectangleSize } from '../../shared/math'
 import Raycast from './Raycast'
 import Actor from './Actor'
@@ -28,6 +27,23 @@ export default class Stage {
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
   collisionStartCount = 0
+  debugBotCircles: boolean
+  debugChase: boolean
+  debugOpenWaypoints: boolean
+  debugCollision: boolean
+  debugFeatures: boolean
+  debugIsClear: boolean
+  debugItChoice: boolean
+  debugLost: boolean
+  debugMakeIt: boolean
+  debugNotItChoice: boolean
+  debugPathing: boolean
+  debugPosition: boolean
+  debugSpeed: boolean
+  debugStepTime: boolean
+  debugWander: boolean
+  debugWaypointCircles: boolean
+  debugWaypointLabels: boolean
   engine = Matter.Engine.create()
   features = new Map<number, Feature>()
   initial = true
@@ -42,6 +58,7 @@ export default class Stage {
   runner = Matter.Runner.create()
   scenery: Matter.Body[] = []
   stepCount = 0
+  stepTimeLimit: number
   timers = new Map<number, [number, () => void]>()
   totalBodyCount = 0
   totalCollisionCount = 0
@@ -57,36 +74,90 @@ export default class Stage {
   yFactor = 2
   ySegment: number
   constructor ({
-    centerBot,
-    cornerBots,
-    country,
-    countryBots,
-    greek,
-    greekBots,
-    gridBots,
-    midpointBots,
-    size,
-    town,
-    townBots,
-    waypointBots,
-    waypointBricks,
-    wildBricks
+    centerBot = false,
+    cornerBots = false,
+    country = false,
+    countryBots = false,
+    debugBotCircles = false,
+    debugChase = false,
+    debugOpenWaypoints = false,
+    debugCollision = false,
+    debugFeatures = false,
+    debugIsClear = false,
+    debugItChoice = false,
+    debugLost = false,
+    debugMakeIt = false,
+    debugNotItChoice = false,
+    debugPathing = false,
+    debugPosition = false,
+    debugSpeed = false,
+    debugStepTime = true,
+    debugWander = false,
+    debugWaypointCircles = false,
+    debugWaypointLabels = false,
+    greek = false,
+    greekBots = false,
+    gridBots = false,
+    midpointBots = false,
+    size = 3000,
+    stepTimeLimit = 35,
+    town = false,
+    townBots = false,
+    waypointBots = false,
+    waypointBricks = false,
+    wildBricks = false
   }: {
     centerBot?: boolean
     cornerBots?: boolean
     country?: boolean
     countryBots?: boolean
+    debugBotCircles?: boolean
+    debugChase?: boolean
+    debugOpenWaypoints?: boolean
+    debugCollision?: boolean
+    debugFeatures?: boolean
+    debugIsClear?: boolean
+    debugItChoice?: boolean
+    debugLost?: boolean
+    debugMakeIt?: boolean
+    debugNotItChoice?: boolean
+    debugPathing?: boolean
+    debugPosition?: boolean
+    debugSpeed?: boolean
+    debugStepTime?: boolean
+    debugWander?: boolean
+    debugWaypointCircles?: boolean
+    debugWaypointLabels?: boolean
     greek?: boolean
     greekBots?: boolean
     gridBots?: boolean
     midpointBots?: boolean
     size: number
+    stepTimeLimit?: number
     town?: boolean
     townBots?: boolean
     waypointBots?: boolean
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    this.debugBotCircles = debugBotCircles
+    this.debugChase = debugChase
+    this.debugOpenWaypoints = debugOpenWaypoints
+    this.debugCollision = debugCollision
+    this.debugFeatures = debugFeatures
+    this.debugIsClear = debugIsClear
+    this.debugItChoice = debugItChoice
+    this.debugLost = debugLost
+    this.debugMakeIt = debugMakeIt
+    this.debugNotItChoice = debugNotItChoice
+    this.debugPathing = debugPathing
+    this.debugPosition = debugPosition
+    this.debugSpeed = debugSpeed
+    this.debugStepTime = debugStepTime
+    this.stepTimeLimit = stepTimeLimit
+    this.debugWander = debugWander
+    this.debugWaypointCircles = debugWaypointCircles
+    this.debugWaypointLabels = debugWaypointLabels
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
     const wallSize = size * 3
@@ -100,7 +171,7 @@ export default class Stage {
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
-    if (town === true) {
+    if (town) {
       const PIT = new Wall({ x: 605, y: -955, width: 1700, height: 1000, stage: this })
       const BYTE = new Wall({ x: -500, y: -1300, width: 5, height: 5, stage: this })
       const PALACE = new Wall({ x: -1000, y: -1150, width: 600, height: 310, stage: this })
@@ -121,7 +192,7 @@ export default class Stage {
     }
 
     const greekWalls: Wall[] = []
-    if (greek === true) {
+    if (greek) {
       const alpha = new Wall({ x: -1454.5, y: -755, width: 1, height: 100, stage: this })
       const beta = new Wall({ x: -1408.5, y: -755, width: 1, height: 100, stage: this })
       const gamma = new Wall({ x: -1363, y: -755, width: 1, height: 100, stage: this })
@@ -139,7 +210,7 @@ export default class Stage {
     }
 
     const countryWalls: Wall[] = []
-    if (country === true) {
+    if (country) {
       countryWalls.push(
         new Wall({ x: -1100, y: 400, width: 200, height: 500, stage: this }),
         new Wall({ x: 0, y: -200, width: 100, height: 100, stage: this }),
@@ -184,8 +255,8 @@ export default class Stage {
     this.waypoints.forEach(waypoint => waypoint.setPaths())
     console.log('debugging waypoints...')
     this.waypoints.forEach(waypoint => {
-      if (DEBUG.WAYPOINT_LABELS) {
-        const y = DEBUG.WAYPOINT_CIRCLES ? waypoint.y + 20 : waypoint.y
+      if (this.debugWaypointLabels) {
+        const y = this.debugWaypointCircles ? waypoint.y + 20 : waypoint.y
         void new Label({
           color: 'white', stage: this, text: String(waypoint.id), x: waypoint.x, y
         })
@@ -193,7 +264,7 @@ export default class Stage {
     })
 
     console.log('navigation complete')
-    if (wildBricks === true) {
+    if (wildBricks) {
       this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
@@ -229,31 +300,31 @@ export default class Stage {
       this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
       this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
-    if (centerBot === true) {
+    if (centerBot) {
       void new Bot({ x: 100, y: 0, stage: this })
     }
 
-    if (greekBots === true) greekWalls.forEach(wall => wall.spawnBots())
-    if (townBots === true) townWalls.forEach(wall => wall.spawnBots())
-    if (gridBots === true) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
-    if (countryBots === true) countryWalls.forEach(wall => wall.spawnBots())
-    if (waypointBots === true) {
+    if (greekBots) greekWalls.forEach(wall => wall.spawnBots())
+    if (townBots) townWalls.forEach(wall => wall.spawnBots())
+    if (gridBots) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
+    if (countryBots) countryWalls.forEach(wall => wall.spawnBots())
+    if (waypointBots) {
       this.waypoints.forEach(waypoint => {
         void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
       })
     }
-    if (waypointBricks === true) {
+    if (waypointBricks) {
       this.waypoints.forEach(waypoint => {
         this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
       })
     }
-    if (cornerBots === true) {
+    if (cornerBots) {
       void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
       void new Bot({ x: marginEdge, y: -marginEdge, stage: this })
       void new Bot({ x: -marginEdge, y: marginEdge, stage: this })
       void new Bot({ x: marginEdge, y: marginEdge, stage: this })
     }
-    if (midpointBots === true) {
+    if (midpointBots) {
       void new Bot({ x: 0, y: -marginEdge, stage: this })
       void new Bot({ x: marginEdge, y: 0, stage: this })
       void new Bot({ x: 0, y: marginEdge, stage: this })
@@ -282,13 +353,13 @@ export default class Stage {
       })
       const newTime = Date.now()
       const difference = newTime - this.oldTime
-      if (DEBUG.STEP_TIME) {
+      if (this.debugStepTime) {
         if (this.initial) {
           console.log('initial difference:', difference)
           this.initial = false
         }
 
-        if (difference >= DEBUG.STEP_TIME_LIMIT) {
+        if (difference >= this.stepTimeLimit) {
           this.warningCount = this.warningCount + 1
           const warningDifference = newTime - this.warningTime
           this.warningDifferenceTotal = this.warningDifferenceTotal + warningDifference
@@ -312,7 +383,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       if (!this.paused) {
         this.lines = []
         this.circles = []
-        if (DEBUG.WAYPOINT_CIRCLES) {
+        if (this.debugWaypointCircles) {
           this.waypoints.forEach(waypoint => {
             this.circle({
               color: 'blue',
@@ -445,7 +516,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     if (player == null) {
       throw new Error('Player not found')
     }
-    if (DEBUG.LOST) {
+    if (this.debugLost) {
       this.lostPoints.forEach(point => {
         this.circle({
           color: 'yellow',
@@ -455,7 +526,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         })
       })
     }
-    const visibleFeatures = player.getVisibleFeatures()
+    const visibleFeatures = this.debugFeatures ? [...this.features.values()] : player.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => new Shape(feature.body))
     const message = {
       shapes,

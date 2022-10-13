@@ -1,7 +1,6 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import Stage from './Stage'
-import { DEBUG } from '../lib/debug'
 import { getPerpendicular, getPerpendicularSides } from '../../shared/math'
 
 export default class Raycast {
@@ -36,7 +35,7 @@ export default class Raycast {
     this.stepRaycasts = this.stepRaycasts + 1
     const collide = collisions.length > 0
     if (!collide) {
-      if (DEBUG.COLLISON) {
+      if (this.stage.debugCollision) {
         this.stage.line({ color: 'purple', end, start })
       }
       return { entryPoint: end }
@@ -82,7 +81,7 @@ export default class Raycast {
     const collisions = this.raycast({ end, start, obstacles })
     this.stepClears = this.stepClears + 1
     const collide = collisions.length > 0
-    if (debug === true || DEBUG.IS_CLEAR) {
+    if (debug === true || this.stage.debugIsClear) {
       if (!collide) {
         this.stage.line({ color: 'green', end, start })
       } else {

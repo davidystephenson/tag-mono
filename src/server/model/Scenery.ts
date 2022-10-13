@@ -1,5 +1,4 @@
 import Matter from 'matter-js'
-import { DEBUG } from '../lib/debug'
 import { project } from '../../shared/math'
 import Feature from './Feature'
 import Stage from './Stage'
@@ -32,7 +31,7 @@ export default class Scenery extends Actor {
     this.dent({ actor, delta, normal })
   }
 
-  dent ({ actor, delta = DEBUG.STEP_TIME_LIMIT, normal }: {
+  dent ({ actor, delta = this.stage.stepTimeLimit, normal }: {
     actor: Actor
     delta?: number
     normal: Matter.Vector
