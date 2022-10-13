@@ -21,16 +21,18 @@ export default class Wall extends RectangleFeature {
   readonly rightMargin: number
   readonly topMargin: number
   readonly bottomMargin: number
-  constructor ({ color = 'blue', height = 100, stage, waypoints = true, width = 100, x = 0, y = 0 }: {
-    color?: string
+  constructor ({ blue = 255, green = 0, height = 100, red = 0, stage, waypoints = true, width = 100, x = 0, y = 0 }: {
+    blue?: number
+    green?: number
     height: number
+    red?: number
     stage: Stage
     waypoints?: boolean
     width: number
     x: number
     y: number
   }) {
-    super({ color, height, stage, width, x, y })
+    super({ blue, green, height, red, stage, width, x, y })
     this.body.label = 'wall'
     this.x = x
     this.y = y

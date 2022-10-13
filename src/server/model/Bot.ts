@@ -19,14 +19,13 @@ export default class Bot extends Character {
   pathLabel?: typeof Bot.pathLabels[number]
   searchTimes: number[] = []
   unblockTries?: Record<number, boolean>
-  constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
-    color?: string
+  constructor ({ radius = 15, stage, x = 0, y = 0 }: {
     radius?: number
     stage: Stage
     x: number
     y: number
   }) {
-    super({ x, y, color, radius, stage })
+    super({ x, y, radius, stage })
     this.searchTimes = this.stage.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
@@ -155,7 +154,13 @@ export default class Bot extends Character {
       throw new Error('Fleeing from no one')
     }
     this.setPath({ path: [], label: 'flee' })
-    return this.stage.it.getDirection({ end: this.feature.body.position, color: debugColor })
+    const start = this.feature.body.position
+    const itPosition = this.stage.it.feature.body.position
+    const itVelocity = this.stage.it.feature.body.velocity
+    const avoidPosition = Matter.Vector.add(itPosition, Matter.Vector.mult(itVelocity, 10))
+    const avoidDirection = Matter.Vector.sub(start, avoidPosition)
+    const toPoint = Matter.Vector.add(start, avoidDirection)
+    return this.getDirection({ end: toPoint, color: debugColor })
   }
 
   followPath (debug?: boolean): Direction | null {

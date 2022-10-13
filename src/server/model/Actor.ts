@@ -60,15 +60,14 @@ export default class Actor {
     const massA = this.feature.body.mass
     const massB = actor.feature.body.mass
     const collidePower = collideSpeed * massA * massB
-    // Damage
     const impact = collidePower * collidePower * collidePower
-    const damage = delta * impact * 50000
+    const damage = delta * impact * 20000
     this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()
     } else {
       const alpha = this.health / this.maximumHealth
-      this.feature.body.render.fillStyle = `rgba(0, 255, 255, ${alpha})`
+      this.feature.setColor({ alpha })
     }
   }
 }

@@ -22,14 +22,16 @@ export default class Character extends Actor {
   pursuer?: Bot
   readonly radius: number
   ready = true
-  constructor ({ color = 'green', radius = 15, stage, x = 0, y = 0 }: {
-    color?: string
+  constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
+    blue?: number
+    green?: number
     radius?: number
+    red?: number
     stage: Stage
     x: number
     y: number
   }) {
-    const feature = new CircleFeature({ x, y, radius, color, stage })
+    const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
     super({ feature, stage })
     this.radius = radius
@@ -68,7 +70,7 @@ export default class Character extends Actor {
   beReady = (): void => {
     console.log('beReady')
     this.ready = true
-    this.setColor('red')
+    this.feature.setColor({ red: 255, green: 0, blue: 0 })
   }
 
   characterCollide ({ actor }: { actor: Actor }): void {
@@ -144,12 +146,12 @@ export default class Character extends Actor {
   }
 
   loseIt ({ prey }: { prey: Character }): void {
-    this.setColor('green')
+    this.feature.setColor({ red: 0, green: 128, blue: 0 })
   }
 
   loseReady (): void {
     this.ready = false
-    this.setColor('white')
+    this.feature.setColor({ red: 255, green: 255, blue: 255 })
   }
 
   makeIt ({ predator }: { predator: Character }): void {
@@ -159,13 +161,8 @@ export default class Character extends Actor {
     }
     predator.loseIt({ prey: this })
     this.loseReady()
-    this.setColor('white')
+    this.feature.setColor({ red: 255, green: 255, blue: 255 })
     this.stage.it = this
     this.stage.timeout(5000, this.beReady)
-  }
-
-  setColor (color: string): void {
-    this.feature.body.render.fillStyle = color
-    this.feature.body.render.strokeStyle = color
   }
 }

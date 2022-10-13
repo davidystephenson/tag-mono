@@ -5,24 +5,28 @@ import Stage from './Stage'
 export default class Crate extends RectangleFeature {
   constructor ({
     angle = 0,
-    color = 'gray',
+    blue = 255,
     density = 0.00005,
+    green = 255,
     height = 10,
+    red = 0,
     stage,
     width = 10,
     x = 0,
     y = 0
   }: {
     angle?: number
-    color?: string
+    blue?: number
     density?: number
+    green?: number
     height: number
+    red?: number
     stage: Stage
     width: number
     x: number
     y: number
   }) {
-    super({ color, density, height, stage, width, x, y })
+    super({ blue, density, green, height, red, stage, width, x, y })
     this.body.label = 'brick'
     Matter.Body.setAngle(this.body, angle)
   }

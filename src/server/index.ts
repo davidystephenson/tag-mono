@@ -10,16 +10,16 @@ import Stage from './model/Stage'
 const stage = new Stage({
   centerBot: true,
   country: true,
-  countryBots: true,
+  countryBots: false,
   cornerBots: true,
   gridBots: true,
   greek: true,
   greekBots: false,
   midpointBots: true,
-  townBots: true,
+  townBots: false,
   waypointBots: false,
-  waypointBricks: true,
-  wildBricks: true,
+  waypointBricks: false,
+  wildBricks: false,
   size: 3000,
   town: true
 })

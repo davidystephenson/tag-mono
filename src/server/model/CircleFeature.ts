@@ -7,17 +7,19 @@ import Stage from './Stage'
 
 export default class CircleFeature extends Feature {
   readonly radius: number
-  constructor ({ color = 'gray', density = 0.001, isObstacle = false, radius, stage, x, y }: {
-    color?: string
+  constructor ({ blue = 128, density = 0.001, green = 128, isObstacle = false, radius, red = 128, stage, x, y }: {
+    blue?: number
     density?: number
+    green?: number
     isObstacle?: boolean
     radius: number
+    red?: number
     stage: Stage
     x: number
     y: number
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, color, density, isObstacle, stage })
+    super({ body, blue, density, green, isObstacle, red, stage })
     this.radius = radius
   }
 

@@ -6,7 +6,6 @@ import Stage from './Stage'
 export default class Brick extends Actor {
   constructor ({
     angle = 0,
-    color = Actor.SCENERY_COLOR,
     density = Actor.SCENERY_DENSITY,
     height = 10,
     stage,
@@ -15,7 +14,6 @@ export default class Brick extends Actor {
     y = 0
   }: {
     angle?: number
-    color?: string
     density?: number
     height: number
     stage: Stage
@@ -23,7 +21,7 @@ export default class Brick extends Actor {
     x: number
     y: number
   }) {
-    const brick = new Crate({ angle, color, density, height, stage, width, x, y })
+    const brick = new Crate({ angle, density, height, stage, width, x, y })
     super({ feature: brick, stage })
   }
 

@@ -8,7 +8,6 @@ export default class Player extends Character {
 
   readonly id: string
   constructor ({
-    color = 'green',
     id,
     observer,
     radius = 15,
@@ -16,7 +15,6 @@ export default class Player extends Character {
     x = 0,
     y = 0
   }: {
-    color?: string
     id: string
     observer?: boolean
     radius?: number
@@ -24,7 +22,7 @@ export default class Player extends Character {
     x: number
     y: number
   }) {
-    super({ x, y, color, radius, stage })
+    super({ x, y, radius, stage })
     if (observer === true) {
       this.observer = true
       this.loseReady()

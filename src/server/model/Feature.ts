@@ -4,18 +4,28 @@ import Stage from './Stage'
 
 export default class Feature {
   actor?: Actor
+  alpha = 1
+  blue: number
+  green: number
   readonly body: Matter.Body
   readonly isObstacle: boolean
+  red: number
   readonly stage: Stage
-  constructor ({ body, color = 'gray', density = 0.001, isObstacle = true, stage }: {
+  constructor ({ body, blue = 128, density = 0.001, green = 128, isObstacle = true, red = 128, stage }: {
     body: Matter.Body
-    color?: string
+    blue?: number
     density?: number
+    green?: number
     isObstacle?: boolean
+    red?: number
     stage: Stage
   }) {
     this.body = body
+    this.blue = blue
+    this.green = green
+    this.red = red
     this.stage = stage
+    const color = `rgb(${this.red}, ${this.green}, ${this.blue})`
     this.body.render.fillStyle = color
     this.body.render.strokeStyle = color
     this.isObstacle = isObstacle
@@ -45,6 +55,22 @@ export default class Feature {
     radius: number
   }): boolean {
     return true
+  }
+
+  setColor ({ alpha, blue, green, red }: {
+    alpha?: number
+    blue?: number
+    green?: number
+    red?: number
+  }): void {
+    if (alpha != null) this.alpha = alpha
+    if (blue != null) this.blue = blue
+    if (green != null) this.green = green
+    if (red != null) this.red = red
+    const stroke = `rgba(${this.red}, ${this.green}, ${this.blue})`
+    this.body.render.strokeStyle = stroke
+    const fill = `rgba(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`
+    this.body.render.fillStyle = fill
   }
 
   destroy (): void {

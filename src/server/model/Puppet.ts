@@ -9,27 +9,31 @@ export default class Puppet extends Actor {
   readonly targetSpeed: number
   readonly force: number
   constructor ({
-    color = Actor.SCENERY_COLOR,
+    blue = 255,
     density = Actor.SCENERY_DENSITY,
     direction = EAST_VECTOR,
     force = 0.001,
+    green = 255,
+    red = 0,
     stage,
     targetSpeed = 0.5,
     vertices,
     x,
     y
   }: {
-    color?: string
+    blue?: number
     density?: number
     direction?: Matter.Vector
     force?: number
+    green?: number
+    red?: number
     stage: Stage
     targetSpeed?: number
     vertices: Matter.Vector[]
     x: number
     y: number
   }) {
-    const figure = new VerticesFeature({ color, density, stage, vertices, x, y })
+    const figure = new VerticesFeature({ blue, density, green, red, stage, vertices, x, y })
     super({ feature: figure, stage })
     this.feature.body.label = 'figure'
     this.direction = direction
