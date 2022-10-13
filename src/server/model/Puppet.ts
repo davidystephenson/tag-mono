@@ -1,20 +1,20 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../lib/directions'
-import Actor from './Actor'
+import Scenery from './Scenery'
 import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'
 
-export default class Puppet extends Actor {
+export default class Puppet extends Scenery {
   readonly direction: Matter.Vector
   readonly targetSpeed: number
   readonly force: number
   constructor ({
-    blue = 255,
-    density = Actor.SCENERY_DENSITY,
+    blue = Scenery.BLUE,
+    density = Scenery.DENSITY,
     direction = EAST_VECTOR,
     force = 0.001,
-    green = 255,
-    red = 0,
+    green = Scenery.GREEN,
+    red = Scenery.RED,
     stage,
     targetSpeed = 0.5,
     vertices,
@@ -47,14 +47,5 @@ export default class Puppet extends Actor {
       const magnified = Matter.Vector.mult(this.direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, magnified)
     }
-  }
-
-  characterCollide ({ actor, delta, normal }: {
-    actor: Actor
-    delta?: number
-    normal: Matter.Vector
-  }): void {
-    super.characterCollide({ actor, delta, normal })
-    this.dent({ actor, delta, normal })
   }
 }
