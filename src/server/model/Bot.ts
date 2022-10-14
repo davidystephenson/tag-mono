@@ -8,6 +8,13 @@ import Player from './Player'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
+import Waypoint from './Waypoint'
+
+interface Heading {
+  waypoint: Waypoint
+  time: number
+  distance: number
+}
 
 export default class Bot extends Character {
   static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
@@ -16,7 +23,7 @@ export default class Bot extends Character {
   path: Matter.Vector[] = []
   pathTime?: number
   pathLabel?: typeof Bot.pathLabels[number]
-  searchTimes: number[] = []
+  headings: Heading[] = []
   unblockTries?: Record<number, boolean>
   constructor ({ radius = 15, stage, x = 0, y = 0 }: {
     radius?: number
@@ -25,7 +32,11 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    this.searchTimes = this.stage.waypoints.map((waypoint) => -this.getDistance(waypoint.position))
+    this.headings = this.stage.waypoints.map((waypoint) => {
+      const distance = this.getDistance(waypoint.position)
+      const time = -distance
+      return { waypoint, time, distance }
+    })
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
   }
@@ -116,35 +127,88 @@ export default class Bot extends Character {
 
   explore (debug = this.stage.debugWander): Direction | null {
     const debugColor = debug ? 'tan' : undefined
-    const openWaypointIds: number[] = []
-    const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
-    const obstacles = [...this.stage.wallBodies, ...otherCharacterBodies]
-    const openTimes = this.searchTimes.filter((time, index) => {
-      const point = this.stage.waypoints[index].position
-      const inRange = this.isPointInRange(point)
-      if (!inRange) return false
-      // const isCharacterOpen = this.isPointCharacterOpen({ point })
-      const isClear = this.stage.raycast.isPointClear({
+    const inRangeHeadings = this.headings.filter(heading => this.isPointInRange(heading.waypoint.position))
+    const wallClearHeadings = inRangeHeadings.filter(heading => {
+      return this.stage.raycast.isPointClear({
         debug,
-        end: point,
-        obstacles,
+        end: heading.waypoint.position,
+        start: this.feature.body.position,
+        obstacles: this.stage.wallBodies
+      })
+    })
+    const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
+    const characterClearHeadings = wallClearHeadings.filter((heading) => {
+      return this.stage.raycast.isPointClear({
+        debug,
+        end: heading.waypoint.position,
+        obstacles: otherCharacterBodies,
         start: this.feature.body.position
       })
-      if (isClear) openWaypointIds.push(this.stage.waypoints[index].id)
-      return isClear
-    })
-    if (openTimes.length === 0) {
-      return this.wander()
+    }, {})
+    if (characterClearHeadings.length === 0) {
+      if (wallClearHeadings.length === 0) {
+        return this.loseWay()
+      }
+      this.setHeading({ headings: wallClearHeadings, label: 'wander' })
+    } else {
+      this.setHeading({ headings: characterClearHeadings, label: 'explore' })
     }
-    const earlyTime = Math.min(...openTimes)
-    const earlyVisibleIds = openWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
-    const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
-    const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
-    const waypoint = this.stage.waypoints[earlyFarId]
-
-    this.searchTimes[waypoint.id] = Date.now()
-    this.setPath({ path: [waypoint.position], label: 'explore' })
     return this.getDirection({ end: this.path[0], color: debugColor })
+  }
+
+  findPath ({ goal }: {
+    goal: Matter.Vector
+  }): Matter.Vector | null {
+    const goalPoint = vectorToPoint(goal)
+    if (this.isPointReachable({ point: goalPoint })) {
+      this.path = [goalPoint]
+      return goalPoint
+    }
+    const visibleFromStart = this.stage.waypoints.filter(waypoint => {
+      return this.isPointReachable({ point: waypoint.position })
+    })
+    if (visibleFromStart.length === 0) {
+      if (this.stage.debugLost) {
+        console.warn('Invisible path start')
+      }
+      return this.loseWay()
+    }
+
+    const visibleFromEnd = this.stage.waypoints.filter(waypoint => {
+      return this.stage.raycast.isPointOpen({
+        start: waypoint.position,
+        end: goalPoint,
+        radius: this.radius,
+        obstacles: this.stage.wallBodies
+      })
+    })
+    if (visibleFromEnd.length === 0) {
+      if (this.stage.debugLost) {
+        console.warn('Invisible path goal')
+      }
+      return this.loseWay()
+    }
+
+    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
+    const distances = pairs.map(pair => {
+      const first = pair[0]
+      const last = pair[1]
+      const startToFirst = this.getDistance(first.position)
+      const firstToLast = first.distances[last.id]
+      const lastToEnd = getDistance(last.position, goalPoint)
+      return startToFirst + firstToLast + lastToEnd
+    })
+    const pair = whichMin(pairs, distances)
+    const last = pair[1]
+    const first = pair[0]
+    const waypointPath = first.paths[last.id]
+    if (waypointPath.length === 0) throw new Error('waypoint path is empty')
+    const reversed = [...waypointPath].reverse()
+    reversed.unshift(goalPoint)
+    this.path = reversed
+    const target = this.path[this.path.length - 1]
+
+    return target
   }
 
   flee (): Direction | null {
@@ -177,7 +241,7 @@ export default class Bot extends Character {
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
-      const target = this.pathfind({ goal: this.path[0] })
+      const target = this.findPath({ goal: this.path[0] })
       if (target == null) return this.loseWay()
       const debugColor = debugging ? 'red' : undefined
       return this.getDirection({ end: target, color: debugColor })
@@ -651,23 +715,12 @@ export default class Bot extends Character {
       }
     } else {
       console.log('unclear test')
-      // void new Brick({
-      // x: this.feature.body.position.x,
-      // y: this.feature.body.position.y,
-      // height: this.radius * 2,
-      // width: this.radius * 2
-      // })
+      this.stage.paused = true
     }
     this.blocked = false
     this.unblockTries = undefined
     this.setPath({ path: [], label: 'reset' })
     super.loseIt({ prey })
-  }
-
-  setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {
-    this.path = path
-    this.pathLabel = label
-    this.pathTime = Date.now()
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
@@ -691,83 +744,34 @@ export default class Bot extends Character {
   makeIt ({ predator }: { predator: Character }): void {
     super.makeIt({ predator })
     console.log('Bot.makeIt test')
-    // if (struggling || Character.it == null) {
-
-    // } else {
-    //   const radians = getRadians({ from: this.feature.body.position, to: Character.it.feature.body.position }) - Math.PI / 2
-    //   const unitVector = {
-    //     x: Math.sin(radians),
-    //     y: Math.cos(radians)
-    //   }
-    //   void new Puppet({
-    //     x: this.feature.body.position.x,
-    //     y: this.feature.body.position.y,
-    //     direction: unitVector,
-    //     vertices: [
-    //       { x: 0, y: this.radius },
-    //       { x: -this.radius, y: -this.radius },
-    //       { x: this.radius, y: -this.radius }
-    //     ]
-    //   })
-    // }
     this.setPath({ path: [], label: 'reset' })
     this.blocked = false
   }
 
-  pathfind ({ goal }: {
-    goal: Matter.Vector
-  }): Matter.Vector | null {
-    const goalPoint = vectorToPoint(goal)
-    if (this.isPointReachable({ point: goalPoint })) {
-      this.path = [goalPoint]
-
-      return goalPoint
-    }
-    const visibleFromStart = this.stage.waypoints.filter(waypoint => {
-      return this.isPointReachable({ point: waypoint.position })
+  setHeading ({ headings, label }: { headings: Heading[], label: string }): Heading {
+    const earlyClearHeading = headings.reduce((headingA, headingB) => {
+      if (headingA.time < headingB.time) return headingA
+      return headingB
     })
-    if (visibleFromStart.length === 0) {
-      if (this.stage.debugLost) {
-        console.warn('Invisible path start')
+    const earlyClearHeadings = headings.filter(heading => heading.time === earlyClearHeading.time)
+    earlyClearHeadings[0].distance = this.getDistance(earlyClearHeadings[0].waypoint.position)
+    const farHeading = earlyClearHeadings.reduce((headingA, headingB) => {
+      headingB.distance = this.getDistance(headingB.waypoint.position)
+      if (headingA.distance > headingB.distance) {
+        return headingB
       }
-      return this.loseWay()
-    }
-
-    const visibleFromEnd = this.stage.waypoints.filter(waypoint => {
-      return this.stage.raycast.isPointOpen({
-        start: waypoint.position,
-        end: goalPoint,
-        radius: this.radius,
-        obstacles: this.stage.wallBodies
-      })
+      return headingA
     })
-    if (visibleFromEnd.length === 0) {
-      if (this.stage.debugLost) {
-        console.warn('Invisible path goal')
-      }
-      return this.loseWay()
-    }
+    this.headings[farHeading.waypoint.id].time = Date.now()
+    this.setPath({ path: [farHeading.waypoint.position], label: 'explore' })
 
-    const pairs = visibleFromStart.flatMap(a => visibleFromEnd.map(b => [a, b]))
-    const distances = pairs.map(pair => {
-      const first = pair[0]
-      const last = pair[1]
-      const startToFirst = this.getDistance(first.position)
-      const firstToLast = first.distances[last.id]
-      const lastToEnd = getDistance(last.position, goalPoint)
-      return startToFirst + firstToLast + lastToEnd
-    })
-    const pair = whichMin(pairs, distances)
-    const last = pair[1]
-    const first = pair[0]
-    const waypointPath = first.paths[last.id]
-    if (waypointPath.length === 0) throw new Error('waypoint path is empty')
-    const reversed = [...waypointPath].reverse()
-    reversed.unshift(goalPoint)
-    this.path = reversed
-    const target = this.path[this.path.length - 1]
+    return farHeading
+  }
 
-    return target
+  setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {
+    this.path = path
+    this.pathLabel = label
+    this.pathTime = Date.now()
   }
 
   unblock (): Direction | null {
@@ -777,32 +781,6 @@ export default class Bot extends Character {
     }
     this.setPath({ path: [unblockPoint], label: 'unblock' })
     const debugColor = this.stage.debugNotItChoice ? 'limegreen' : undefined
-    return this.getDirection({ end: this.path[0], color: debugColor })
-  }
-
-  wander (debug = this.stage.debugWander): Direction | null {
-    const debugColor = debug ? 'tan' : undefined
-    const visibleWaypointIds: number[] = []
-    const visibleTimes = this.searchTimes.filter((time, index) => {
-      const isVisible = this.isPointWallVisible({ point: this.stage.waypoints[index].position })
-      if (isVisible) visibleWaypointIds.push(this.stage.waypoints[index].id)
-      return isVisible
-    })
-
-    if (visibleTimes.length === 0) {
-      return this.loseWay()
-    }
-    const earlyTime = Math.min(...visibleTimes)
-    const earlyVisibleIds = visibleWaypointIds.filter(id => this.searchTimes[id] === earlyTime)
-    const earlyDistances = earlyVisibleIds.map(id => this.getDistance(this.feature.body.position))
-    const earlyFarId = whichMax(earlyVisibleIds, earlyDistances)
-    const waypoint = this.stage.waypoints[earlyFarId]
-    if (waypoint == null) {
-      return null
-    }
-
-    this.searchTimes[waypoint.id] = Date.now()
-    this.setPath({ path: [waypoint.position], label: 'wander' })
     return this.getDirection({ end: this.path[0], color: debugColor })
   }
 
