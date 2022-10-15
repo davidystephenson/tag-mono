@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { vectorToPoint } from '../server/math'
+import { vectorToPoint } from './math'
 
 export default class Shape {
   readonly circleRadius?: number
