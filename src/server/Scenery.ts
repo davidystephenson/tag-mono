@@ -1,8 +1,8 @@
 import Matter from 'matter-js'
-import { project } from '../math'
 import Feature from './Feature'
 import Stage from './Stage'
 import Actor from './Actor'
+import { project } from './math'
 
 export default class Scenery extends Actor {
   static BLUE = 255

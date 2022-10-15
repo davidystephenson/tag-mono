@@ -1,11 +1,11 @@
 import Matter from 'matter-js'
-import Input from '../../shared/Input'
+import Input from '../shared/Input'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
 import Direction from './Direction'
 import Feature from './Feature'
-import { isPointInVisionRange } from '../lib/inRange'
+import { isPointInVisionRange } from './math'
 import Stage from './Stage'
 
 export default class Character extends Actor {

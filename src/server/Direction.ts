@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import Controls, { getRadiansControls } from '../../shared/controls'
+import Controls, { getRadiansControls } from '../shared/controls'
 import Stage from './Stage'
 
 export default class Direction {

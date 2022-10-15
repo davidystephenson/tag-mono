@@ -1,5 +1,5 @@
+import Controls, { Control, controlValues } from '../shared/controls'
 import Character from './Character'
-import Controls, { Control, controlValues } from '../../shared/controls'
 import Stage from './Stage'
 
 export default class Player extends Character {

@@ -1,11 +1,11 @@
 import { io, Socket } from 'socket.io-client'
-import Camera from './model/Camera'
-import State from './model/State'
+import Camera from './Camera'
 import Input from '../shared/Input'
 import Matter from 'matter-js'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import VISION from '../shared/VISION'
 import Shape from '../shared/Shape'
+import State from './State'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const context = canvas.getContext('2d')
@@ -113,7 +113,7 @@ const draw = function (): void {
     context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const upper = context.fillStyle.toUpperCase()
+      const upper = String(context.fillStyle).toUpperCase()
       const red = upper.slice(1, 3)
       const green = upper.slice(3, 5)
       const blue = upper.slice(5, 7)

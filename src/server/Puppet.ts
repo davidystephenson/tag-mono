@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { EAST_VECTOR } from '../../shared/math'
+import { EAST_VECTOR } from '../shared/math'
 import Scenery from './Scenery'
 import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'

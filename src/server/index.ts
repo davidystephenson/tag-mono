@@ -6,7 +6,7 @@ import config from './config.json'
 import fs from 'fs'
 import socketIo from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
-import Stage from './model/Stage'
+import Stage from './Stage'
 const stage = new Stage({
   centerBot: true,
   country: true,

@@ -1,8 +1,7 @@
 import Matter from 'matter-js'
-import VISION from '../../shared/VISION'
-import { isPointInRange } from '../lib/inRange'
-import { getSides } from '../math'
+import VISION from '../shared/VISION'
 import Feature from './Feature'
+import { getSides, isPointInRange } from './math'
 import Stage from './Stage'
 
 export default class CircleFeature extends Feature {

@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
+import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
 import Bot from './Bot'
 import Character from './Character'
 import RectangleFeature from './RectangleFeature'

@@ -1,15 +1,15 @@
 import Matter from 'matter-js'
 import Character from './Character'
-import Controls, { STILL } from '../../shared/controls'
-import { VISION_HEIGHT, VISION_WIDTH } from '../../shared/VISION'
 import Direction from './Direction'
-import { getAngle, getAngleDifference, getDistance, whichMax, whichMin } from '../math'
 import Player from './Player'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
 import Waypoint from './Waypoint'
-import { vectorToPoint } from '../../shared/math'
+import Controls, { STILL } from '../shared/controls'
+import { vectorToPoint } from '../shared/math'
+import { VISION_HEIGHT, VISION_WIDTH } from '../shared/VISION'
+import { getDistance, whichMin, getAngle, getAngleDifference, whichMax } from './math'
 
 interface Heading {
   waypoint: Waypoint

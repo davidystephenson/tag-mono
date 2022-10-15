@@ -1,13 +1,5 @@
 import csvAppend from 'csv-append'
 import Matter from 'matter-js'
-import Controls from '../../shared/controls'
-import Circle from '../../shared/Circle'
-import Label from '../../shared/Label'
-import Line from '../../shared/Line'
-import Shape from '../../shared/Shape'
-import { UpdateMessage } from '../../shared/socket'
-import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../../shared/VISION'
-import { getRandomRectangleSize } from '../math'
 import Raycast from './Raycast'
 import Actor from './Actor'
 import Bot from './Bot'
@@ -17,6 +9,14 @@ import Feature from './Feature'
 import Player from './Player'
 import Wall from './Wall'
 import Waypoint from './Waypoint'
+import Line from '../shared/Line'
+import Circle from '../shared/Circle'
+import Controls from '../shared/controls'
+import Label from '../shared/Label'
+import Shape from '../shared/Shape'
+import { UpdateMessage } from '../shared/socket'
+import { VISION_INNER_WIDTH, VISION_INNER_HEIGHT } from '../shared/VISION'
+import { getRandomRectangleSize } from './math'
 
 export default class Stage {
   activeCollisionCount = 0
@@ -262,9 +262,7 @@ export default class Stage {
     this.waypoints.forEach(waypoint => {
       if (this.debugWaypointLabels) {
         const y = this.debugWaypointCircles ? waypoint.y + 20 : waypoint.y
-        void new Label({
-          color: 'white', stage: this, text: String(waypoint.id), x: waypoint.x, y
-        })
+        this.label({ text: String(waypoint.id), x: waypoint.x, y })
       }
     })
 
@@ -482,6 +480,16 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const player = Player.players.get(id)
     if (this.it === player) this.oldest?.makeIt({ predator: this.oldest })
     player?.destroy()
+  }
+
+  label ({ color = 'white', text, x, y }: {
+    color?: string
+    text: string
+    x: number
+    y: number
+  }): void {
+    const label = new Label({ color, text, x, y })
+    this.labels.push(label)
   }
 
   line ({ color = 'black', end, start }: {
