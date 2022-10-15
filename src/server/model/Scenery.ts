@@ -28,12 +28,11 @@ export default class Scenery extends Actor {
     normal: Matter.Vector
   }): void {
     super.collide({ actor, delta, normal })
-    this.dent({ actor, delta, normal })
+    this.dent({ actor, normal })
   }
 
-  dent ({ actor, delta = this.stage.stepTimeLimit, normal }: {
+  dent ({ actor, normal }: {
     actor: Actor
-    delta?: number
     normal: Matter.Vector
   }): void {
     const projectionA = project(this.feature.body.velocity, normal)
@@ -44,7 +43,7 @@ export default class Scenery extends Actor {
     const massB = actor.feature.body.mass
     const collidePower = collideSpeed * massA * massB
     const impact = collidePower * collidePower * collidePower
-    const damage = delta * impact * 20000
+    const damage = impact * 10000000
     this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()

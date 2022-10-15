@@ -24,8 +24,8 @@ const stage = new Stage({
   townBots: true,
   wallBots: false,
   waypointBots: false,
-  waypointBricks: false,
-  wildBricks: false,
+  waypointBricks: true,
+  wildBricks: true,
   size: 3000,
   town: true
 })
