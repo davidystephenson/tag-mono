@@ -3,7 +3,6 @@ import Input from '../shared/Input'
 import Actor from './Actor'
 import Bot from './Bot'
 import CircleFeature from './CircleFeature'
-import Direction from './Direction'
 import Feature from './Feature'
 import { isPointInVisionRange } from './math'
 import Stage from './Stage'
@@ -72,16 +71,12 @@ export default class Character extends Actor {
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
   }
 
-  characterCollide ({ actor }: { actor: Actor }): void {
+  collide ({ actor }: { actor?: Actor }): void {
     this.checkTag({ actor })
   }
 
-  characterColliding ({ actor }: { actor: Actor }): void {
-    this.checkTag({ actor })
-  }
-
-  checkTag ({ actor }: { actor: Actor }): void {
-    if (this.stage.it === actor) {
+  checkTag ({ actor }: { actor?: Actor }): void {
+    if (actor != null && this.stage.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
         this.makeIt({ predator: it })
@@ -95,25 +90,6 @@ export default class Character extends Actor {
     if (this.pursuer != null) {
       this.pursuer.setPath({ path: [], label: 'reset' })
     }
-  }
-
-  getDirection ({
-    end,
-    color,
-    velocity = { x: 0, y: 0 }
-  }: {
-    end: Matter.Vector
-    color?: string
-    velocity?: Matter.Vector
-  }): Direction {
-    return new Direction({
-      color,
-      end,
-      endVelocity: velocity,
-      stage: this.stage,
-      start: this.feature.body.position,
-      startVelocity: this.feature.body.velocity
-    })
   }
 
   getVisibleFeatures (): Feature[] {

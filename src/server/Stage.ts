@@ -451,10 +451,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const actorB = this.actors.get(pair.bodyB.id)
     // @ts-expect-error
     const { normal } = pair.collision
-    if (actorA != null && actorB != null) {
-      actorA.collide({ actor: actorB, delta, normal })
-      actorB.collide({ actor: actorA, delta, normal })
-    }
+    actorA?.collide({ actor: actorB, body: pair.bodyB, delta, normal })
+    actorB?.collide({ actor: actorA, body: pair.bodyA, delta, normal })
   }
 
   control ({ controls, id }: {

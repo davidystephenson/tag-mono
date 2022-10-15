@@ -22,28 +22,31 @@ export default class Scenery extends Actor {
     this.maximumHealth = this.health
   }
 
-  collide ({ actor, delta, normal }: {
-    actor: Actor
+  collide ({ actor, body, delta, normal }: {
+    actor?: Actor
+    body: Matter.Body
     delta?: number
     normal: Matter.Vector
   }): void {
-    super.collide({ actor, delta, normal })
-    this.dent({ actor, normal })
+    super.collide({ actor, body, delta, normal })
+    this.dent({ body, normal })
   }
 
-  dent ({ actor, normal }: {
-    actor: Actor
+  dent ({ body, normal }: {
+    body: Matter.Body
     normal: Matter.Vector
   }): void {
-    const projectionA = project(this.feature.body.velocity, normal)
-    const projectionB = project(actor.feature.body.velocity, normal)
-    const collideVelocity = Matter.Vector.sub(projectionA, projectionB)
-    const collideSpeed = Matter.Vector.magnitude(collideVelocity)
     const massA = this.feature.body.mass
-    const massB = actor.feature.body.mass
-    const collidePower = collideSpeed * massA * massB
+    const velocityA = this.feature.body.velocity
+    const massB = body.mass < 100 ? body.mass : 100
+    const velocityB = body.velocity
+    const projectionA = project(velocityA, normal)
+    const projectionB = project(velocityB, normal)
+    const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
+    const collideForce = Matter.Vector.magnitude(collideMomentum)
+    const collidePower = collideForce * massB / (massA + massB)
     const impact = collidePower * collidePower * collidePower
-    const damage = impact * 10000000
+    const damage = impact * 20
     this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()

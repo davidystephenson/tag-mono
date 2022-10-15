@@ -17,21 +17,12 @@ export default class Actor {
 
   act (): void {}
 
-  characterCollide ({ actor, delta, normal }: {
-    actor: Actor
+  collide ({ actor, body, delta, normal }: {
+    actor?: Actor
+    body: Matter.Body
     delta?: number
     normal: Matter.Vector
   }): void {}
-
-  collide ({ actor, delta, normal }: {
-    actor: Actor
-    delta?: number
-    normal: Matter.Vector
-  }): void {
-    if (actor?.feature.body.label === 'character') {
-      this.characterCollide({ actor, delta, normal })
-    }
-  }
 
   destroy (): void {
     this.feature.destroy()

@@ -1,12 +1,11 @@
 import Matter from 'matter-js'
 import Character from './Character'
-import Direction from './Direction'
 import Player from './Player'
 import Brick from './Brick'
 import Puppet from './Puppet'
 import Stage from './Stage'
 import Waypoint from './Waypoint'
-import Controls, { STILL } from '../shared/controls'
+import Controls, { getRadiansControls, STILL } from '../shared/controls'
 import { vectorToPoint } from '../shared/math'
 import { VISION_HEIGHT, VISION_WIDTH } from '../shared/VISION'
 import { getDistance, whichMin, getAngle, getAngleDifference, whichMax } from './math'
@@ -72,16 +71,16 @@ export default class Bot extends Character {
   }
 
   chooseControls (): Partial<Controls> {
-    const direction = this.chooseDirection()
-    if (direction == null) {
+    const target = this.chooseDirection()
+    if (target == null) {
       return STILL
     }
-    const controls = direction.getControls()
-
+    const radians = Matter.Vector.angle(this.feature.body.position, target)
+    const controls = getRadiansControls(radians)
     return controls
   }
 
-  chooseDirection (): Direction | null {
+  chooseDirection (): Matter.Vector | null {
     if (this.stage.it == null) {
       return null
     }
@@ -108,8 +107,7 @@ export default class Bot extends Character {
         enemy.pursuer = this
         const point = vectorToPoint(enemy.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
-        const debugColor = this.stage.debugItChoice ? 'red' : undefined
-        return this.getDirection({ end: point, velocity: enemy.feature.body.velocity, color: debugColor })
+        return point
       } else {
         this.blocked = this.isBlocked()
         const trapped = this.blocked && (bored || stuck || arriving)
@@ -131,8 +129,7 @@ export default class Bot extends Character {
     return this.followPath(debug)
   }
 
-  explore (debug = this.stage.debugWander): Direction | null {
-    const debugColor = debug ? 'tan' : undefined
+  explore (debug = this.stage.debugWander): Matter.Vector | null {
     const inRangeHeadings = this.headings.filter(heading => this.isPointInRange(heading.waypoint.position))
     const wallClearHeadings = inRangeHeadings.filter(heading => {
       return this.stage.raycast.isPointClear({
@@ -159,7 +156,7 @@ export default class Bot extends Character {
     } else {
       this.setHeading({ headings: characterClearHeadings, label: 'explore' })
     }
-    return this.getDirection({ end: this.path[0], color: debugColor })
+    return this.path[0]
   }
 
   findPath ({ goal }: {
@@ -217,8 +214,7 @@ export default class Bot extends Character {
     return target
   }
 
-  flee (): Direction | null {
-    const debugColor = this.stage.debugNotItChoice ? 'orange' : undefined
+  flee (): Matter.Vector {
     if (this.stage.it == null) {
       throw new Error('Fleeing from no one')
     }
@@ -229,10 +225,10 @@ export default class Bot extends Character {
     const avoidPosition = Matter.Vector.add(itPosition, Matter.Vector.mult(itVelocity, 10))
     const avoidDirection = Matter.Vector.sub(start, avoidPosition)
     const toPoint = Matter.Vector.add(start, avoidDirection)
-    return this.getDirection({ end: toPoint, color: debugColor })
+    return toPoint
   }
 
-  followPath (debug?: boolean): Direction | null {
+  followPath (debug?: boolean): Matter.Vector | null {
     const debugging = debug === true || this.stage.debugPathing
     if (debugging) {
       const originIndex = this.path.length - 1
@@ -249,11 +245,9 @@ export default class Bot extends Character {
     if (target == null) {
       const target = this.findPath({ goal: this.path[0] })
       if (target == null) return this.loseWay()
-      const debugColor = debugging ? 'red' : undefined
-      return this.getDirection({ end: target, color: debugColor })
+      return target
     } else {
-      const debugColor = debug === true ? 'green' : undefined
-      return this.getDirection({ end: target, color: debugColor })
+      return target
     }
   }
 
@@ -767,14 +761,13 @@ export default class Bot extends Character {
     this.pathTime = Date.now()
   }
 
-  unblock (): Direction | null {
+  unblock (): Matter.Vector | null {
     const unblockPoint = this.getUnblockPoint()
     if (unblockPoint == null) {
       return this.loseWay()
     }
     this.setPath({ path: [unblockPoint], label: 'unblock' })
-    const debugColor = this.stage.debugNotItChoice ? 'limegreen' : undefined
-    return this.getDirection({ end: this.path[0], color: debugColor })
+    return unblockPoint
   }
 
   takeInput (controls: Partial<Controls>): void {
