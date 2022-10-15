@@ -14,7 +14,7 @@ const stage = new Stage({
   cornerBots: true,
   debugBotCircles: true,
   debugChase: true,
-  debugFeatures: true,
+  debugFeatures: false,
   debugItChoice: true,
   debugNotItChoice: true,
   gridBots: true,

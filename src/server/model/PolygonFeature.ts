@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import { isPointInVisionRange } from '../lib/inRange'
-import { getViewpoints } from '../../shared/math'
+import { getViewpoints } from '../math'
 import Feature from './Feature'
 
 export default class PolygonFeature extends Feature {

@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { project } from '../../shared/math'
+import { project } from '../math'
 import Feature from './Feature'
 import Stage from './Stage'
 import Actor from './Actor'

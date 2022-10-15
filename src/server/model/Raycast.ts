@@ -1,7 +1,7 @@
 import Matter from 'matter-js'
 import VISION from '../../shared/VISION'
 import Stage from './Stage'
-import { getPerpendicular, getPerpendicularSides } from '../../shared/math'
+import { getPerpendicular, getPerpendicularSides } from '../math'
 
 export default class Raycast {
   stage: Stage
