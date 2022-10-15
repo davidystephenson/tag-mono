@@ -16,6 +16,11 @@ interface Heading {
   distance: number
 }
 
+interface Profile {
+  character: Character
+  distance: number
+}
+
 export default class Bot extends Character {
   static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
   static TIME_LIMIT = 5000
@@ -83,28 +88,28 @@ export default class Bot extends Character {
     const stuck = this.isStuck()
     const bored = this.path.length === 0
     const arriving = !bored && this.isPointClose({ point: this.path[0], limit: 15 })
+    const profiles: Profile[] = [] // same as Array.from
+    this.stage.characters.forEach(character => {
+      if (character === this) return
+      if (isIt && !character.ready) return
+      if (!isIt && this.stage.it !== character) return
+      const distance = this.getDistance(character.feature.body.position)
+      profiles.push({ character, distance })
+    })
+    profiles.sort((a, b) => a.distance - b.distance)
+    const enemy = profiles.find(profile => {
+      const isVisible = this.isFeatureVisible(profile.character.feature)
+      return isVisible
+    })?.character
 
-    if (isIt) {
-      const visibleCharacters: Character[] = []
-      this.stage.characters.forEach(character => {
-        const isVisible =
-          character !== this &&
-          character.ready &&
-          this.isFeatureVisible(character.feature)
-        if (isVisible) visibleCharacters.push(character)
-      })
-      if (visibleCharacters.length > 0) {
-        const distances = visibleCharacters.map(character => this.getDistance(character.feature.body.position))
-        const close = whichMin(visibleCharacters, distances)
-        close.pursuer = this
-        const point = vectorToPoint(close.feature.body.position)
+    if (enemy != null) {
+      if (isIt) {
+        enemy.pursuer = this
+        const point = vectorToPoint(enemy.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
         const debugColor = this.stage.debugItChoice ? 'red' : undefined
-        return this.getDirection({ end: point, velocity: close.feature.body.velocity, color: debugColor })
-      }
-    } else {
-      const itVisible = this.isFeatureVisible(this.stage.it.feature)
-      if (itVisible) {
+        return this.getDirection({ end: point, velocity: enemy.feature.body.velocity, color: debugColor })
+      } else {
         this.blocked = this.isBlocked()
         const trapped = this.blocked && (bored || stuck || arriving)
         if (trapped) {
@@ -113,10 +118,10 @@ export default class Bot extends Character {
         if (this.pathLabel !== 'unblock') {
           return this.flee()
         }
-      } else {
-        this.blocked = false
-        this.unblockTries = undefined
       }
+    } else if (!isIt) {
+      this.blocked = false
+      this.unblockTries = undefined
     }
     if (stuck || bored || arriving) {
       return this.explore()
@@ -289,19 +294,6 @@ export default class Bot extends Character {
     if (this.unblockTries == null) this.unblockTries = {}
     this.unblockTries[mostDifferent.id] = true
     return mostDifferent.position
-  }
-
-  getOpenCharacters (): Character[] {
-    const characters = this.stage.characters.values()
-    const visibleCharacters = []
-    for (const character of characters) {
-      const isVisible =
-        character !== this &&
-        character.ready &&
-        this.isFeatureVisible(character.feature)
-      if (isVisible) visibleCharacters.push(character)
-    }
-    return visibleCharacters
   }
 
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {

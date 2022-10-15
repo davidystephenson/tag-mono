@@ -103,6 +103,7 @@ export default class Stage {
     stepTimeLimit = 35,
     town = false,
     townBots = false,
+    wallBots = false,
     waypointBots = false,
     waypointBricks = false,
     wildBricks = false
@@ -136,6 +137,7 @@ export default class Stage {
     stepTimeLimit?: number
     town?: boolean
     townBots?: boolean
+    wallBots?: boolean
     waypointBots?: boolean
     waypointBricks?: boolean
     wildBricks?: boolean
@@ -221,6 +223,9 @@ export default class Stage {
         new Wall({ x: 300, y: 1300, width: 800, height: 200, stage: this }),
         new Wall({ x: -1250, y: 1300, width: 200, height: 50, stage: this })
       )
+    }
+    if (wallBots) {
+      this.walls.forEach(wall => wall.spawnBots())
     }
     const innerSize = size - Character.MARGIN * 2
     this.xFactor = 2

@@ -35,11 +35,32 @@ export default class CircleFeature extends Feature {
     })
   }
 
-  isClear ({ center, radius }: {
+  isInLine ({ center, debug, radius }: {
     center: Matter.Vector
+    debug?: boolean
     radius: number
   }): boolean {
-    return this.isVisible({ center, radius })
+    return this.stage.raycast.isCircleShown({
+      debug,
+      obstacles: this.stage.scenery,
+      end: this.body.position,
+      endRadius: this.radius,
+      start: center,
+      startRadius: radius
+    })
+  }
+
+  isInRange ({ point }: {
+    point: Matter.Vector
+  }): boolean {
+    const arrow = Matter.Vector.sub(point, this.body.position)
+    const direction = Matter.Vector.normalise(arrow)
+    const magnified = Matter.Vector.mult(direction, this.radius)
+    const closest = Matter.Vector.add(this.body.position, magnified)
+    const inRange = isPointInRange({
+      start: point, end: closest, xRange: VISION.width, yRange: VISION.height
+    })
+    return inRange
   }
 
   isVisible ({ center, debug, radius }: {
@@ -47,13 +68,7 @@ export default class CircleFeature extends Feature {
     debug?: boolean
     radius: number
   }): boolean {
-    const arrow = Matter.Vector.sub(center, this.body.position)
-    const direction = Matter.Vector.normalise(arrow)
-    const magnified = Matter.Vector.mult(direction, this.radius)
-    const closest = Matter.Vector.add(this.body.position, magnified)
-    const inRange = isPointInRange({
-      start: center, end: closest, xRange: VISION.width, yRange: VISION.height
-    })
+    const inRange = this.isInRange({ point: center })
     if (!inRange) return false
     return this.stage.raycast.isCircleShown({
       debug,

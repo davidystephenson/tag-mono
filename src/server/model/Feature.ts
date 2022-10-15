@@ -43,9 +43,8 @@ export default class Feature {
     return Matter.Vertices.area(this.body.vertices, true)
   }
 
-  isClear ({ center, radius }: {
-    center: Matter.Vector
-    radius: number
+  isInRange ({ point }: {
+    point: Matter.Vector
   }): boolean {
     return true
   }
