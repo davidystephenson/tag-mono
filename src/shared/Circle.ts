@@ -3,8 +3,8 @@ export default class Circle {
   readonly radius: number
   readonly x: number
   readonly y: number
-  constructor ({ color = 'black', radius, x, y }: {
-    color: string
+  constructor ({ color = 'white', radius, x, y }: {
+    color?: string
     radius: number
     x: number
     y: number

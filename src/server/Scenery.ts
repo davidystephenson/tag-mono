@@ -3,6 +3,7 @@ import Feature from './Feature'
 import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
+import Bot from './Bot'
 
 export default class Scenery extends Actor {
   static BLUE = 255
@@ -28,13 +29,6 @@ export default class Scenery extends Actor {
     normal: Matter.Vector
   }): void {
     super.collide({ actor, body, delta, normal })
-    this.dent({ body, normal })
-  }
-
-  dent ({ body, normal }: {
-    body: Matter.Body
-    normal: Matter.Vector
-  }): void {
     const massA = this.feature.body.mass
     const velocityA = this.feature.body.velocity
     const massB = body.mass < 100 ? body.mass : 100
@@ -48,6 +42,9 @@ export default class Scenery extends Actor {
     const damage = impact * 10
     this.health = this.health - damage
     if (this.health <= 0) {
+      if (this.stage.it === actor) {
+        void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      }
       this.destroy()
     } else {
       const alpha = this.health / this.maximumHealth

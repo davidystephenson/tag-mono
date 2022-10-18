@@ -44,6 +44,14 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
+    if (this.stage.debugCharacters) {
+      this.stage.circle({
+        color: this.feature.body.render.strokeStyle,
+        radius: 7,
+        x: this.feature.body.position.x,
+        y: this.feature.body.position.y
+      })
+    }
     if (this.ready || this.observer) {
       const vector = { x: 0, y: 0 }
       this.moving = false
@@ -71,7 +79,11 @@ export default class Character extends Actor {
 
   beReady = (): void => {
     this.ready = true
-    this.feature.setColor({ red: 0, green: 128, blue: 0 })
+    if (this.stage.it === this) {
+      this.feature.setColor({ red: 255, green: 0, blue: 0 })
+    } else {
+      this.feature.setColor({ red: 0, green: 128, blue: 0 })
+    }
   }
 
   collide ({ actor }: { actor?: Actor }): void {
@@ -106,6 +118,11 @@ export default class Character extends Actor {
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
+  }
+
+  goOut (): void {
+    this.loseReady()
+    this.stage.timeout(2000, this.beReady)
   }
 
   isFeatureVisible (feature: Feature): boolean {
@@ -499,8 +516,7 @@ export default class Character extends Actor {
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     this.stage.characters.forEach(character => {
       if (character !== this && character.feature.isInRange({ point: this.feature.body.position })) {
-        character.loseReady()
-        this.stage.timeout(2000, character.beReady)
+        character.goOut()
       }
     })
   }

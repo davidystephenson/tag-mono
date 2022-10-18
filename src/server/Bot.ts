@@ -34,6 +34,7 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
+    this.goOut()
     this.headings = this.stage.waypoints.map((waypoint) => {
       const distance = this.getDistance(waypoint.position)
       const time = -distance
@@ -44,24 +45,6 @@ export default class Bot extends Character {
   }
 
   act (): void {
-    if (this.stage.debugBotCircles) {
-      const debugColor = this.stage.it === this
-        ? 'red'
-        : this.blocked && this.moving
-          ? 'white'
-          : this.blocked
-            ? 'orange'
-            : this.moving
-              ? 'limegreen'
-              : 'green'
-
-      this.stage.circle({
-        color: debugColor,
-        radius: 7,
-        x: this.feature.body.position.x,
-        y: this.feature.body.position.y
-      })
-    }
     const choice = this.chooseControls()
     this.takeInput(choice)
     super.act()

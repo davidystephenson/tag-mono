@@ -27,7 +27,7 @@ export default class Stage {
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
   collisionStartCount = 0
-  debugBotCircles: boolean
+  debugCharacters: boolean
   debugChase: boolean
   debugOpenWaypoints: boolean
   debugCollision: boolean
@@ -78,7 +78,7 @@ export default class Stage {
     cornerBots = false,
     country = false,
     countryBots = false,
-    debugBotCircles = false,
+    debugCharacters = false,
     debugChase = false,
     debugOpenWaypoints = false,
     debugCollision = false,
@@ -112,7 +112,7 @@ export default class Stage {
     cornerBots?: boolean
     country?: boolean
     countryBots?: boolean
-    debugBotCircles?: boolean
+    debugCharacters?: boolean
     debugChase?: boolean
     debugOpenWaypoints?: boolean
     debugCollision?: boolean
@@ -142,7 +142,7 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
-    this.debugBotCircles = debugBotCircles
+    this.debugCharacters = debugCharacters
     this.debugChase = debugChase
     this.debugOpenWaypoints = debugOpenWaypoints
     this.debugCollision = debugCollision
@@ -433,8 +433,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
   }
 
-  circle ({ color = 'black', radius, x, y }: {
-    color: string
+  circle ({ color = 'white', radius, x, y }: {
+    color?: string
     radius: number
     x: number
     y: number
