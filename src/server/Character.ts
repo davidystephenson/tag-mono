@@ -23,7 +23,7 @@ export default class Character extends Actor {
   observer = false
   pursuer?: Bot
   readonly radius: number
-  ready = true
+  ready = false
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
     green?: number

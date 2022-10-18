@@ -8,7 +8,7 @@ export default class Player extends Character {
   readonly id: string
   constructor ({
     id,
-    observer,
+    observer = false,
     radius = 15,
     stage,
     x = 0,
@@ -22,9 +22,9 @@ export default class Player extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    if (observer === true) {
-      this.observer = true
-      this.loseReady()
+    this.observer = observer
+    if (!this.observer) {
+      this.ready = true
     }
     this.id = id
     Player.players.set(this.id, this)

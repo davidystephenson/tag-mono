@@ -34,7 +34,6 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    this.goOut()
     this.headings = this.stage.waypoints.map((waypoint) => {
       const distance = this.getDistance(waypoint.position)
       const time = -distance
@@ -42,6 +41,7 @@ export default class Bot extends Character {
     })
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
+    this.goOut()
   }
 
   act (): void {
@@ -66,9 +66,6 @@ export default class Bot extends Character {
       return null
     }
     const isIt = this.stage.it === this
-    const stuck = this.isStuck()
-    const bored = this.path.length === 0
-    const arriving = !bored && this.isPointClose({ point: this.path[0], limit: 15 })
     const profiles: Profile[] = [] // same as Array.from
     this.stage.characters.forEach(character => {
       if (character === this) return
@@ -87,7 +84,7 @@ export default class Bot extends Character {
     if (enemy != null) {
       if (isIt) {
         this.blocked = this.isBlocked({ character: enemy })
-        const trapped = this.blocked && (bored || stuck || arriving)
+        const trapped = this.blocked && this.isBored()
         if (trapped) {
           return this.unblock({ character: enemy })
         }
@@ -104,7 +101,7 @@ export default class Bot extends Character {
       this.blocked = false
       this.unblockTries = undefined
     }
-    if (stuck || bored || arriving) {
+    if (this.isBored()) {
       return this.explore()
     }
     const debug = isIt ? this.stage.debugItChoice : this.stage.debugNotItChoice
@@ -227,6 +224,14 @@ export default class Bot extends Character {
     } else {
       return target
     }
+  }
+
+  isBored (): boolean {
+    const stuck = this.isStuck()
+    const confused = this.path.length === 0
+    const arriving = !confused && this.isPointClose({ point: this.path[0], limit: 15 })
+
+    return stuck || confused || arriving
   }
 
   isBlocked ({ character }: { character: Character }): boolean {
