@@ -1,6 +1,39 @@
 import Matter from 'matter-js'
 import VISION from '../shared/VISION'
 
+export function boxToTriangle ({ box, radius, scale, sign }: {
+  box: {
+    center: Matter.Vector
+    width: number
+    height: number
+  }
+  radius: number
+  scale: number
+  sign: number
+}): Matter.Vector[] {
+  console.log('boxToTriangle')
+  const scaleHeight = box.height * scale
+  const height = scaleHeight > radius * 2 ? scaleHeight : box.height
+  const scaledWidth = box.width * scale
+  const width = scaledWidth > radius * 2 ? scaledWidth : box.width
+  const halfHeight = 0.5 * height
+  const halfWidth = 0.5 * width
+  const topRight = { x: halfWidth, y: -halfHeight }
+  const botRight = { x: halfWidth, y: halfHeight }
+  const topLeft = { x: -halfWidth, y: -halfHeight }
+  const botLeft = { x: -halfWidth, y: halfHeight }
+  const weight = 0.5
+  console.log('sign', sign)
+  if (sign > 0) {
+    console.log('point left')
+    const point = { x: halfWidth, y: weight * halfHeight - (1 - weight) * halfHeight }
+    return [botLeft, topLeft, point]
+  }
+  console.log('point right')
+  const point = { x: -halfWidth, y: weight * halfHeight - (1 - weight) * halfHeight }
+  return [botRight, topRight, point]
+}
+
 export function getAngle (from: Matter.Vector, to: Matter.Vector): number {
   const angle = (Matter.Vector.angle(from, to) / Math.PI + 1) / 2
 
