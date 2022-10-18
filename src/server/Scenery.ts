@@ -17,8 +17,7 @@ export default class Scenery extends Actor {
     stage: Stage
   }) {
     super({ feature, stage })
-    const area = this.feature.getArea() / 100
-    this.health = area * area * area
+    this.health = this.feature.getArea()
     this.maximumHealth = this.health
   }
 
@@ -46,7 +45,7 @@ export default class Scenery extends Actor {
     const collideForce = Matter.Vector.magnitude(collideMomentum)
     const collidePower = collideForce * massB / (massA + massB)
     const impact = collidePower * collidePower * collidePower
-    const damage = impact * 20
+    const damage = impact * 10
     this.health = this.health - damage
     if (this.health <= 0) {
       this.destroy()

@@ -82,6 +82,7 @@ export default class Bot extends Character {
 
   chooseDirection (): Matter.Vector | null {
     if (this.stage.it == null) {
+      console.warn('No it')
       return null
     }
     const isIt = this.stage.it === this
@@ -91,8 +92,9 @@ export default class Bot extends Character {
     const profiles: Profile[] = [] // same as Array.from
     this.stage.characters.forEach(character => {
       if (character === this) return
-      if (isIt && !character.ready) return
-      if (!isIt && this.stage.it !== character) return
+      if (!isIt) {
+        if (this.stage.it !== character || !character.ready) return
+      }
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
     })
@@ -104,21 +106,21 @@ export default class Bot extends Character {
 
     if (enemy != null) {
       if (isIt) {
+        this.blocked = this.isBlocked({ character: enemy })
+        const trapped = this.blocked && (bored || stuck || arriving)
+        if (trapped) {
+          return this.unblock({ character: enemy })
+        }
+        if (this.pathLabel !== 'unblock') {
+          return this.flee({ character: enemy })
+        }
+      } else {
         enemy.pursuer = this
         const point = vectorToPoint(enemy.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
         return point
-      } else {
-        this.blocked = this.isBlocked()
-        const trapped = this.blocked && (bored || stuck || arriving)
-        if (trapped) {
-          return this.unblock()
-        }
-        if (this.pathLabel !== 'unblock') {
-          return this.flee()
-        }
       }
-    } else if (!isIt) {
+    } else if (isIt) {
       this.blocked = false
       this.unblockTries = undefined
     }
@@ -214,15 +216,11 @@ export default class Bot extends Character {
     return target
   }
 
-  flee (): Matter.Vector {
-    if (this.stage.it == null) {
-      throw new Error('Fleeing from no one')
-    }
+  flee ({ character }: { character: Character }): Matter.Vector {
     this.setPath({ path: [], label: 'flee' })
     const start = this.feature.body.position
-    const itPosition = this.stage.it.feature.body.position
-    const itVelocity = this.stage.it.feature.body.velocity
-    const avoidPosition = Matter.Vector.add(itPosition, Matter.Vector.mult(itVelocity, 10))
+    const product = Matter.Vector.mult(character.feature.body.velocity, 10)
+    const avoidPosition = Matter.Vector.add(character.feature.body.position, product)
     const avoidDirection = Matter.Vector.sub(start, avoidPosition)
     const toPoint = Matter.Vector.add(start, avoidDirection)
     return toPoint
@@ -251,11 +249,11 @@ export default class Bot extends Character {
     }
   }
 
-  isBlocked (): boolean {
-    if (this.stage.it == null) {
+  isBlocked ({ character }: { character: Character }): boolean {
+    if (character == null) {
       return false
     }
-    const vector = Matter.Vector.sub(this.feature.body.position, this.stage.it.feature.body.position)
+    const vector = Matter.Vector.sub(this.feature.body.position, character.feature.body.position)
     const direction = Matter.Vector.normalise(vector)
     const blockPoint = Matter.Vector.add(this.feature.body.position, Matter.Vector.mult(direction, 30))
     return !this.isPointWallOpen({ point: blockPoint, debug: this.stage.debugChase })
@@ -263,32 +261,6 @@ export default class Bot extends Character {
 
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
-  }
-
-  getUnblockPoint (): Matter.Vector | null {
-    const eligible = this.stage.waypoints.filter(waypoint => {
-      const tried = this.unblockTries?.[waypoint.id] === true
-      if (tried) {
-        return false
-      }
-      const reachable = this.isPointReachable({ point: waypoint.position })
-      return reachable
-    })
-    if (eligible.length === 0) return this.loseWay()
-    const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
-    if (far.length === 0) return this.loseWay()
-    if (this.stage.it == null || this.stage.it === this) {
-      throw new Error('No it to unblock from')
-    }
-    const itAngle = getAngle(this.feature.body.position, this.stage.it.feature.body.position)
-    const differences = far.map(waypoint => {
-      const angle = getAngle(this.feature.body.position, waypoint.position)
-      return getAngleDifference(angle, itAngle)
-    })
-    const mostDifferent = whichMax(far, differences)
-    if (this.unblockTries == null) this.unblockTries = {}
-    this.unblockTries[mostDifferent.id] = true
-    return mostDifferent.position
   }
 
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
@@ -660,15 +632,14 @@ export default class Bot extends Character {
         const absVerts = verts.map(vert => ({ x: vert.x + box.center.x, y: vert.y + box.center.y }))
         const center = Matter.Vertices.centre(absVerts)
         console.log('center test:', center)
-        const v = this.stage.it?.feature.body.velocity ?? { x: 0, y: 0 }
+        const v = prey.feature.body.velocity
         const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
         const maxSize = VISION_WIDTH * 0.5
         const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
         const m = even * Matter.Vector.magnitude(v)
         const z = (0.8 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
-        const velocity = this.stage.it?.feature.body.velocity ?? { x: 0, y: 0 }
-        const direction = vectorToPoint(velocity)
+        const direction = vectorToPoint(v)
         void new Puppet({
           x: center.x,
           y: center.y,
@@ -761,13 +732,31 @@ export default class Bot extends Character {
     this.pathTime = Date.now()
   }
 
-  unblock (): Matter.Vector | null {
-    const unblockPoint = this.getUnblockPoint()
-    if (unblockPoint == null) {
+  unblock ({ character }: { character: Character }): Matter.Vector | null {
+    const eligible = this.stage.waypoints.filter(waypoint => {
+      const tried = this.unblockTries?.[waypoint.id] === true
+      if (tried) {
+        return false
+      }
+      const reachable = this.isPointReachable({ point: waypoint.position })
+      return reachable
+    })
+    if (eligible.length === 0) return this.loseWay()
+    const far = eligible.filter(waypoint => !this.isPointClose({ point: waypoint.position, limit: 45 }))
+    if (far.length === 0) return this.loseWay()
+    const characterAngle = getAngle(this.feature.body.position, character.feature.body.position)
+    const differences = far.map(waypoint => {
+      const angle = getAngle(this.feature.body.position, waypoint.position)
+      return getAngleDifference(angle, characterAngle)
+    })
+    const mostDifferent = whichMax(far, differences)
+    if (this.unblockTries == null) this.unblockTries = {}
+    this.unblockTries[mostDifferent.id] = true
+    if (mostDifferent.position == null) {
       return this.loseWay()
     }
-    this.setPath({ path: [unblockPoint], label: 'unblock' })
-    return unblockPoint
+    this.setPath({ path: [mostDifferent.position], label: 'unblock' })
+    return mostDifferent.position
   }
 
   takeInput (controls: Partial<Controls>): void {

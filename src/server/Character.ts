@@ -66,9 +66,8 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
-    console.log('beReady')
     this.ready = true
-    this.feature.setColor({ red: 255, green: 0, blue: 0 })
+    this.feature.setColor({ red: 0, green: 128, blue: 0 })
   }
 
   collide ({ actor }: { actor?: Actor }): void {
@@ -134,9 +133,13 @@ export default class Character extends Actor {
       throw new Error('Already it')
     }
     predator.loseIt({ prey: this })
-    this.loseReady()
-    this.feature.setColor({ red: 255, green: 255, blue: 255 })
     this.stage.it = this
-    this.stage.timeout(5000, this.beReady)
+    this.feature.setColor({ red: 255, green: 0, blue: 0 })
+    this.stage.characters.forEach(character => {
+      if (character !== this && character.feature.isInRange({ point: this.feature.body.position })) {
+        character.loseReady()
+        this.stage.timeout(5000, character.beReady)
+      }
+    })
   }
 }
