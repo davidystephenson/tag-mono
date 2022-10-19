@@ -3,7 +3,7 @@ import Input from '../shared/Input'
 import { vectorToPoint } from '../shared/math'
 import { VISION_HEIGHT, VISION_WIDTH } from '../shared/VISION'
 import Actor from './Actor'
-import Bot from './Bot'
+import Bot, { Profile } from './Bot'
 import Brick from './Brick'
 import CircleFeature from './CircleFeature'
 import Feature from './Feature'
@@ -22,8 +22,10 @@ export default class Character extends Actor {
   moving = false
   observer = false
   pursuer?: Bot
+  quadrant?: number
+  quadrantTime?: number
   readonly radius: number
-  ready = false
+  ready = true
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
     green?: number
@@ -39,11 +41,26 @@ export default class Character extends Actor {
     this.radius = radius
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
-    if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ predator: this }), 300)
+    if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
   }
 
   act (): void {
     super.act()
+    if (this.stage.it === this) {
+      const quadrant = this.stage.getQuadrant(this.feature.body.position)
+      if (this.quadrant !== quadrant) {
+        this.quadrant = quadrant
+        this.quadrantTime = Date.now()
+      }
+      const now = Date.now()
+      if (this.quadrantTime != null && now - this.quadrantTime > 5000) {
+        void new Bot({ stage: this.stage, x: 0, y: 0 })
+        this.quadrantTime = now
+      }
+    } else {
+      this.quadrant = undefined
+      this.quadrantTime = undefined
+    }
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
@@ -87,14 +104,10 @@ export default class Character extends Actor {
   }
 
   collide ({ actor }: { actor?: Actor }): void {
-    this.checkTag({ actor })
-  }
-
-  checkTag ({ actor }: { actor?: Actor }): void {
     if (actor != null && this.stage.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
-        this.makeIt({ predator: it })
+        this.makeIt({ oldIt: it })
       }
     }
   }
@@ -118,11 +131,6 @@ export default class Character extends Actor {
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
-  }
-
-  goOut (): void {
-    this.loseReady()
-    this.stage.timeout(2000, this.beReady)
   }
 
   isFeatureVisible (feature: Feature): boolean {
@@ -153,7 +161,7 @@ export default class Character extends Actor {
     })
   }
 
-  loseIt ({ prey }: { prey: Character }): void {
+  loseIt ({ newIt }: { newIt: Character }): void {
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
       color: 'red', radius: 15, x: thisPoint.x, y: thisPoint.y
@@ -413,9 +421,9 @@ export default class Character extends Actor {
     */
     const isBoxClear = true // boxQuery.length === 0
     if (isBoxClear) {
-      console.log('prey.moving test:', prey.moving)
-      console.log('prey.blocked test:', prey.blocked)
-      const struggling = prey.moving && prey.blocked
+      console.log('prey.moving test:', newIt.moving)
+      console.log('prey.blocked test:', newIt.blocked)
+      const struggling = newIt.moving && newIt.blocked
       console.log('struggling test:', struggling)
       console.log('unscaled box test:', box)
       this.stage.circle({
@@ -454,7 +462,7 @@ export default class Character extends Actor {
         const absVerts = verts.map(vert => ({ x: vert.x + box.center.x, y: vert.y + box.center.y }))
         const center = Matter.Vertices.centre(absVerts)
         console.log('center test:', center)
-        const v = prey.feature.body.velocity
+        const v = newIt.feature.body.velocity
         const even = Math.min(box.height, box.width) / Math.max(box.height, box.width)
         const maxSize = VISION_WIDTH * 0.5
         const size = Math.min(1, speed / 4) * Math.max(box.height, box.width)
@@ -504,19 +512,41 @@ export default class Character extends Actor {
   loseReady (): void {
     this.ready = false
     this.feature.setColor({ red: 255, green: 255, blue: 255 })
+    this.stage.timeout(2000, this.beReady)
   }
 
-  makeIt ({ predator }: { predator: Character }): void {
+  makeIt ({ oldIt }: { oldIt?: Character }): void {
     if (this.stage.debugMakeIt) console.log('makeIt', this.feature.body.id)
     if (this.stage.it === this) {
-      throw new Error('Already it')
+      // throw new Error('Already it')
     }
-    predator.loseIt({ prey: this })
+    const profiles: Profile[] = []
+    this.stage.characters.forEach(character => {
+      if (character === this || character === oldIt) return
+      const distance = this.getDistance(character.feature.body.position)
+      profiles.push({ character, distance })
+    })
+    profiles.sort((a, b) => a.distance - b.distance)
+    const bystander = profiles.find(profile => {
+      const isVisible = this.isFeatureVisible(profile.character.feature)
+      return isVisible
+    })?.character
+    bystander?.destroy()
+    oldIt?.loseIt({ newIt: this })
     this.stage.it = this
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     this.stage.characters.forEach(character => {
-      if (character !== this && character.feature.isInRange({ point: this.feature.body.position })) {
-        character.goOut()
+      if (character !== this) {
+        const fromPoint = this.feature.body.position
+        const pushPoint = character.feature.body.position
+        const distance = this.getDistance(pushPoint)
+        const direction = Matter.Vector.normalise(Matter.Vector.sub(pushPoint, fromPoint))
+        const force = Matter.Vector.mult(direction, 500000 / Math.min(distance, 15) + 10000)
+        Matter.Body.applyForce(character.feature.body, pushPoint, force)
+        Matter.Body.update(character.feature.body, 0.01, 1, 0)
+        if (this.isFeatureVisible(character.feature)) {
+          character.loseReady()
+        }
       }
     })
   }

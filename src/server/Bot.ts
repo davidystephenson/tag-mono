@@ -13,7 +13,7 @@ interface Heading {
   distance: number
 }
 
-interface Profile {
+export interface Profile {
   character: Character
   distance: number
 }
@@ -41,7 +41,7 @@ export default class Bot extends Character {
     })
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
-    this.goOut()
+    this.loseReady()
   }
 
   act (): void {
@@ -66,7 +66,7 @@ export default class Bot extends Character {
       return null
     }
     const isIt = this.stage.it === this
-    const profiles: Profile[] = [] // same as Array.from
+    const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
       if (character === this) return
       if (!isIt) {
@@ -302,8 +302,8 @@ export default class Bot extends Character {
     return [botRight, topRight, point]
   }
 
-  loseIt ({ prey }: { prey: Character }): void {
-    super.loseIt({ prey })
+  loseIt ({ newIt }: { newIt: Character }): void {
+    super.loseIt({ newIt })
     this.unblockTries = undefined
     this.setPath({ path: [], label: 'reset' })
   }
@@ -326,8 +326,8 @@ export default class Bot extends Character {
     return null
   }
 
-  makeIt ({ predator }: { predator: Character }): void {
-    super.makeIt({ predator })
+  makeIt ({ oldIt }: { oldIt: Character }): void {
+    super.makeIt({ oldIt: oldIt })
     console.log('Bot.makeIt test')
     this.setPath({ path: [], label: 'reset' })
     this.blocked = false

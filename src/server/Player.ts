@@ -1,4 +1,3 @@
-import Controls, { Control, controlValues } from '../shared/controls'
 import Character from './Character'
 import Stage from './Stage'
 
@@ -23,23 +22,11 @@ export default class Player extends Character {
   }) {
     super({ x, y, radius, stage })
     this.observer = observer
-    if (!this.observer) {
-      this.ready = true
+    if (this.observer) {
+      this.ready = false
     }
     this.id = id
     Player.players.set(this.id, this)
-  }
-
-  updateControls (controls: Controls): void {
-    let key: Control
-    for (key in controls) {
-      const isControl = controlValues.has(key)
-      if (!isControl) return console.warn('Control is not a value:', key)
-      const control = controls[key]
-      const isBoolean = typeof control === 'boolean'
-      if (!isBoolean) return console.warn('Control is not a boolean:', this.feature.body.id, control)
-      this.controls[key] = control
-    }
   }
 
   act (): void {
@@ -63,5 +50,9 @@ export default class Player extends Character {
     if (this.stage.debugSpeed) {
       console.log('player speed', this.feature.body.speed)
     }
+  }
+
+  destroy (): void {
+    console.log('destroying player', this.id)
   }
 }

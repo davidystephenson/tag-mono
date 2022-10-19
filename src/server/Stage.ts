@@ -398,6 +398,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       this.actors.forEach(actor => actor.act())
+      // this.it?.makeIt({})
       const record = {
         warnings: this.warningCount,
         steps: this.stepCount,
@@ -470,13 +471,32 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
   }
 
+  getQuadrant ({ x, y }: {
+    x: number
+    y: number
+  }): 0 | 1 | 2 | 3 {
+    if (x < 0) {
+      if (y < 0) {
+        return 2
+      } else {
+        return 3
+      }
+    } else {
+      if (y < 0) {
+        return 1
+      } else {
+        return 0
+      }
+    }
+  }
+
   join (id: string): void {
     void new Player({ id, observer: false, x: -100, y: 0, stage: this })
   }
 
   leave (id: string): void {
     const player = Player.players.get(id)
-    if (this.it === player) this.oldest?.makeIt({ predator: this.oldest })
+    if (this.it === player) this.oldest?.makeIt({ oldIt: this.oldest })
     player?.destroy()
   }
 
