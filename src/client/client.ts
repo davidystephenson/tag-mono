@@ -59,6 +59,7 @@ socket.on('updateClient', message => {
     if (stateShape == null) {
       newShapes.set(messageShape.id, messageShape)
     } else {
+      stateShape.circleRadius = messageShape.circleRadius
       stateShape.x = messageShape.x
       stateShape.y = messageShape.y
       stateShape.render = messageShape.render

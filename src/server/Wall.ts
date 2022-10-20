@@ -9,8 +9,6 @@ import Waypoint from './Waypoint'
 export default class Wall extends RectangleFeature {
   readonly x: number
   readonly y: number
-  readonly width: number
-  readonly height: number
   readonly halfWidth: number
   readonly halfHeight: number
   readonly leftSide: number
@@ -36,8 +34,6 @@ export default class Wall extends RectangleFeature {
     this.body.label = 'wall'
     this.x = x
     this.y = y
-    this.width = width
-    this.height = height
     this.halfWidth = this.width / 2
     this.halfHeight = this.height / 2
     this.leftSide = this.x - this.halfWidth

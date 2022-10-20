@@ -2,7 +2,7 @@ import Matter from 'matter-js'
 import { vectorToPoint } from './math'
 
 export default class Shape {
-  readonly circleRadius?: number
+  circleRadius?: number
   deleted = false
   readonly id: number
   ivertices: Matter.Vector[]

@@ -38,10 +38,15 @@ export default class Scenery extends Actor {
     const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
     const collideForce = Matter.Vector.magnitude(collideMomentum)
     const collidePower = collideForce * massB / (massA + massB)
-    const impact = collidePower * collidePower * collidePower
+    const impact = collidePower * collidePower
     const damage = impact * 25
     this.health = this.health - damage
     if (this.health <= 0) {
+      if (actor?.feature.body.label === 'character') {
+        Matter.Body.scale(actor.feature.body, 0.9, 0.9)
+        console.log('scale', actor.feature.body.circleRadius)
+        Matter.Body.update(actor.feature.body, 0.01, 1, 0)
+      }
       if (this.stage.it === actor) {
         void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
       }

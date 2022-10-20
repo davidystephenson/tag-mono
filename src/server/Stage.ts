@@ -558,7 +558,13 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       })
     }
     const visibleFeatures = this.debugFeatures ? [...this.features.values()] : player.getVisibleFeatures()
-    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
+    const shapes = visibleFeatures.map(feature => {
+      const shape = new Shape(feature.body)
+      if (shape.id === player.feature.body.id) {
+        shape.render.strokeStyle = 'limegreen'
+      }
+      return shape
+    })
     const message = {
       shapes,
       lines: this.lines,

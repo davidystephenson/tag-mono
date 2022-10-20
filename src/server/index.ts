@@ -14,21 +14,20 @@ const stage = new Stage({
   cornerBots: false,
   debugCharacters: false,
   debugChase: false,
-  debugFeatures: false,
   debugItChoice: false,
   debugNotItChoice: false,
   gridBots: false,
   greek: true,
-  greekBots: false,
   midpointBots: false,
   townBots: false,
   wallBots: false,
   waypointBots: false,
-  waypointBricks: true,
+  waypointBricks: false,
   wildBricks: true,
   size: 3000,
   town: true
 })
+stage.paused = true
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)

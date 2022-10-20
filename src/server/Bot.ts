@@ -160,7 +160,7 @@ export default class Bot extends Character {
       return this.stage.raycast.isPointOpen({
         start: waypoint.position,
         end: goalPoint,
-        radius: this.radius,
+        radius: this.feature.getRadius(),
         obstacles: this.stage.wallBodies
       })
     })
@@ -280,10 +280,11 @@ export default class Bot extends Character {
     sign: number
   }): Matter.Vector[] {
     console.log('boxToTriangle')
+    const radius = this.feature.getRadius()
     const scaleHeight = box.height * scale
-    const height = scaleHeight > this.radius * 2 ? scaleHeight : box.height
+    const height = scaleHeight > radius * 2 ? scaleHeight : box.height
     const scaledWidth = box.width * scale
-    const width = scaledWidth > this.radius * 2 ? scaledWidth : box.width
+    const width = scaledWidth > radius * 2 ? scaledWidth : box.width
     const halfHeight = 0.5 * height
     const halfWidth = 0.5 * width
     const topRight = { x: halfWidth, y: -halfHeight }

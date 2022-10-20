@@ -24,7 +24,6 @@ export default class Character extends Actor {
   pursuer?: Bot
   quadrant?: number
   quadrantTime?: number
-  readonly radius: number
   ready = true
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
@@ -38,7 +37,6 @@ export default class Character extends Actor {
     const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
     super({ feature, stage })
-    this.radius = radius
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
@@ -136,7 +134,7 @@ export default class Character extends Actor {
   isFeatureVisible (feature: Feature): boolean {
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
-      radius: this.radius * 0.9
+      radius: this.feature.getRadius() * 0.9
     })
     return isVisible
   }
@@ -147,7 +145,11 @@ export default class Character extends Actor {
 
   isPointWallOpen ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     return this.stage.raycast.isPointOpen({
-      start: this.feature.body.position, end: point, radius: this.radius, obstacles: this.stage.wallBodies, debug
+      start: this.feature.body.position,
+      end: point,
+      radius: this.feature.getRadius(),
+      obstacles: this.stage.wallBodies,
+      debug
     })
   }
 
@@ -156,12 +158,13 @@ export default class Character extends Actor {
       debug,
       end: point,
       obstacles: this.stage.wallBodies,
-      radius: this.radius,
+      radius: this.feature.getRadius(),
       start: this.feature.body.position
     })
   }
 
   loseIt ({ newIt }: { newIt: Character }): void {
+    const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
       color: 'red', radius: 15, x: thisPoint.x, y: thisPoint.y
@@ -224,7 +227,7 @@ export default class Character extends Actor {
       y: farthestSidePoint.y
     })
     const horizontal = [1, 3].includes(sideIndex)
-    const box = { center: thisPoint, height: 2 * this.radius, width: 2 * this.radius }
+    const box = { center: thisPoint, height: 2 * radius, width: 2 * radius }
     const visibleFeatures = this.getVisibleFeatures()
     const visibleBodies = visibleFeatures.map(feature => feature.body)
     if (horizontal) {
@@ -233,14 +236,14 @@ export default class Character extends Actor {
       if (farthestSidePoint.x > thisPoint.x) {
         console.log('right side')
         console.log('farthestSidePoint', farthestSidePoint)
-        const botNorth = { x: thisPoint.x + this.radius, y: northY }
-        const botSouth = { x: thisPoint.x + this.radius, y: southY }
+        const botNorth = { x: thisPoint.x + radius, y: northY }
+        const botSouth = { x: thisPoint.x + radius, y: southY }
         corners.push(...[botNorth, northEast, southEast, botSouth])
       }
       if (farthestSidePoint.x < thisPoint.x) {
         console.log('left side')
-        const botNorth = { x: thisPoint.x - this.radius, y: northY }
-        const botSouth = { x: thisPoint.x - this.radius, y: southY }
+        const botNorth = { x: thisPoint.x - radius, y: northY }
+        const botSouth = { x: thisPoint.x - radius, y: southY }
         corners.push(...[northWest, botNorth, botSouth, southWest])
       }
       corners.forEach(corner => this.stage.circle({
@@ -270,13 +273,13 @@ export default class Character extends Actor {
       const topsBelow = tops.filter(y => y > thisPoint.y)
       if (farthestSidePoint.x > thisPoint.x) {
         const lefts = boxQuery.map(body => body.bounds.min.x)
-        const leftsRight = lefts.filter(x => x > thisPoint.x + this.radius)
+        const leftsRight = lefts.filter(x => x > thisPoint.x + radius)
         console.log('visibleBoxQuery.length', boxQuery.length)
         console.log('leftsRight', leftsRight)
         farthestSidePoint.x = Math.min(...leftsRight, farthestSidePoint.x)
       } else {
         const rights = boxQuery.map(body => body.bounds.max.x)
-        const rightsLeft = rights.filter(x => x < thisPoint.x - this.radius)
+        const rightsLeft = rights.filter(x => x < thisPoint.x - radius)
         farthestSidePoint.x = Math.max(...rightsLeft, farthestSidePoint.x)
       }
       boxQuery.forEach(body => this.stage.circle({
@@ -287,7 +290,7 @@ export default class Character extends Actor {
       }))
       const yMin = Math.max(...bottomsAbove, northY)
       const yMax = Math.min(...topsBelow, southY)
-      const offset = Math.sign(farthestSidePoint.x - thisPoint.x) * this.radius * 1
+      const offset = Math.sign(farthestSidePoint.x - thisPoint.x) * radius * 1
       console.log('offset', offset)
       box.center = { x: 0.5 * (thisPoint.x + offset) + 0.5 * farthestSidePoint.x, y: 0.5 * yMin + 0.5 * yMax }
       box.height = (yMax - yMin) * 0.9
@@ -300,14 +303,14 @@ export default class Character extends Actor {
       const corners = []
       if (farthestSidePoint.y > thisPoint.y) {
         console.log('far point below')
-        const botEast = { x: eastX, y: thisPoint.y + this.radius }
-        const botWest = { x: westX, y: thisPoint.y + this.radius }
+        const botEast = { x: eastX, y: thisPoint.y + radius }
+        const botWest = { x: westX, y: thisPoint.y + radius }
         corners.push(...[botWest, botEast, southEast, southWest])
       }
       if (farthestSidePoint.y < thisPoint.y) {
         console.log('far point above')
-        const botEast = { x: eastX, y: thisPoint.y - this.radius }
-        const botWest = { x: westX, y: thisPoint.y - this.radius }
+        const botEast = { x: eastX, y: thisPoint.y - radius }
+        const botWest = { x: westX, y: thisPoint.y - radius }
         corners.push(...[northWest, northEast, botEast, botWest])
       }
       corners.forEach(corner => this.stage.circle({
@@ -338,13 +341,13 @@ export default class Character extends Actor {
       if (farthestSidePoint.y > thisPoint.y) {
         console.log('below case')
         const tops = boxQuery.map(body => body.bounds.min.y)
-        const topsBelow = tops.filter(y => y > thisPoint.y + this.radius)
+        const topsBelow = tops.filter(y => y > thisPoint.y + radius)
         console.log('topsBelow.length', topsBelow.length)
         farthestSidePoint.y = Math.min(...topsBelow, farthestSidePoint.y)
       } else {
         console.log('above case')
         const bottoms = boxQuery.map(body => body.bounds.max.y)
-        const bottomsAbove = bottoms.filter(y => y < thisPoint.y - this.radius)
+        const bottomsAbove = bottoms.filter(y => y < thisPoint.y - radius)
         farthestSidePoint.y = Math.max(...bottomsAbove, farthestSidePoint.y)
       }
       boxQuery.forEach(body => this.stage.circle({
@@ -355,7 +358,7 @@ export default class Character extends Actor {
       }))
       const xMin = Math.max(...rightsWest, westX)
       const xMax = Math.min(...leftsEast, eastX)
-      const offset = Math.sign(farthestSidePoint.y - thisPoint.y) * this.radius
+      const offset = Math.sign(farthestSidePoint.y - thisPoint.y) * radius
       box.center = { x: 0.5 * xMin + 0.5 * xMax, y: 0.5 * (thisPoint.y + offset) + 0.5 * farthestSidePoint.y }
       box.width = (xMax - xMin)
       box.height = Math.abs(thisPoint.y + offset - farthestSidePoint.y) * 0.9
@@ -378,13 +381,13 @@ export default class Character extends Actor {
       })
     })
     const boxArea = box.width * box.height
-    const minimumArea = this.radius * 2 * this.radius * 2
+    const minimumArea = radius * 2 * radius * 2
     console.log('area:', boxArea, 'minimum:', minimumArea)
     if (boxArea < minimumArea) {
       console.log('small box:', box)
 
-      box.width = this.radius * 2
-      box.height = this.radius * 2
+      box.width = radius * 2
+      box.height = radius * 2
     }
     const margin = 1500 - Character.MARGIN
     if (box.center.x < -margin) {
@@ -457,7 +460,7 @@ export default class Character extends Actor {
         console.log('boxHeight', boxHeight)
         console.log('boxWidth', boxWidth)
         */
-        const verts = boxToTriangle({ box, radius: this.radius, scale, sign: Math.sign(this.feature.body.position.x - box.center.x) })
+        const verts = boxToTriangle({ box, radius: radius, scale, sign: Math.sign(this.feature.body.position.x - box.center.x) })
         console.log('verts test:', verts)
         const absVerts = verts.map(vert => ({ x: vert.x + box.center.x, y: vert.y + box.center.y }))
         const center = Matter.Vertices.centre(absVerts)
@@ -483,8 +486,8 @@ export default class Character extends Actor {
         const scale = speed === 0 ? 1 : Math.min(1, speed / 2)
         const scaledWidth = box.width * scale
         const scaledHeight = box.height * scale
-        const brickWidth = scaledWidth > this.radius * 2 ? scaledWidth : box.width
-        const brickHeight = scaledHeight > this.radius * 2 ? scaledHeight : box.height
+        const brickWidth = scaledWidth > radius * 2 ? scaledWidth : box.width
+        const brickHeight = scaledHeight > radius * 2 ? scaledHeight : box.height
         /*
         const boxWidth = horizontal
           ? Math.sign(this.feature.body.position.x - box.center.x) * 0.5 * box.width * (1 - scale)
@@ -506,13 +509,13 @@ export default class Character extends Actor {
       this.stage.paused = true
     }
     this.blocked = false
-    this.feature.setColor({ red: 0, green: 128, blue: 0 })
+    this.loseReady()
   }
 
   loseReady (): void {
     this.ready = false
     this.feature.setColor({ red: 255, green: 255, blue: 255 })
-    this.stage.timeout(2000, this.beReady)
+    setTimeout(this.beReady, 2000)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
@@ -536,17 +539,16 @@ export default class Character extends Actor {
     this.stage.it = this
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     this.stage.characters.forEach(character => {
-      if (character !== this) {
+      if (character !== this && this.isFeatureVisible(character.feature)) {
         const fromPoint = this.feature.body.position
         const pushPoint = character.feature.body.position
         const distance = this.getDistance(pushPoint)
         const direction = Matter.Vector.normalise(Matter.Vector.sub(pushPoint, fromPoint))
-        const force = Matter.Vector.mult(direction, 500000 / Math.min(distance, 15) + 10000)
+        const power = this.stage.engine.timing.timestamp < 1000 ? 0 : 2000000 / Math.max(distance, 30)
+        const force = Matter.Vector.mult(direction, power)
         Matter.Body.applyForce(character.feature.body, pushPoint, force)
         Matter.Body.update(character.feature.body, 0.01, 1, 0)
-        if (this.isFeatureVisible(character.feature)) {
-          character.loseReady()
-        }
+        character.loseReady()
       }
     })
   }
