@@ -6,6 +6,7 @@ import Waypoint from './Waypoint'
 import Controls, { getRadiansControls, STILL } from '../shared/controls'
 import { vectorToPoint } from '../shared/math'
 import { getDistance, whichMin, getAngle, getAngleDifference, whichMax } from './math'
+import Scenery from './Scenery'
 
 interface Heading {
   waypoint: Waypoint
@@ -303,7 +304,7 @@ export default class Bot extends Character {
     return [botRight, topRight, point]
   }
 
-  loseIt ({ newIt }: { newIt: Character }): void {
+  loseIt ({ newIt }: { newIt: Character }): Scenery {
     this.unblockTries = undefined
     this.setPath({ path: [], label: 'reset' })
     return super.loseIt({ newIt })

@@ -9,6 +9,7 @@ import CircleFeature from './CircleFeature'
 import Feature from './Feature'
 import { boxToTriangle, getDistance, isPointInVisionRange } from './math'
 import Puppet from './Puppet'
+import Scenery from './Scenery'
 import Stage from './Stage'
 
 export default class Character extends Actor {
@@ -163,7 +164,9 @@ export default class Character extends Actor {
     })
   }
 
-  loseIt ({ newIt }: { newIt: Character }): void {
+  loseIt ({ newIt }: { newIt: Character }): Scenery {
+    this.blocked = false
+    this.loseReady()
     const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
@@ -473,7 +476,7 @@ export default class Character extends Actor {
         const z = (0.8 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
         const direction = vectorToPoint(v)
-        void new Puppet({
+        return new Puppet({
           x: center.x,
           y: center.y,
           direction,
@@ -496,7 +499,7 @@ export default class Character extends Actor {
         // const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
         console.log('brickWidth', brickWidth)
         console.log('brickHeight', brickHeight)
-        void new Brick({
+        return new Brick({
           x: box.center.x,
           y: box.center.y,
           width: brickWidth,
@@ -505,11 +508,9 @@ export default class Character extends Actor {
         })
       }
     } else {
-      console.log('unclear test')
       this.stage.paused = true
+      throw new Error('Unclear scenery')
     }
-    this.blocked = false
-    this.loseReady()
   }
 
   loseReady (): void {
