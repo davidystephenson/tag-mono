@@ -59,6 +59,7 @@ export default class Stage {
   scenery: Matter.Body[] = []
   stepCount = 0
   stepTimeLimit: number
+  spawnTime: number
   timers = new Map<number, [number, () => void]>()
   totalBodyCount = 0
   totalCollisionCount = 0
@@ -142,6 +143,7 @@ export default class Stage {
     waypointBricks?: boolean
     wildBricks?: boolean
   }) {
+    this.spawnTime = Date.now()
     this.debugCharacters = debugCharacters
     this.debugChase = debugChase
     this.debugOpenWaypoints = debugOpenWaypoints
@@ -398,7 +400,13 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       this.actors.forEach(actor => actor.act())
-      // this.it?.makeIt({})
+      const now = Date.now()
+      const spawnDifference = now - this.spawnTime
+      const spawnLimit = this.getSpawnLimit()
+      if (spawnDifference > spawnLimit) {
+        void new Bot({ x: 0, y: 0, stage: this })
+        this.spawnTime = now
+      }
       const record = {
         warnings: this.warningCount,
         steps: this.stepCount,
@@ -471,23 +479,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
   }
 
-  getQuadrant ({ x, y }: {
-    x: number
-    y: number
-  }): 0 | 1 | 2 | 3 {
-    if (x < 0) {
-      if (y < 0) {
-        return 2
-      } else {
-        return 3
-      }
-    } else {
-      if (y < 0) {
-        return 1
-      } else {
-        return 0
-      }
-    }
+  getSpawnLimit (): number {
+    return this.characters.size * 500
   }
 
   join (id: string): void {

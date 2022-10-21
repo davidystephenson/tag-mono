@@ -30,5 +30,8 @@ export default class Actor {
     this.stage.actors.delete(this.feature.body.id)
   }
 
-  loseReady ({ scenery }: { scenery?: Scenery }): void {}
+  loseReady ({ scenery, time }: {
+    scenery?: Scenery
+    time?: number
+  }): void {}
 }

@@ -40,8 +40,7 @@ export default class Scenery extends Actor {
       const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
       const collideForce = Matter.Vector.magnitude(collideMomentum)
       const collidePower = collideForce * massB / (massA + massB)
-      const impact = collidePower
-      const damage = impact * 25
+      const damage = collidePower * 50
       this.health = this.health - damage
       if (this.health <= 0) {
         if (this.stage.it === actor) {

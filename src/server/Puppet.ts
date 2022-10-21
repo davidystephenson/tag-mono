@@ -1,5 +1,6 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../shared/math'
+import Actor from './Actor'
 import Scenery from './Scenery'
 import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'
@@ -47,5 +48,14 @@ export default class Puppet extends Scenery {
       const magnified = Matter.Vector.mult(this.direction, this.force)
       Matter.Body.applyForce(this.feature.body, this.feature.body.position, magnified)
     }
+  }
+
+  collide ({ actor, body, delta, normal }: {
+    actor?: Actor
+    body: Matter.Body
+    delta?: number
+    normal: Matter.Vector
+  }): void {
+    if (body.label !== 'wall') return super.collide({ actor, body, delta, normal })
   }
 }

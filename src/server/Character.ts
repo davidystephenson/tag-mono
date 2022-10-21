@@ -3,7 +3,7 @@ import Input from '../shared/Input'
 import { vectorToPoint } from '../shared/math'
 import { VISION_HEIGHT, VISION_WIDTH } from '../shared/VISION'
 import Actor from './Actor'
-import Bot, { Profile } from './Bot'
+import { Profile } from './Bot'
 import Brick from './Brick'
 import CircleFeature from './CircleFeature'
 import Feature from './Feature'
@@ -23,8 +23,6 @@ export default class Character extends Actor {
   isPlayer = false
   moving = false
   observer = false
-  quadrant?: number
-  quadrantTime?: number
   ready = true
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
@@ -45,21 +43,6 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    if (this.stage.it === this) {
-      const quadrant = this.stage.getQuadrant(this.feature.body.position)
-      if (this.quadrant !== quadrant) {
-        this.quadrant = quadrant
-        this.quadrantTime = Date.now()
-      }
-      const now = Date.now()
-      if (this.quadrantTime != null && now - this.quadrantTime > 5000) {
-        void new Bot({ stage: this.stage, x: 0, y: 0 })
-        this.quadrantTime = now
-      }
-    } else {
-      this.quadrant = undefined
-      this.quadrantTime = undefined
-    }
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
@@ -181,6 +164,7 @@ export default class Character extends Actor {
 
   loseIt ({ newIt }: { newIt: Character }): Scenery {
     this.blocked = false
+    this.loseReady({})
     const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
@@ -526,8 +510,9 @@ export default class Character extends Actor {
     }
   }
 
-  loseReady ({ scenery }: {
+  loseReady ({ scenery, time = 2000 }: {
     scenery?: Scenery
+    time?: number
   }): void {
     super.loseReady({ scenery })
     this.ready = false
@@ -535,7 +520,7 @@ export default class Character extends Actor {
     const ready = (): void => {
       this.beReady({ scenery })
     }
-    setTimeout(ready, 2000)
+    setTimeout(ready, time)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
@@ -557,6 +542,8 @@ export default class Character extends Actor {
     })?.character
     bystander?.destroy()
     this.stage.it = this
+    const spawnLimit = this.stage.getSpawnLimit()
+    this.stage.spawnTime = this.stage.spawnTime + spawnLimit
     const radius = this.feature.getRadius()
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
@@ -573,12 +560,13 @@ export default class Character extends Actor {
           feature.body.id !== scenery?.feature.body.id &&
           !feature.body.isStatic
         ) {
-          const area = this.feature.getArea()
-          const featureArea = feature.getArea()
-          if (featureArea >= area) {
+          const distance = this.getDistance(feature.body.position)
+          const pushable = feature.body.label === 'character'
+            ? this.isFeatureVisible(feature)
+            : feature.getArea() > this.feature.getArea()
+          if (pushable) {
             const fromPoint = this.feature.body.position
             const pushPoint = feature.body.position
-            const distance = this.getDistance(pushPoint)
             if (distance <= 0) throw new Error('Push point intersection')
             const difference = Matter.Vector.sub(pushPoint, fromPoint)
             const direction = Matter.Vector.normalise(difference)
@@ -590,7 +578,8 @@ export default class Character extends Actor {
           }
           if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
             const actor = this.stage.actors.get(feature.body.id)
-            actor?.loseReady({ scenery })
+            const time = 5000 / (distance / 30)
+            actor?.loseReady({ scenery, time })
           }
         }
       })
