@@ -550,6 +550,9 @@ export default class Character extends Actor {
     bystander?.destroy()
     const scenery = oldIt?.loseIt({ newIt: this })
     this.stage.it = this
+    const radius = this.feature.getRadius()
+    const needed = 15 / radius
+    Matter.Body.scale(this.feature.body, needed, needed)
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     this.stage.characters.forEach(character => {
       if (character !== this && this.isFeatureVisible(character.feature)) {
