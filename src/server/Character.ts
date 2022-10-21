@@ -543,11 +543,12 @@ export default class Character extends Actor {
     })
     profiles.sort((a, b) => a.distance - b.distance)
     const bystander = profiles.find(profile => {
+      if (profile.character.isPlayer) return false
       const isVisible = this.isFeatureVisible(profile.character.feature)
       return isVisible
     })?.character
     bystander?.destroy()
-    oldIt?.loseIt({ newIt: this })
+    const scenery = oldIt?.loseIt({ newIt: this })
     this.stage.it = this
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     this.stage.characters.forEach(character => {
