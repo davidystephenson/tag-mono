@@ -28,4 +28,6 @@ export default class Actor {
     this.feature.destroy()
     this.stage.actors.delete(this.feature.body.id)
   }
+
+  loseReady (): void {}
 }

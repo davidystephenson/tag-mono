@@ -513,6 +513,7 @@ export default class Character extends Actor {
   }
 
   loseReady (): void {
+    super.loseReady()
     this.ready = false
     this.feature.setColor({ red: 255, green: 255, blue: 255 })
     setTimeout(this.beReady, 2000)
