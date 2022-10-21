@@ -42,7 +42,7 @@ export default class Bot extends Character {
     })
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
-    this.loseReady()
+    this.loseReady({})
   }
 
   act (): void {

@@ -93,12 +93,17 @@ export default class Character extends Actor {
     }
   }
 
-  beReady = (): void => {
+  beReady = ({ scenery }: {
+    scenery?: Scenery
+  }): void => {
     this.ready = true
     if (this.stage.it === this) {
       this.feature.setColor({ red: 255, green: 0, blue: 0 })
     } else {
       this.feature.setColor({ red: 0, green: 128, blue: 0 })
+    }
+    if (scenery != null) {
+      scenery.spawning = false
     }
   }
 
@@ -176,7 +181,6 @@ export default class Character extends Actor {
 
   loseIt ({ newIt }: { newIt: Character }): Scenery {
     this.blocked = false
-    this.loseReady()
     const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
@@ -518,16 +522,20 @@ export default class Character extends Actor {
         })
       }
     } else {
-      this.stage.paused = true
       throw new Error('Unclear scenery')
     }
   }
 
-  loseReady (): void {
-    super.loseReady()
+  loseReady ({ scenery }: {
+    scenery?: Scenery
+  }): void {
+    super.loseReady({ scenery })
     this.ready = false
     this.feature.setColor({ red: 255, green: 255, blue: 255 })
-    setTimeout(this.beReady, 2000)
+    const ready = (): void => {
+      this.beReady({ scenery })
+    }
+    setTimeout(ready, 2000)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
@@ -548,25 +556,44 @@ export default class Character extends Actor {
       return isVisible
     })?.character
     bystander?.destroy()
-    const scenery = oldIt?.loseIt({ newIt: this })
     this.stage.it = this
     const radius = this.feature.getRadius()
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
-    const inRangeFeatures = this.getInRangeFeatures()
-    inRangeFeatures.forEach(feature => {
-      if (feature.body.id !== this.feature.body.id && feature.body.id !== scenery?.feature.body.id) {
-        const fromPoint = this.feature.body.position
-        const pushPoint = feature.body.position
-        const distance = this.getDistance(pushPoint)
-        const direction = Matter.Vector.normalise(Matter.Vector.sub(pushPoint, fromPoint))
-        const power = this.stage.engine.timing.timestamp < 1000 ? 0 : 2000000 / Math.max(distance, 30)
-        const force = Matter.Vector.mult(direction, power)
-        Matter.Body.applyForce(feature.body, pushPoint, force)
-        Matter.Body.update(feature.body, 0.01, 1, 0)
-        // character.loseReady()
-      }
-    })
+    const scenery = oldIt?.loseIt({ newIt: this })
+    if (scenery != null) {
+      scenery.spawning = true
+    }
+    if (this.stage.engine.timing.timestamp > 1000) {
+      const inRangeFeatures = this.getInRangeFeatures()
+      inRangeFeatures.forEach(feature => {
+        if (
+          feature.body.id !== this.feature.body.id &&
+          feature.body.id !== scenery?.feature.body.id &&
+          !feature.body.isStatic
+        ) {
+          const area = this.feature.getArea()
+          const featureArea = feature.getArea()
+          if (featureArea >= area) {
+            const fromPoint = this.feature.body.position
+            const pushPoint = feature.body.position
+            const distance = this.getDistance(pushPoint)
+            if (distance <= 0) throw new Error('Push point intersection')
+            const difference = Matter.Vector.sub(pushPoint, fromPoint)
+            const direction = Matter.Vector.normalise(difference)
+            const power = 2000000 / distance
+            const force = Matter.Vector.mult(direction, power)
+            console.log('force test:', force)
+            Matter.Body.applyForce(feature.body, pushPoint, force)
+            Matter.Body.update(feature.body, 0.01, 1, 0)
+          }
+          if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
+            const actor = this.stage.actors.get(feature.body.id)
+            actor?.loseReady({ scenery })
+          }
+        }
+      })
+    }
   }
 }

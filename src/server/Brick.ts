@@ -1,4 +1,4 @@
-import Crate from './Crate'
+import RectangleFeature from './RectangleFeature'
 import Scenery from './Scenery'
 import Stage from './Stage'
 
@@ -26,7 +26,10 @@ export default class Brick extends Scenery {
     x: number
     y: number
   }) {
-    const brick = new Crate({ angle, blue, density, green, height, red, stage, width, x, y })
-    super({ feature: brick, stage })
+    const feature = new RectangleFeature({
+      blue, density, green, height, red, stage, width, x, y
+    })
+    feature.body.label = 'brick'
+    super({ feature, stage })
   }
 }

@@ -13,6 +13,7 @@ export default class Scenery extends Actor {
 
   health: number
   readonly maximumHealth: number
+  spawning = false
   constructor ({ feature, stage }: {
     feature: Feature
     stage: Stage
@@ -29,28 +30,30 @@ export default class Scenery extends Actor {
     normal: Matter.Vector
   }): void {
     super.collide({ actor, body, delta, normal })
-    const massA = this.feature.body.mass
-    const velocityA = this.feature.body.velocity
-    const massB = body.mass < 100 ? body.mass : 100
-    const velocityB = body.velocity
-    const projectionA = project(velocityA, normal)
-    const projectionB = project(velocityB, normal)
-    const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
-    const collideForce = Matter.Vector.magnitude(collideMomentum)
-    const collidePower = collideForce * massB / (massA + massB)
-    const impact = collidePower * collidePower
-    const damage = impact * 25
-    this.health = this.health - damage
-    if (this.health <= 0) {
-      if (this.stage.it === actor) {
-        void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
-      } else if (actor?.feature.body.label === 'character') {
-        Matter.Body.scale(actor.feature.body, 0.9, 0.9)
+    if (!this.spawning) {
+      const massA = this.feature.body.mass
+      const velocityA = this.feature.body.velocity
+      const massB = body.mass < 100 ? body.mass : 100
+      const velocityB = body.velocity
+      const projectionA = project(velocityA, normal)
+      const projectionB = project(velocityB, normal)
+      const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
+      const collideForce = Matter.Vector.magnitude(collideMomentum)
+      const collidePower = collideForce * massB / (massA + massB)
+      const impact = collidePower
+      const damage = impact * 25
+      this.health = this.health - damage
+      if (this.health <= 0) {
+        if (this.stage.it === actor) {
+          void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
+        } else if (actor?.feature.body.label === 'character') {
+          Matter.Body.scale(actor.feature.body, 0.9, 0.9)
+        }
+        this.destroy()
+      } else {
+        const alpha = this.health / this.maximumHealth
+        this.feature.setColor({ alpha })
       }
-      this.destroy()
-    } else {
-      const alpha = this.health / this.maximumHealth
-      this.feature.setColor({ alpha })
     }
   }
 }
