@@ -27,6 +27,7 @@ export default class Player extends Character {
     }
     this.id = id
     Player.players.set(this.id, this)
+    this.isPlayer = true
   }
 
   act (): void {

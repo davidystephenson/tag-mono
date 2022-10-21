@@ -20,6 +20,7 @@ export default class Character extends Actor {
   controls = new Input().controls
   declare feature: CircleFeature
   force = 0.0001
+  isPlayer = false
   moving = false
   observer = false
   quadrant?: number
