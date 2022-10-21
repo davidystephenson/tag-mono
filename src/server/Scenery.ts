@@ -49,7 +49,7 @@ export default class Scenery extends Actor {
         if (this.stage.it === actor) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         } else if (actor?.feature.body.label === 'character') {
-          Matter.Body.scale(actor.feature.body, 0.99, 0.99)
+          Matter.Body.scale(actor.feature.body, 0.95, 0.95)
         }
         this.destroy()
       } else {
