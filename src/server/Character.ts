@@ -120,6 +120,15 @@ export default class Character extends Actor {
     return getDistance(this.feature.body.position, point)
   }
 
+  getInRangeFeatures (): Feature[] {
+    const inRangeFeatures: Feature[] = []
+    this.stage.features.forEach(feature => {
+      const isInRange = this.isFeatureInRange(feature)
+      if (isInRange) inRangeFeatures.push(feature)
+    })
+    return inRangeFeatures
+  }
+
   getVisibleFeatures (): Feature[] {
     const visibleFeatures: Feature[] = []
     this.stage.features.forEach(feature => {
@@ -127,6 +136,10 @@ export default class Character extends Actor {
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
+  }
+
+  isFeatureInRange (feature: Feature): boolean {
+    return feature.isInRange({ point: this.feature.body.position })
   }
 
   isFeatureVisible (feature: Feature): boolean {
