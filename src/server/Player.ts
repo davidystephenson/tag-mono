@@ -51,8 +51,4 @@ export default class Player extends Character {
       console.log('player speed', this.feature.body.speed)
     }
   }
-
-  destroy (): void {
-    console.log('destroying player', this.id)
-  }
 }
