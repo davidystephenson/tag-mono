@@ -554,17 +554,18 @@ export default class Character extends Actor {
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
-    this.stage.characters.forEach(character => {
-      if (character !== this && this.isFeatureVisible(character.feature)) {
+    const inRangeFeatures = this.getInRangeFeatures()
+    inRangeFeatures.forEach(feature => {
+      if (feature.body.id !== this.feature.body.id && feature.body.id !== scenery?.feature.body.id) {
         const fromPoint = this.feature.body.position
-        const pushPoint = character.feature.body.position
+        const pushPoint = feature.body.position
         const distance = this.getDistance(pushPoint)
         const direction = Matter.Vector.normalise(Matter.Vector.sub(pushPoint, fromPoint))
         const power = this.stage.engine.timing.timestamp < 1000 ? 0 : 2000000 / Math.max(distance, 30)
         const force = Matter.Vector.mult(direction, power)
-        Matter.Body.applyForce(character.feature.body, pushPoint, force)
-        Matter.Body.update(character.feature.body, 0.01, 1, 0)
-        character.loseReady()
+        Matter.Body.applyForce(feature.body, pushPoint, force)
+        Matter.Body.update(feature.body, 0.01, 1, 0)
+        // character.loseReady()
       }
     })
   }
