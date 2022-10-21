@@ -304,9 +304,9 @@ export default class Bot extends Character {
   }
 
   loseIt ({ newIt }: { newIt: Character }): void {
-    super.loseIt({ newIt })
     this.unblockTries = undefined
     this.setPath({ path: [], label: 'reset' })
+    return super.loseIt({ newIt })
   }
 
   loseWay (props?: { goal?: Matter.Vector }): null {
