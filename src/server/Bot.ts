@@ -93,7 +93,6 @@ export default class Bot extends Character {
           return this.flee({ character: enemy })
         }
       } else {
-        enemy.pursuer = this
         const point = vectorToPoint(enemy.feature.body.position)
         this.setPath({ path: [point], label: 'pursue' })
         return point

@@ -22,7 +22,6 @@ export default class Character extends Actor {
   force = 0.0001
   moving = false
   observer = false
-  pursuer?: Bot
   quadrant?: number
   quadrantTime?: number
   ready = true
@@ -114,9 +113,6 @@ export default class Character extends Actor {
   destroy (): void {
     super.destroy()
     this.stage.characters.delete(this.feature.body.id)
-    if (this.pursuer != null) {
-      this.pursuer.setPath({ path: [], label: 'reset' })
-    }
   }
 
   getDistance (point: Matter.Vector): number {
