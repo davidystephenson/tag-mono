@@ -2,17 +2,10 @@ import Matter from 'matter-js'
 import Character from './Character'
 import Player from './Player'
 import Stage from './Stage'
-import Waypoint from './Waypoint'
 import Controls, { getRadiansControls, STILL } from '../shared/controls'
 import { vectorToPoint } from '../shared/math'
 import { getDistance, whichMin, getAngle, getAngleDifference, whichMax } from './math'
 import Scenery from './Scenery'
-
-interface Heading {
-  waypoint: Waypoint
-  time: number
-  distance: number
-}
 
 export interface Profile {
   character: Character
@@ -26,7 +19,6 @@ export default class Bot extends Character {
   path: Matter.Vector[] = []
   pathTime?: number
   pathLabel?: typeof Bot.pathLabels[number]
-  headings: Heading[] = []
   unblockTries?: Record<number, boolean>
   constructor ({ radius = 15, stage, x = 0, y = 0 }: {
     radius?: number
@@ -35,11 +27,6 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    this.headings = this.stage.waypoints.map((waypoint) => {
-      const distance = this.getDistance(waypoint.position)
-      const time = -distance
-      return { waypoint, time, distance }
-    })
     this.stage.botCount = this.stage.botCount + 1
     if (this.stage.oldest == null) this.stage.oldest = this
     this.loseReady({})
@@ -109,32 +96,9 @@ export default class Bot extends Character {
   }
 
   explore (debug = this.stage.debugWander): Matter.Vector | null {
-    const inRangeHeadings = this.headings.filter(heading => this.isPointInRange(heading.waypoint.position))
-    const wallClearHeadings = inRangeHeadings.filter(heading => {
-      return this.stage.raycast.isPointClear({
-        debug,
-        end: heading.waypoint.position,
-        start: this.feature.body.position,
-        obstacles: this.stage.wallBodies
-      })
-    })
-    const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
-    const characterClearHeadings = wallClearHeadings.filter((heading) => {
-      return this.stage.raycast.isPointClear({
-        debug,
-        end: heading.waypoint.position,
-        obstacles: otherCharacterBodies,
-        start: this.feature.body.position
-      })
-    }, {})
-    if (characterClearHeadings.length === 0) {
-      if (wallClearHeadings.length === 0) {
-        return this.loseWay()
-      }
-      this.setHeading({ headings: wallClearHeadings, label: 'wander' })
-    } else {
-      this.setHeading({ headings: characterClearHeadings, label: 'explore' })
-    }
+    const explorePoint = this.getExplorePoint({ debug })
+    if (explorePoint == null) return this.loseWay()
+    this.setPath({ path: [explorePoint], label: 'explore' })
     return this.path[0]
   }
 
@@ -332,26 +296,6 @@ export default class Bot extends Character {
     console.log('Bot.makeIt test')
     this.setPath({ path: [], label: 'reset' })
     this.blocked = false
-  }
-
-  setHeading ({ headings, label }: { headings: Heading[], label: string }): Heading {
-    const earlyClearHeading = headings.reduce((headingA, headingB) => {
-      if (headingA.time < headingB.time) return headingA
-      return headingB
-    })
-    const earlyClearHeadings = headings.filter(heading => heading.time === earlyClearHeading.time)
-    earlyClearHeadings[0].distance = this.getDistance(earlyClearHeadings[0].waypoint.position)
-    const farHeading = earlyClearHeadings.reduce((headingA, headingB) => {
-      headingB.distance = this.getDistance(headingB.waypoint.position)
-      if (headingA.distance > headingB.distance) {
-        return headingB
-      }
-      return headingA
-    })
-    this.headings[farHeading.waypoint.id].time = Date.now()
-    this.setPath({ path: [farHeading.waypoint.position], label: 'explore' })
-
-    return farHeading
   }
 
   setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {

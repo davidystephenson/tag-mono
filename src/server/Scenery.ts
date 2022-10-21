@@ -13,7 +13,7 @@ export default class Scenery extends Actor {
 
   health: number
   readonly maximumHealth: number
-  spawning = false
+  spawning = true
   constructor ({ feature, stage }: {
     feature: Feature
     stage: Stage
@@ -21,6 +21,9 @@ export default class Scenery extends Actor {
     super({ feature, stage })
     this.health = this.feature.getArea()
     this.maximumHealth = this.health
+    setTimeout(() => {
+      this.spawning = false
+    }, 5000)
   }
 
   collide ({ actor, body, delta, normal }: {
@@ -46,7 +49,7 @@ export default class Scenery extends Actor {
         if (this.stage.it === actor) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         } else if (actor?.feature.body.label === 'character') {
-          Matter.Body.scale(actor.feature.body, 0.9, 0.9)
+          Matter.Body.scale(actor.feature.body, 0.99, 0.99)
         }
         this.destroy()
       } else {

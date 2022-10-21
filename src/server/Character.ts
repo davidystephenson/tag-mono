@@ -11,6 +11,13 @@ import { boxToTriangle, getDistance, isPointInVisionRange } from './math'
 import Puppet from './Puppet'
 import Scenery from './Scenery'
 import Stage from './Stage'
+import Waypoint from './Waypoint'
+
+interface Heading {
+  waypoint: Waypoint
+  time: number
+  distance: number
+}
 
 export default class Character extends Actor {
   static MAXIMUM_RADIUS = 15
@@ -20,10 +27,12 @@ export default class Character extends Actor {
   controls = new Input().controls
   declare feature: CircleFeature
   force = 0.0001
+  headings: Heading[] = []
   isPlayer = false
   moving = false
   observer = false
   ready = true
+  goal?: Matter.Vector
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
     green?: number
@@ -39,6 +48,11 @@ export default class Character extends Actor {
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
+    this.headings = this.stage.waypoints.map((waypoint) => {
+      const distance = this.getDistance(waypoint.position)
+      const time = -distance
+      return { waypoint, time, distance }
+    })
   }
 
   act (): void {
@@ -76,17 +90,12 @@ export default class Character extends Actor {
     }
   }
 
-  beReady = ({ scenery }: {
-    scenery?: Scenery
-  }): void => {
+  beReady = (): void => {
     this.ready = true
     if (this.stage.it === this) {
       this.feature.setColor({ red: 255, green: 0, blue: 0 })
     } else {
       this.feature.setColor({ red: 0, green: 128, blue: 0 })
-    }
-    if (scenery != null) {
-      scenery.spawning = false
     }
   }
 
@@ -106,6 +115,54 @@ export default class Character extends Actor {
 
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
+  }
+
+  getExplorePoint ({ debug }: { debug?: boolean }): Matter.Vector | null {
+    const inRangeHeadings = this.headings.filter(heading => this.isPointInRange(heading.waypoint.position))
+    const wallClearHeadings = inRangeHeadings.filter(heading => {
+      return this.stage.raycast.isPointClear({
+        debug,
+        end: heading.waypoint.position,
+        start: this.feature.body.position,
+        obstacles: this.stage.wallBodies
+      })
+    })
+    const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
+    const characterClearHeadings = wallClearHeadings.filter((heading) => {
+      return this.stage.raycast.isPointClear({
+        debug,
+        end: heading.waypoint.position,
+        obstacles: otherCharacterBodies,
+        start: this.feature.body.position
+      })
+    }, {})
+    if (characterClearHeadings.length === 0) {
+      if (wallClearHeadings.length === 0) {
+        return null
+      }
+      return this.getHeadingPoint({ headings: wallClearHeadings, label: 'wander' })
+    } else {
+      return this.getHeadingPoint({ headings: characterClearHeadings, label: 'explore' })
+    }
+  }
+
+  getHeadingPoint ({ headings, label }: { headings: Heading[], label: string }): Matter.Vector {
+    const earlyClearHeading = headings.reduce((headingA, headingB) => {
+      if (headingA.time < headingB.time) return headingA
+      return headingB
+    })
+    const earlyClearHeadings = headings.filter(heading => heading.time === earlyClearHeading.time)
+    earlyClearHeadings[0].distance = this.getDistance(earlyClearHeadings[0].waypoint.position)
+    const farHeading = earlyClearHeadings.reduce((headingA, headingB) => {
+      headingB.distance = this.getDistance(headingB.waypoint.position)
+      if (headingA.distance > headingB.distance) {
+        return headingB
+      }
+      return headingA
+    })
+    this.headings[farHeading.waypoint.id].time = Date.now()
+
+    return farHeading.waypoint.position
   }
 
   getInRangeFeatures (): Feature[] {
@@ -510,17 +567,13 @@ export default class Character extends Actor {
     }
   }
 
-  loseReady ({ scenery, time = 2000 }: {
-    scenery?: Scenery
+  loseReady ({ time = 5000 }: {
     time?: number
   }): void {
-    super.loseReady({ scenery })
+    super.loseReady({})
     this.ready = false
     this.feature.setColor({ red: 255, green: 255, blue: 255 })
-    const ready = (): void => {
-      this.beReady({ scenery })
-    }
-    setTimeout(ready, time)
+    setTimeout(this.beReady, time)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
@@ -549,9 +602,6 @@ export default class Character extends Actor {
     Matter.Body.scale(this.feature.body, needed, needed)
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
     const scenery = oldIt?.loseIt({ newIt: this })
-    if (scenery != null) {
-      scenery.spawning = true
-    }
     if (this.stage.engine.timing.timestamp > 1000) {
       const inRangeFeatures = this.getInRangeFeatures()
       inRangeFeatures.forEach(feature => {
@@ -579,7 +629,7 @@ export default class Character extends Actor {
           if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
             const actor = this.stage.actors.get(feature.body.id)
             const time = 5000 / (distance / 30)
-            actor?.loseReady({ scenery, time })
+            actor?.loseReady({ time })
           }
         }
       })
