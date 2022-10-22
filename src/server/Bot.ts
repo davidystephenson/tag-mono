@@ -182,12 +182,10 @@ export default class Bot extends Character {
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
-      // this.stage.paused = true
-      // const target = this.findPath({ goal: this.path[0] })
-      // if (target == null) return this.loseWay()
-      // return target
-
-      return this.explore()
+      this.stage.paused = true
+      const target = this.findPath({ goal: this.path[0] })
+      if (target == null) return this.loseWay()
+      return target
     } else {
       return target
     }
