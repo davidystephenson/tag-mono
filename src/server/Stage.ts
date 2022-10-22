@@ -54,6 +54,7 @@ export default class Stage {
   oldest?: Bot
   oldTime = Date.now()
   paused = false
+  radii = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
   scenery: Matter.Body[] = []
@@ -69,7 +70,8 @@ export default class Stage {
   warningDifferenceTotal = 0
   warningTime = Date.now()
   readonly warnings10: number[] = []
-  waypoints: Waypoint[] = []
+  // waypoints: Waypoint[] = []
+  waypointGroups: Record<number, Waypoint[]> = { }
   xFactor = 2
   xSegment: number
   yFactor = 2
@@ -164,6 +166,7 @@ export default class Stage {
     this.debugWaypointLabels = debugWaypointLabels
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
+    this.radii.forEach(radius => { this.waypointGroups[radius] = [] })
     const wallSize = size * 3
     const wallProps = [
       { x: 0, y: size, width: wallSize, height: size },
@@ -242,24 +245,42 @@ export default class Stage {
       this.yFactor = this.yFactor + 1
       this.ySegment = innerSize / this.yFactor
     }
-    const gridWaypoints: Waypoint[] = []
+    const gridPoints: Matter.Vector[] = []
     for (let i = 0; i <= this.xFactor; i++) {
       for (let j = 0; j <= this.yFactor; j++) {
         const x = -innerSize / 2 + i * this.xSegment
         const y = -innerSize / 2 + j * this.ySegment
-
-        gridWaypoints.push(new Waypoint({ stage: this, x, y }))
+        gridPoints.push({ x, y })
+        this.radii.forEach(radius => {
+          void new Waypoint({ stage: this, x, y, radius })
+        })
       }
     }
-    console.log('begin navigation')
-    this.waypoints.forEach(waypoint => { waypoint.distances = this.waypoints.map(() => Infinity) })
-    console.log('setting neighbors...')
-    this.waypoints.forEach(waypoint => waypoint.setNeighbors())
-    console.log('updating distances...')
-    this.waypoints.forEach(() => this.waypoints.forEach(waypoint => waypoint.updateDistances()))
-    console.log('Wall.wall.length', this.walls.length)
-    console.log('setting paths...')
-    this.waypoints.forEach(waypoint => waypoint.setPaths())
+    this.radii.forEach(radius => {
+      console.log('Begin navigation for', radius)
+      const group = this.waypointGroups[radius]
+      if (group.length === 0) {
+        throw new Error(`No waypoints for radius ${radius}`)
+      }
+      group.forEach(waypoint => {
+        waypoint.distances = group.map(() => Infinity)
+      })
+      console.log('Setting neighbors...')
+      group.forEach(waypoint => {
+        waypoint.setNeighbors()
+        if (waypoint.neighbors.length === 0) {
+          console.log('neighbors', waypoint.id, waypoint.neighbors.length)
+          this.circle({ radius: 10, x: waypoint.x, y: waypoint.y, color: 'orange' })
+        }
+      })
+      console.log('Updating distances...')
+      group.forEach(() => group.forEach(waypoint => waypoint.updateDistances()))
+      console.log('Setting paths...')
+      group.forEach(waypoint => {
+        waypoint.setPaths()
+      })
+    })
+    /*
     console.log('debugging waypoints...')
     this.waypoints.forEach(waypoint => {
       if (this.debugWaypointLabels) {
@@ -267,6 +288,7 @@ export default class Stage {
         this.label({ text: String(waypoint.id), x: waypoint.x, y })
       }
     })
+    */
 
     console.log('navigation complete')
     if (wildBricks) {
@@ -311,17 +333,17 @@ export default class Stage {
 
     if (greekBots) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots) townWalls.forEach(wall => wall.spawnBots())
-    if (gridBots) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
+    if (gridBots) gridPoints.forEach(point => new Bot({ x: point.x, y: point.y, stage: this }))
     if (countryBots) countryWalls.forEach(wall => wall.spawnBots())
     if (waypointBots) {
-      this.waypoints.forEach(waypoint => {
-        void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
-      })
+      // this.waypoints.forEach(waypoint => {
+      //   void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
+      // })
     }
     if (waypointBricks) {
-      this.waypoints.forEach(waypoint => {
-        this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
-      })
+      // this.waypoints.forEach(waypoint => {
+      //   this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+      // })
     }
     if (cornerBots) {
       void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
@@ -389,14 +411,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         this.lines = []
         this.circles = []
         if (this.debugWaypointCircles) {
-          this.waypoints.forEach(waypoint => {
-            this.circle({
-              color: 'blue',
-              radius: 5,
-              x: waypoint.x,
-              y: waypoint.y
-            })
-          })
+          // this.waypoints.forEach(waypoint => {
+          //   this.circle({
+          //     color: 'blue',
+          //     radius: 5,
+          //     x: waypoint.x,
+          //     y: waypoint.y
+          //   })
+          // })
         }
       }
       this.actors.forEach(actor => actor.act())

@@ -145,7 +145,7 @@ const draw = function (): void {
     context.fillStyle = label.color
     context.lineWidth = 4
     context.font = '12px sans'
-    context.fillText(label.text, label.x - camera.x, label.y - camera.y)
+    context.fillText(label.text, label.x - camera.x, label.y - camera.y + 2)
   })
 }
 draw()

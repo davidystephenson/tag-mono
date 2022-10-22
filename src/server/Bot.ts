@@ -110,7 +110,8 @@ export default class Bot extends Character {
       this.path = [goalPoint]
       return goalPoint
     }
-    const visibleFromStart = this.stage.waypoints.filter(waypoint => {
+    const group = this.getGroup()
+    const visibleFromStart = this.stage.waypointGroups[group].filter(waypoint => {
       return this.isPointReachable({ point: waypoint.position })
     })
     if (visibleFromStart.length === 0) {
@@ -120,7 +121,7 @@ export default class Bot extends Character {
       return this.loseWay()
     }
 
-    const visibleFromEnd = this.stage.waypoints.filter(waypoint => {
+    const visibleFromEnd = this.stage.waypointGroups[group].filter(waypoint => {
       return this.stage.raycast.isPointOpen({
         start: waypoint.position,
         end: goalPoint,
@@ -182,7 +183,6 @@ export default class Bot extends Character {
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
     if (target == null) {
-      this.stage.paused = true
       const target = this.findPath({ goal: this.path[0] })
       if (target == null) return this.loseWay()
       return target
@@ -300,7 +300,8 @@ export default class Bot extends Character {
   }
 
   unblock ({ character }: { character: Character }): Matter.Vector | null {
-    const eligible = this.stage.waypoints.filter(waypoint => {
+    const group = this.getGroup()
+    const eligible = this.stage.waypointGroups[group].filter(waypoint => {
       const tried = this.unblockTries?.[waypoint.id] === true
       if (tried) {
         return false

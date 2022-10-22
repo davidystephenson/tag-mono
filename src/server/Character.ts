@@ -27,7 +27,7 @@ export default class Character extends Actor {
   controls = new Input().controls
   declare feature: CircleFeature
   force = 0.0001
-  headings: Heading[] = []
+  headings: Record<number, Heading[]> = {}
   isPlayer = false
   moving = false
   observer = false
@@ -48,10 +48,12 @@ export default class Character extends Actor {
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
-    this.headings = this.stage.waypoints.map((waypoint) => {
-      const distance = this.getDistance(waypoint.position)
-      const time = -distance
-      return { waypoint, time, distance }
+    this.stage.radii.forEach(radius => {
+      this.headings[radius] = this.stage.waypointGroups[radius].map((waypoint) => {
+        const distance = this.getDistance(waypoint.position)
+        const time = -distance
+        return { waypoint, time, distance }
+      })
     })
   }
 
@@ -118,7 +120,9 @@ export default class Character extends Actor {
   }
 
   getExplorePoint ({ debug }: { debug?: boolean }): Matter.Vector | null {
-    const inRangeHeadings = this.headings.filter(heading => this.isPointInRange(heading.waypoint.position))
+    const group = this.getGroup()
+    const headings = this.headings[group]
+    const inRangeHeadings = headings.filter(heading => this.isPointInRange(heading.waypoint.position))
     const wallClearHeadings = inRangeHeadings.filter(heading => {
       return this.stage.raycast.isPointClear({
         debug,
@@ -146,6 +150,13 @@ export default class Character extends Actor {
     }
   }
 
+  getGroup (): number {
+    const radius = this.feature.getRadius()
+    const ceiled = Math.ceil(radius)
+    const capped = Math.min(ceiled, Character.MAXIMUM_RADIUS)
+    return capped
+  }
+
   getHeadingPoint ({ headings, label }: { headings: Heading[], label: string }): Matter.Vector {
     const earlyClearHeading = headings.reduce((headingA, headingB) => {
       if (headingA.time < headingB.time) return headingA
@@ -160,7 +171,8 @@ export default class Character extends Actor {
       }
       return headingA
     })
-    this.headings[farHeading.waypoint.id].time = Date.now()
+    const group = this.getGroup()
+    this.headings[group][farHeading.waypoint.id].time = Date.now()
 
     return farHeading.waypoint.position
   }

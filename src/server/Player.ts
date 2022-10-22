@@ -66,18 +66,6 @@ export default class Player extends Character {
         }
       }
     }
-    if (this.stage.debugOpenWaypoints) {
-      const visible = this.stage.waypoints.filter(waypoint => {
-        return this.isPointWallOpen({ point: waypoint.position })
-      })
-      visible.forEach(waypoint => {
-        this.stage.line({
-          color: 'black',
-          end: waypoint.position,
-          start: this.feature.body.position
-        })
-      })
-    }
     if (this.stage.debugPosition) {
       console.log('player position', this.feature.body.position)
     }
