@@ -569,6 +569,35 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       labels: this.labels,
       torsoId: player.feature.body.id
     }
+    player.scores.forEach((goal, index) => {
+      const circleColor = 'rgba(255, 0, 0, 0.5)'
+      const circle = new Circle({
+        color: circleColor,
+        radius: 7.5,
+        x: goal.x,
+        y: goal.y
+      })
+      message.circles = [...message.circles, circle]
+      const label = new Label({
+        color: 'white',
+        text: String(index),
+        x: goal.x,
+        y: goal.y
+      })
+      message.labels = [...message.labels, label]
+    })
+    player.goals.forEach(goal => {
+      const circle = new Circle({ color: 'white', radius: 7.5, x: goal.x, y: goal.y })
+      message.circles = [...message.circles, circle]
+      const color = player.onTime ? 'red' : 'green'
+      const label = new Label({
+        color,
+        text: String(player.score),
+        x: goal.x,
+        y: goal.y
+      })
+      message.labels = [...message.labels, label]
+    })
     return message
   }
 }

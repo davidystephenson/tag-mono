@@ -208,12 +208,6 @@ export default class Bot extends Character {
     return !this.isPointWallOpen({ point: blockPoint, debug: this.stage.debugChase })
   }
 
-  isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
-    const distance = this.getDistance(point)
-    const close = distance < limit
-    return close
-  }
-
   isPointReachable ({ point, debug }: { point: Matter.Vector, debug?: boolean }): boolean {
     const inRange = this.isPointInRange(point)
     if (!inRange) return false

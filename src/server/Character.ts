@@ -31,8 +31,8 @@ export default class Character extends Actor {
   isPlayer = false
   moving = false
   observer = false
+  onTime = false
   ready = true
-  goal?: Matter.Vector
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
     green?: number
@@ -193,6 +193,12 @@ export default class Character extends Actor {
       radius: this.feature.getRadius() * 0.9
     })
     return isVisible
+  }
+
+  isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
+    const distance = this.getDistance(point)
+    const close = distance < limit
+    return close
   }
 
   isPointInRange (point: Matter.Vector): boolean {

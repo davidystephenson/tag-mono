@@ -144,7 +144,7 @@ const draw = function (): void {
   state.labels.forEach(label => {
     context.fillStyle = label.color
     context.lineWidth = 4
-    context.font = '10px sans'
+    context.font = '12px sans'
     context.fillText(label.text, label.x - camera.x, label.y - camera.y)
   })
 }
