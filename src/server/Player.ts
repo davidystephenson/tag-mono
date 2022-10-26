@@ -44,7 +44,8 @@ export default class Player extends Character {
       } else {
         const indexes = new Array<Number>()
         this.goals.forEach((goal, index) => {
-          const close = this.isPointClose({ point: goal, limit: 15 })
+          const limit = this.feature.getRadius() + 15
+          const close = this.isPointClose({ point: goal, limit })
           if (close) {
             this.score = this.score + 1
             void new Bot({ stage: this.stage, x: 0, y: 0 })
@@ -60,8 +61,9 @@ export default class Player extends Character {
         const now = Date.now()
         const goalDifference = now - this.goalTime
         const spawnLimit = this.stage.getSpawnLimit()
-        const goalLimit = 5000 + spawnLimit
-        if (goalDifference > goalLimit) {
+        const goalLimit = 10000 - spawnLimit
+        const limited = Math.max(goalLimit, 5000)
+        if (goalDifference > limited) {
           this.setGoal()
         }
       }
@@ -84,8 +86,10 @@ export default class Player extends Character {
     if (goal == null) {
       throw new Error('Can not set goal')
     }
-    this.goals.push(goal)
-    this.goalTime = Date.now()
-    this.onTime = true
+    const old = this.scores.find(score => score.x === goal.x && score.y === goal.y)
+    if (old == null) {
+      this.goals.push(goal)
+      this.goalTime = Date.now()
+    }
   }
 }

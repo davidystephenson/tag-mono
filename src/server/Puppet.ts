@@ -50,12 +50,25 @@ export default class Puppet extends Scenery {
     }
   }
 
-  collide ({ actor, body, delta, normal }: {
+  getScaled ({ label }: { label: string}): number {
+    switch (label) {
+      case 'wall':
+        return 0.1
+      default:
+        return 1
+    }
+  }
+
+  collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
     body: Matter.Body
     delta?: number
     normal: Matter.Vector
+    scale?: number
   }): void {
-    if (body.label !== 'wall') return super.collide({ actor, body, delta, normal })
+    const scaled = this.getScaled({ label: body.label })
+    return super.collide({
+      actor, body, delta, normal, scale: scaled
+    })
   }
 }

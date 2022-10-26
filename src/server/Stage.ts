@@ -411,14 +411,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         this.lines = []
         this.circles = []
         if (this.debugWaypointCircles) {
-          // this.waypoints.forEach(waypoint => {
-          //   this.circle({
-          //     color: 'blue',
-          //     radius: 5,
-          //     x: waypoint.x,
-          //     y: waypoint.y
-          //   })
-          // })
+          this.waypointGroups[15].forEach(waypoint => {
+            this.circle({
+              color: 'darkblue',
+              radius: 5,
+              x: waypoint.x,
+              y: waypoint.y
+            })
+          })
         }
       }
       this.actors.forEach(actor => actor.act())
@@ -506,7 +506,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   join (id: string): void {
-    void new Player({ id, observer: false, x: -100, y: 0, stage: this })
+    const point = this.it?.getExplorePoint({}) ?? { x: 0, y: 0 }
+    void new Player({ id, observer: false, x: point.x, y: point.y, stage: this })
   }
 
   leave (id: string): void {
@@ -592,9 +593,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       torsoId: player.feature.body.id
     }
     player.scores.forEach((goal, index) => {
-      const circleColor = 'rgba(255, 0, 0, 0.5)'
+      const white = 'rgba(255, 255, 255, 0.25)'
       const circle = new Circle({
-        color: circleColor,
+        color: white,
         radius: 7.5,
         x: goal.x,
         y: goal.y
@@ -602,19 +603,19 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       message.circles = [...message.circles, circle]
       const label = new Label({
         color: 'white',
-        text: String(index),
+        text: String(index + 1),
         x: goal.x,
         y: goal.y
       })
       message.labels = [...message.labels, label]
     })
     player.goals.forEach(goal => {
-      const circle = new Circle({ color: 'white', radius: 7.5, x: goal.x, y: goal.y })
+      const red = 'rgba(255, 0, 0, 0.1)'
+      const circle = new Circle({ color: red, radius: 7.5, x: goal.x, y: goal.y })
       message.circles = [...message.circles, circle]
-      const color = player.onTime ? 'red' : 'green'
       const label = new Label({
-        color,
-        text: String(player.score),
+        color: 'red',
+        text: String(player.score + 1),
         x: goal.x,
         y: goal.y
       })

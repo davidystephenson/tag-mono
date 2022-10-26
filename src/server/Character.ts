@@ -31,7 +31,6 @@ export default class Character extends Actor {
   isPlayer = false
   moving = false
   observer = false
-  onTime = false
   ready = true
   constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
@@ -101,13 +100,20 @@ export default class Character extends Actor {
     }
   }
 
-  collide ({ actor }: { actor?: Actor }): void {
+  collide ({ actor, body, delta, normal, scale }: {
+    actor?: Actor
+    body: Matter.Body
+    delta?: number
+    normal: Matter.Vector
+    scale?: number
+  }): void {
     if (actor != null && this.stage.it === actor) {
       const it = actor as Character
       if (it.ready && this.ready) {
         this.makeIt({ oldIt: it })
       }
     }
+    super.collide({ actor, body, delta, normal, scale })
   }
 
   destroy (): void {

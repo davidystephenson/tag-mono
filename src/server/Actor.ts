@@ -18,11 +18,12 @@ export default class Actor {
 
   act (): void {}
 
-  collide ({ actor, body, delta, normal }: {
+  collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
     body: Matter.Body
     delta?: number
     normal: Matter.Vector
+    scale?: number
   }): void {}
 
   destroy (): void {

@@ -144,8 +144,11 @@ const draw = function (): void {
   state.labels.forEach(label => {
     context.fillStyle = label.color
     context.lineWidth = 4
-    context.font = '12px sans'
-    context.fillText(label.text, label.x - camera.x, label.y - camera.y + 2)
+    const red = 'rgba(255, 0, 0, 0.5)'
+    console.log('label.color test:', label.color)
+    context.font = label.color === red ? '28px sans' : '14px sans'
+    const offsetY = label.color === red ? 25 + Math.random() * 10 : 0
+    context.fillText(label.text, label.x - camera.x, label.y - camera.y - offsetY + 1)
   })
 }
 draw()

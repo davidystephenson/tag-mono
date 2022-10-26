@@ -79,4 +79,8 @@ export default class Feature {
       this.stage.scenery = this.stage.scenery.filter(obstacle => obstacle.id !== this.body.id)
     }
   }
+
+  getRadius (): number {
+    throw new Error('Only circles have a radius')
+  }
 }
