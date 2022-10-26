@@ -592,32 +592,37 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       labels: this.labels,
       torsoId: player.feature.body.id
     }
-    player.scores.forEach((goal, index) => {
-      const white = 'rgba(255, 255, 255, 0.25)'
+    const scores = player.goals.filter(goal => goal.scored)
+    scores.forEach((score, index) => {
       const circle = new Circle({
-        color: white,
+        color: 'rgba(255, 255, 255, 0.25)',
         radius: 7.5,
-        x: goal.x,
-        y: goal.y
+        x: score.position.x,
+        y: score.position.y
       })
       message.circles = [...message.circles, circle]
       const label = new Label({
         color: 'white',
         text: String(index + 1),
-        x: goal.x,
-        y: goal.y
+        x: score.position.x,
+        y: score.position.y
       })
       message.labels = [...message.labels, label]
     })
-    player.goals.forEach(goal => {
-      const red = 'rgba(255, 0, 0, 0.1)'
-      const circle = new Circle({ color: red, radius: 7.5, x: goal.x, y: goal.y })
+    const goals = player.goals.filter(goal => !goal.scored)
+    goals.forEach((goal) => {
+      const circle = new Circle({
+        color: 'rgba(255, 0, 0, 0.1)',
+        radius: 7.5,
+        x: goal.position.x,
+        y: goal.position.y
+      })
       message.circles = [...message.circles, circle]
       const label = new Label({
         color: 'red',
-        text: String(player.score + 1),
-        x: goal.x,
-        y: goal.y
+        text: String(scores.length + 1),
+        x: goal.position.x,
+        y: goal.position.y
       })
       message.labels = [...message.labels, label]
     })

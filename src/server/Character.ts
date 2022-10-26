@@ -137,6 +137,16 @@ export default class Character extends Actor {
         obstacles: this.stage.wallBodies
       })
     })
+    if (debug === true) {
+      wallClearHeadings.forEach(heading => {
+        this.stage.circle({
+          color: 'yellow',
+          radius: 5,
+          x: heading.waypoint.position.x,
+          y: heading.waypoint.position.y
+        })
+      })
+    }
     const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
     const characterClearHeadings = wallClearHeadings.filter((heading) => {
       return this.stage.raycast.isPointClear({
@@ -146,13 +156,23 @@ export default class Character extends Actor {
         start: this.feature.body.position
       })
     }, {})
+    if (debug === true) {
+      characterClearHeadings.forEach(heading => {
+        this.stage.circle({
+          color: 'green',
+          radius: 5,
+          x: heading.waypoint.position.x,
+          y: heading.waypoint.position.y
+        })
+      })
+    }
     if (characterClearHeadings.length === 0) {
       if (wallClearHeadings.length === 0) {
         return null
       }
-      return this.getHeadingPoint({ headings: wallClearHeadings, label: 'wander' })
+      return this.getHeadingPoint({ headings: wallClearHeadings })
     } else {
-      return this.getHeadingPoint({ headings: characterClearHeadings, label: 'explore' })
+      return this.getHeadingPoint({ headings: characterClearHeadings })
     }
   }
 
@@ -163,14 +183,14 @@ export default class Character extends Actor {
     return capped
   }
 
-  getHeadingPoint ({ headings, label }: { headings: Heading[], label: string }): Matter.Vector {
-    const earlyClearHeading = headings.reduce((headingA, headingB) => {
+  getHeadingPoint ({ headings }: { headings: Heading[] }): Matter.Vector {
+    const earlyHeading = headings.reduce((headingA, headingB) => {
       if (headingA.time < headingB.time) return headingA
       return headingB
     })
-    const earlyClearHeadings = headings.filter(heading => heading.time === earlyClearHeading.time)
-    earlyClearHeadings[0].distance = this.getDistance(earlyClearHeadings[0].waypoint.position)
-    const farHeading = earlyClearHeadings.reduce((headingA, headingB) => {
+    const earlyHeadings = headings.filter(heading => heading.time === earlyHeading.time)
+    earlyHeadings[0].distance = this.getDistance(earlyHeadings[0].waypoint.position)
+    const farHeading = earlyHeadings.reduce((headingA, headingB) => {
       headingB.distance = this.getDistance(headingB.waypoint.position)
       if (headingA.distance > headingB.distance) {
         return headingB

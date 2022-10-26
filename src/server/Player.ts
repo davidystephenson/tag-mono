@@ -3,14 +3,17 @@ import Bot from './Bot'
 import Character from './Character'
 import Stage from './Stage'
 
+interface Goal {
+  position: Matter.Vector
+  scored: boolean
+}
+
 export default class Player extends Character {
   static players = new Map<string, Player>()
 
   readonly id: string
-  goals = new Array<Matter.Vector>()
+  goals = new Array<Goal>()
   goalTime?: number
-  readonly scores = new Array<Matter.Vector>()
-  score = 0
   constructor ({
     id,
     observer = false,
@@ -42,21 +45,15 @@ export default class Player extends Character {
       if (this.goals.length === 0 || this.goalTime == null) {
         this.setGoal()
       } else {
-        const indexes = new Array<Number>()
         this.goals.forEach((goal, index) => {
+          if (goal.scored) return
           const limit = this.feature.getRadius() + 15
-          const close = this.isPointClose({ point: goal, limit })
+          const close = this.isPointClose({ point: goal.position, limit })
           if (close) {
-            this.score = this.score + 1
+            goal.scored = true
             void new Bot({ stage: this.stage, x: 0, y: 0 })
-            this.scores.push(goal)
-            indexes.push(index)
+            this.setGoal()
           }
-        })
-
-        indexes.forEach(index => {
-          this.goals = this.goals.filter((_, i) => i !== index)
-          this.setGoal()
         })
         const now = Date.now()
         const goalDifference = now - this.goalTime
@@ -86,10 +83,12 @@ export default class Player extends Character {
     if (goal == null) {
       throw new Error('Can not set goal')
     }
-    const old = this.scores.find(score => score.x === goal.x && score.y === goal.y)
-    if (old == null) {
-      this.goals.push(goal)
+    const oldGoal = this.goals.find(oldGoal => oldGoal.position.x === goal.x && oldGoal.position.y === goal.y)
+    if (oldGoal == null) {
+      this.goals.push({ position: goal, scored: false })
       this.goalTime = Date.now()
+    } else {
+      this.stage.circle({ color: 'orange', radius: 5, x: goal.x, y: goal.y })
     }
   }
 }
