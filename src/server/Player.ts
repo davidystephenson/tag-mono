@@ -6,6 +6,7 @@ import Stage from './Stage'
 interface Goal {
   position: Matter.Vector
   scored: boolean
+  passed: boolean
 }
 
 export default class Player extends Character {
@@ -14,6 +15,7 @@ export default class Player extends Character {
   readonly id: string
   goals = new Array<Goal>()
   goalTime?: number
+  score = 0
   constructor ({
     id,
     observer = false,
@@ -55,6 +57,19 @@ export default class Player extends Character {
             this.setGoal()
           }
         })
+        const scores = this.goals.filter(goal => goal.scored)
+        const waypointsLength = this.stage.waypointGroups[15].length
+        if (scores.length > waypointsLength) {
+          throw new Error('More scores than waypoints')
+        }
+        if (scores.length === waypointsLength) {
+          this.score = this.score + waypointsLength
+          const lastGoal = this.goals[this.goals.length - 1]
+          this.goals = [lastGoal]
+          this.initializeHeadings()
+          this.setGoal()
+        }
+
         const now = Date.now()
         const goalDifference = now - this.goalTime
         const spawnLimit = this.stage.getSpawnLimit()
@@ -83,12 +98,13 @@ export default class Player extends Character {
     if (goal == null) {
       throw new Error('Can not set goal')
     }
+    this.goals.forEach(goal => { goal.passed = false })
     const oldGoal = this.goals.find(oldGoal => oldGoal.position.x === goal.x && oldGoal.position.y === goal.y)
     if (oldGoal == null) {
-      this.goals.push({ position: goal, scored: false })
+      this.goals.push({ position: goal, scored: false, passed: false })
       this.goalTime = Date.now()
     } else {
-      this.stage.circle({ color: 'orange', radius: 5, x: goal.x, y: goal.y })
+      oldGoal.passed = true
     }
   }
 }

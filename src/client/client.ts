@@ -118,7 +118,9 @@ const draw = function (): void {
       const red = upper.slice(1, 3)
       const green = upper.slice(3, 5)
       const blue = upper.slice(5, 7)
-      context.fillStyle = 'white'
+      context.fillStyle = green === 'FF' && blue === 'FF'
+        ? 'black'
+        : 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
       context.font = '10px sans'

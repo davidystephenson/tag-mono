@@ -18,6 +18,8 @@ export default class Actor {
 
   act (): void {}
 
+  beReady (): void {}
+
   collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
     body: Matter.Body

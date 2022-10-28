@@ -47,17 +47,14 @@ export default class Character extends Actor {
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
-    this.stage.radii.forEach(radius => {
-      this.headings[radius] = this.stage.waypointGroups[radius].map((waypoint) => {
-        const distance = this.getDistance(waypoint.position)
-        const time = -distance
-        return { waypoint, time, distance }
-      })
-    })
+    this.initializeHeadings()
   }
 
   act (): void {
     super.act()
+    // if (this.feature.blue === 255 && this.feature.green === 255 && this.feature.red === 0) {
+    //   this.feature.setColor({ blue: 0, green: 128, red: 0 })
+    // }
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
@@ -219,6 +216,16 @@ export default class Character extends Actor {
       if (isVisible) visibleFeatures.push(feature)
     })
     return visibleFeatures
+  }
+
+  initializeHeadings (): void {
+    this.stage.radii.forEach(radius => {
+      this.headings[radius] = this.stage.waypointGroups[radius].map((waypoint) => {
+        const distance = this.getDistance(waypoint.position)
+        const time = -distance
+        return { waypoint, time, distance }
+      })
+    })
   }
 
   isFeatureInRange (feature: Feature): boolean {

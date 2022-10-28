@@ -53,7 +53,9 @@ export default class Puppet extends Scenery {
   getScaled ({ label }: { label: string}): number {
     switch (label) {
       case 'wall':
-        return 0.1
+        return 0.01
+      case 'character':
+        return 2
       default:
         return 1
     }

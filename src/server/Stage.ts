@@ -603,7 +603,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       message.circles = [...message.circles, circle]
       const label = new Label({
         color: 'white',
-        text: String(index + 1),
+        text: String(player.score + index + 1),
         x: score.position.x,
         y: score.position.y
       })
@@ -620,12 +620,27 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       message.circles = [...message.circles, circle]
       const label = new Label({
         color: 'red',
-        text: String(scores.length + 1),
+        text: String(player.score + scores.length + 1),
         x: goal.position.x,
         y: goal.position.y
       })
       message.labels = [...message.labels, label]
     })
+    const passes = player.goals.filter(goal => goal.passed)
+    if (passes.length > 1) {
+      throw new Error('More than one pass')
+    }
+    passes.forEach(pass => {
+      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.25)'
+      const circle = new Circle({
+        color,
+        radius: 10,
+        x: pass.position.x,
+        y: pass.position.y
+      })
+      message.circles = [...message.circles, circle]
+    })
+
     return message
   }
 }

@@ -61,6 +61,9 @@ export default class Scenery extends Actor {
           console.log('floored test:', floored)
           Matter.Body.scale(actor.feature.body, floored, floored)
           console.log('radius test:', actor.feature.getRadius())
+          actor.feature.setColor({ blue: 255, green: 255, red: 0 })
+          const delay = (1 - floored) * 10000
+          setTimeout(actor.beReady, delay)
         }
         this.destroy()
       } else {
