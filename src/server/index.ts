@@ -9,25 +9,12 @@ import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import Stage from './Stage'
 const stage = new Stage({
   centerBot: true,
-  country: true,
-  countryBots: false,
-  cornerBots: false,
-  debugCharacters: false,
-  debugChase: false,
-  debugItChoice: false,
-  debugNotItChoice: false,
-  gridBots: false,
-  greek: true,
-  midpointBots: false,
-  townBots: false,
-  wallBots: false,
-  waypointBots: false,
-  waypointBricks: false,
-  wildBricks: true,
-  size: 3000,
-  town: true
+  debugWaypointCircles: true,
+  debugItChoice: true,
+  debugLost: true,
+  debugNotItChoice: true,
+  observer: true
 })
-stage.paused = true
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
 const staticMiddleware = express.static(staticPath)

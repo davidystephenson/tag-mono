@@ -58,7 +58,7 @@ export default class Character extends Actor {
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
-        radius: 7,
+        radius: 10,
         x: this.feature.body.position.x,
         y: this.feature.body.position.y
       })
@@ -89,11 +89,15 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
-    this.ready = true
-    if (this.stage.it === this) {
-      this.feature.setColor({ red: 255, green: 0, blue: 0 })
+    if (this.observer) {
+      this.feature.setColor({ red: 255, green: 255, blue: 255 })
     } else {
-      this.feature.setColor({ red: 0, green: 128, blue: 0 })
+      this.ready = true
+      if (this.stage.it === this) {
+        this.feature.setColor({ red: 255, green: 0, blue: 0 })
+      } else {
+        this.feature.setColor({ red: 0, green: 128, blue: 0 })
+      }
     }
   }
 
@@ -116,6 +120,7 @@ export default class Character extends Actor {
   destroy (): void {
     super.destroy()
     this.stage.characters.delete(this.feature.body.id)
+    this.stage.characterBodies = this.stage.characterBodies.filter(body => body.id !== this.feature.body.id)
   }
 
   getDistance (point: Matter.Vector): number {
@@ -134,15 +139,20 @@ export default class Character extends Actor {
         obstacles: this.stage.wallBodies
       })
     })
-    if (debug === true) {
+    const isOneWall = wallClearHeadings.length === 1
+    if (debug === true || isOneWall) {
       wallClearHeadings.forEach(heading => {
         this.stage.circle({
-          color: 'yellow',
+          color: 'white',
           radius: 5,
           x: heading.waypoint.position.x,
           y: heading.waypoint.position.y
         })
       })
+    }
+    if (isOneWall) {
+      console.log('isOneWall', wallClearHeadings[0].waypoint.position)
+      this.stage.paused = true
     }
     const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
     const characterClearHeadings = wallClearHeadings.filter((heading) => {
@@ -153,13 +163,56 @@ export default class Character extends Actor {
         start: this.feature.body.position
       })
     }, {})
-    if (debug === true) {
+    const oneCharacter = characterClearHeadings.length === 1
+    if (debug === true || oneCharacter) {
       characterClearHeadings.forEach(heading => {
         this.stage.circle({
-          color: 'green',
+          color: 'aqua',
           radius: 5,
           x: heading.waypoint.position.x,
           y: heading.waypoint.position.y
+        })
+      })
+    }
+    if (oneCharacter) {
+      console.log('oneCharacter', characterClearHeadings[0].waypoint.position)
+
+      inRangeHeadings.forEach(heading => {
+        this.stage.circle({
+          color: 'orange',
+          radius: 5,
+          x: heading.waypoint.position.x,
+          y: heading.waypoint.position.y
+        })
+      })
+      wallClearHeadings.forEach(heading => {
+        this.stage.circle({
+          color: 'limegreen',
+          radius: 5,
+          x: heading.waypoint.position.x,
+          y: heading.waypoint.position.y
+        })
+        this.stage.raycast.isPointClear({
+          debug: true,
+          end: heading.waypoint.position,
+          obstacles: otherCharacterBodies,
+          start: this.feature.body.position
+        })
+        const collisions = this.stage.raycast.raycast({ end: heading.waypoint.position, start: this.feature.body.position, obstacles: otherCharacterBodies })
+        console.log('collisions test:', collisions.length)
+        collisions.forEach(collision => {
+          this.stage.circle({
+            color: 'aqua',
+            radius: 5,
+            x: collision.bodyA.position.x,
+            y: collision.bodyA.position.y
+          })
+          this.stage.circle({
+            color: 'hotpink',
+            radius: 5,
+            x: collision.bodyB.position.x,
+            y: collision.bodyB.position.y
+          })
         })
       })
     }

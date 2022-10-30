@@ -213,3 +213,7 @@ export function whichMin <Element> (array: Element[], numbers: number[]): Elemen
 
   return element
 }
+
+export function samePoint ({ a, b }: { a?: Matter.Vector, b?: Matter.Vector }): boolean {
+  return a?.x === b?.x && a?.y === b?.y
+}

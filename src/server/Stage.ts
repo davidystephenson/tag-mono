@@ -41,7 +41,7 @@ export default class Stage {
   debugPosition: boolean
   debugSpeed: boolean
   debugStepTime: boolean
-  debugWander: boolean
+  debugExplore: boolean
   debugWaypointCircles: boolean
   debugWaypointLabels: boolean
   engine = Matter.Engine.create()
@@ -51,6 +51,7 @@ export default class Stage {
   labels: Label[] = []
   lines: Line[] = []
   lostPoints: Matter.Vector[] = []
+  observer: boolean
   oldest?: Bot
   oldTime = Date.now()
   paused = false
@@ -58,10 +59,13 @@ export default class Stage {
   raycast: Raycast
   runner = Matter.Runner.create()
   scenery: Matter.Body[] = []
+  scenerySpawn: boolean
+  scoreSpawn: boolean
   stepCount = 0
   stepTimeLimit: number
   spawnTime: number
   timers = new Map<number, [number, () => void]>()
+  timeSpawn: boolean
   totalBodyCount = 0
   totalCollisionCount = 0
   wallBodies: Matter.Body[] = []
@@ -77,14 +81,15 @@ export default class Stage {
   yFactor = 2
   ySegment: number
   constructor ({
-    centerBot = false,
+    centerBot = true,
     cornerBots = false,
-    country = false,
+    country = true,
     countryBots = false,
     debugCharacters = false,
     debugChase = false,
     debugOpenWaypoints = false,
     debugCollision = false,
+    debugExplore = false,
     debugFeatures = false,
     debugIsClear = false,
     debugItChoice = false,
@@ -95,21 +100,24 @@ export default class Stage {
     debugPosition = false,
     debugSpeed = false,
     debugStepTime = true,
-    debugWander = false,
     debugWaypointCircles = false,
     debugWaypointLabels = false,
-    greek = false,
+    greek = true,
     greekBots = false,
     gridBots = false,
     midpointBots = false,
+    observer = false,
+    scenerySpawn = true,
+    scoreSpawn = true,
     size = 3000,
     stepTimeLimit = 35,
-    town = false,
+    timeSpawn = true,
+    town = true,
     townBots = false,
     wallBots = false,
     waypointBots = false,
     waypointBricks = false,
-    wildBricks = false
+    wildBricks = true
   }: {
     centerBot?: boolean
     cornerBots?: boolean
@@ -119,6 +127,7 @@ export default class Stage {
     debugChase?: boolean
     debugOpenWaypoints?: boolean
     debugCollision?: boolean
+    debugExplore?: boolean
     debugFeatures?: boolean
     debugIsClear?: boolean
     debugItChoice?: boolean
@@ -129,15 +138,18 @@ export default class Stage {
     debugPosition?: boolean
     debugSpeed?: boolean
     debugStepTime?: boolean
-    debugWander?: boolean
     debugWaypointCircles?: boolean
     debugWaypointLabels?: boolean
     greek?: boolean
     greekBots?: boolean
     gridBots?: boolean
     midpointBots?: boolean
-    size: number
+    observer?: boolean
+    scenerySpawn?: boolean
+    scoreSpawn?: boolean
+    size?: number
     stepTimeLimit?: number
+    timeSpawn?: boolean
     town?: boolean
     townBots?: boolean
     wallBots?: boolean
@@ -160,10 +172,14 @@ export default class Stage {
     this.debugPosition = debugPosition
     this.debugSpeed = debugSpeed
     this.debugStepTime = debugStepTime
-    this.stepTimeLimit = stepTimeLimit
-    this.debugWander = debugWander
+    this.debugExplore = debugExplore
     this.debugWaypointCircles = debugWaypointCircles
     this.debugWaypointLabels = debugWaypointLabels
+    this.observer = observer
+    this.scenerySpawn = scenerySpawn
+    this.scoreSpawn = scoreSpawn
+    this.stepTimeLimit = stepTimeLimit
+    this.timeSpawn = timeSpawn
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
     this.radii.forEach(radius => { this.waypointGroups[radius] = [] })
@@ -422,12 +438,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       this.actors.forEach(actor => actor.act())
-      const now = Date.now()
-      const spawnDifference = now - this.spawnTime
-      const spawnLimit = this.getSpawnLimit()
-      if (spawnDifference > spawnLimit) {
-        void new Bot({ x: 0, y: 0, stage: this })
-        this.spawnTime = now
+      if (this.timeSpawn) {
+        const now = Date.now()
+        const spawnDifference = now - this.spawnTime
+        const spawnLimit = this.getSpawnLimit()
+        if (spawnDifference > spawnLimit) {
+          void new Bot({ x: 0, y: 0, stage: this })
+          this.spawnTime = now
+        }
       }
       const record = {
         warnings: this.warningCount,
@@ -507,7 +525,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
   join (id: string): void {
     const point = this.it?.getExplorePoint({}) ?? { x: 0, y: 0 }
-    void new Player({ id, observer: false, x: point.x, y: point.y, stage: this })
+    void new Player({ id, observer: this.observer, x: point.x, y: point.y, stage: this })
   }
 
   leave (id: string): void {
@@ -562,6 +580,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const player = Player.players.get(id)
     if (player == null) {
       throw new Error('Player not found')
+    }
+    if (this.lostPoints.length > 100) {
+      this.lostPoints = this.lostPoints.slice(-100)
     }
     if (this.debugLost) {
       this.lostPoints.forEach(point => {

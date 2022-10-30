@@ -35,6 +35,7 @@ export default class Player extends Character {
     this.observer = observer
     if (this.observer) {
       this.ready = false
+      this.feature.setColor({ red: 255, green: 255, blue: 255 })
     }
     this.id = id
     Player.players.set(this.id, this)
@@ -53,7 +54,9 @@ export default class Player extends Character {
           const close = this.isPointClose({ point: goal.position, limit })
           if (close) {
             goal.scored = true
-            void new Bot({ stage: this.stage, x: 0, y: 0 })
+            if (this.stage.scoreSpawn) {
+              void new Bot({ stage: this.stage, x: 0, y: 0 })
+            }
             this.setGoal()
           }
         })

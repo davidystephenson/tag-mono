@@ -4,7 +4,7 @@ import Player from './Player'
 import Stage from './Stage'
 import Controls, { getRadiansControls, STILL } from '../shared/controls'
 import { vectorToPoint } from '../shared/math'
-import { getDistance, whichMin, getAngle, getAngleDifference, whichMax } from './math'
+import { getDistance, whichMin, getAngle, getAngleDifference, whichMax, samePoint } from './math'
 import Scenery from './Scenery'
 
 export interface Profile {
@@ -13,7 +13,7 @@ export interface Profile {
 }
 
 export default class Bot extends Character {
-  static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'wander', 'explore', 'lost'] as const
+  static pathLabels = ['reset', 'unblock', 'pursue', 'flee', 'explore', 'lost'] as const
   static TIME_LIMIT = 5000
 
   path: Matter.Vector[] = []
@@ -43,6 +43,9 @@ export default class Bot extends Character {
     if (target == null) {
       return STILL
     }
+    const color = this.getPathColor()
+    this.stage.line({ color, start: this.feature.body.position, end: target })
+    this.stage.circle({ color, radius: 7.5, x: target.x, y: target.y })
     const radians = Matter.Vector.angle(this.feature.body.position, target)
     const controls = getRadiansControls(radians)
     return controls
@@ -56,7 +59,7 @@ export default class Bot extends Character {
     const isIt = this.stage.it === this
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
-      if (character === this) return
+      if (character === this || character.observer) return
       if (!isIt) {
         if (this.stage.it !== character || !character.ready) return
       }
@@ -95,9 +98,15 @@ export default class Bot extends Character {
     return this.followPath(debug)
   }
 
-  explore (debug = this.stage.debugWander): Matter.Vector | null {
+  explore (debug = this.stage.debugExplore): Matter.Vector | null {
     const explorePoint = this.getExplorePoint({ debug })
     if (explorePoint == null) return this.loseWay()
+    const isPosition = samePoint({ a: explorePoint, b: this.feature.body.position })
+    if (isPosition) {
+      console.log('insular', explorePoint)
+      this.stage.circle({ color: 'red', radius: 12.5, x: explorePoint.x, y: explorePoint.y })
+      this.stage.paused = true
+    }
     this.setPath({ path: [explorePoint], label: 'explore' })
     return this.path[0]
   }
@@ -171,14 +180,11 @@ export default class Bot extends Character {
   followPath (debug?: boolean): Matter.Vector | null {
     const debugging = debug === true || this.stage.debugPathing
     if (debugging) {
-      const originIndex = this.path.length - 1
-      this.path.slice(0, originIndex).forEach((point, i) => {
-        this.stage.line({
-          color: 'purple', start: point, end: this.path[i + 1]
-        })
-      })
-      this.stage.circle({
-        color: 'purple', radius: 5, x: this.path[0].x, y: this.path[0].y
+      const color = this.stage.it === this ? 'red' : 'green'
+      this.path.forEach((point, index) => {
+        const end = this.path[index + 1]
+        if (end == null) return
+        this.stage.line({ start: point, end: end, color })
       })
     }
     const target = this.path.find(point => this.isPointReachable({ point }))
@@ -193,10 +199,21 @@ export default class Bot extends Character {
 
   isBored (): boolean {
     const stuck = this.isStuck()
+    if (stuck) {
+      this.stage.circle({ color: 'orange', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      return true
+    }
     const confused = this.path.length === 0
+    if (confused) {
+      this.stage.circle({ color: 'yellow', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      return true
+    }
     const arriving = !confused && this.isPointClose({ point: this.path[0], limit: 15 })
-
-    return stuck || confused || arriving
+    if (arriving) {
+      this.stage.circle({ color: 'magenta', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      return true
+    }
+    return false
   }
 
   isBlocked ({ character }: { character: Character }): boolean {
@@ -260,6 +277,25 @@ export default class Bot extends Character {
     console.log('point right')
     const point = { x: -halfWidth, y: weight * halfHeight - (1 - weight) * halfHeight }
     return [botRight, topRight, point]
+  }
+
+  getPathColor (): string {
+    switch (this.pathLabel) {
+      case 'reset':
+        return 'white'
+      case 'unblock':
+        return 'brown'
+      case 'pursue':
+        return 'hotpink'
+      case 'flee':
+        return 'orange'
+      case 'explore':
+        return 'gray'
+      case 'lost':
+        return 'yellow'
+      default:
+        return 'red'
+    }
   }
 
   loseIt ({ newIt }: { newIt: Character }): Scenery {
