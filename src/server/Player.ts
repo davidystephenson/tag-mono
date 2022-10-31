@@ -4,9 +4,10 @@ import Character from './Character'
 import Stage from './Stage'
 
 interface Goal {
+  number: number
+  passed: boolean
   position: Matter.Vector
   scored: boolean
-  passed: boolean
 }
 
 export default class Player extends Character {
@@ -53,6 +54,8 @@ export default class Player extends Character {
           const limit = this.feature.getRadius() + 15
           const close = this.isPointClose({ point: goal.position, limit })
           if (close) {
+            this.score = this.score + 1
+            goal.number = this.score
             goal.scored = true
             if (this.stage.scoreSpawn) {
               void new Bot({ stage: this.stage, x: 0, y: 0 })
@@ -66,9 +69,11 @@ export default class Player extends Character {
           throw new Error('More scores than waypoints')
         }
         if (scores.length === waypointsLength) {
-          this.score = this.score + waypointsLength
-          const lastGoal = this.goals[this.goals.length - 1]
-          this.goals = [lastGoal]
+          const highest = scores.reduce((a, b) => {
+            return a.number > b.number ? a : b
+          })
+          console.log('highest test:', highest)
+          this.goals = [highest]
           this.initializeHeadings()
           this.setGoal()
         }
@@ -97,14 +102,15 @@ export default class Player extends Character {
   }
 
   setGoal (): void {
-    const goal = this.getExplorePoint({ debug: false })
-    if (goal == null) {
+    const point = this.getExplorePoint({ debug: false })
+    if (point == null) {
       throw new Error('Can not set goal')
     }
     this.goals.forEach(goal => { goal.passed = false })
-    const oldGoal = this.goals.find(oldGoal => oldGoal.position.x === goal.x && oldGoal.position.y === goal.y)
+    const oldGoal = this.goals.find(oldGoal => oldGoal.position.x === point.x && oldGoal.position.y === point.y)
     if (oldGoal == null) {
-      this.goals.push({ position: goal, scored: false, passed: false })
+      const newGoal = { position: point, passed: false, scored: false, number: 0 }
+      this.goals.push(newGoal)
       this.goalTime = Date.now()
     } else {
       oldGoal.passed = true

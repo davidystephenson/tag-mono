@@ -43,9 +43,12 @@ export default class Bot extends Character {
     if (target == null) {
       return STILL
     }
-    const color = this.getPathColor()
-    this.stage.line({ color, start: this.feature.body.position, end: target })
-    this.stage.circle({ color, radius: 7.5, x: target.x, y: target.y })
+    const debug = this.stage.debugPathing || this.stage.it === this ? this.stage.debugItChoice : this.stage.debugNotItChoice
+    if (debug) {
+      const color = this.getPathColor()
+      this.stage.line({ color, start: this.feature.body.position, end: target })
+      this.stage.circle({ color, radius: 7.5, x: target.x, y: target.y })
+    }
     const radians = Matter.Vector.angle(this.feature.body.position, target)
     const controls = getRadiansControls(radians)
     return controls
@@ -200,17 +203,23 @@ export default class Bot extends Character {
   isBored (): boolean {
     const stuck = this.isStuck()
     if (stuck) {
-      this.stage.circle({ color: 'orange', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      if (this.stage.debugBored) {
+        this.stage.circle({ color: 'orange', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      }
       return true
     }
     const confused = this.path.length === 0
     if (confused) {
-      this.stage.circle({ color: 'yellow', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      if (this.stage.debugBored) {
+        this.stage.circle({ color: 'yellow', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      }
       return true
     }
     const arriving = !confused && this.isPointClose({ point: this.path[0], limit: 15 })
     if (arriving) {
-      this.stage.circle({ color: 'magenta', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      if (this.stage.debugBored) {
+        this.stage.circle({ color: 'magenta', radius: 10, x: this.feature.body.position.x, y: this.feature.body.position.y })
+      }
       return true
     }
     return false

@@ -140,7 +140,7 @@ export default class Character extends Actor {
       })
     })
     const isOneWall = wallClearHeadings.length === 1
-    if (debug === true || isOneWall) {
+    if (debug === true && isOneWall) {
       wallClearHeadings.forEach(heading => {
         this.stage.circle({
           color: 'white',
@@ -149,8 +149,6 @@ export default class Character extends Actor {
           y: heading.waypoint.position.y
         })
       })
-    }
-    if (isOneWall) {
       console.log('isOneWall', wallClearHeadings[0].waypoint.position)
       this.stage.paused = true
     }
@@ -163,8 +161,8 @@ export default class Character extends Actor {
         start: this.feature.body.position
       })
     }, {})
-    const oneCharacter = characterClearHeadings.length === 1
-    if (debug === true || oneCharacter) {
+    const isOneCharacter = characterClearHeadings.length === 1
+    if (debug === true && isOneCharacter) {
       characterClearHeadings.forEach(heading => {
         this.stage.circle({
           color: 'aqua',
@@ -173,8 +171,6 @@ export default class Character extends Actor {
           y: heading.waypoint.position.y
         })
       })
-    }
-    if (oneCharacter) {
       console.log('oneCharacter', characterClearHeadings[0].waypoint.position)
 
       inRangeHeadings.forEach(heading => {

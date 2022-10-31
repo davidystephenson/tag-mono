@@ -19,7 +19,10 @@ export default class Scenery extends Actor {
     stage: Stage
   }) {
     super({ feature, stage })
-    this.health = this.feature.getArea()
+    const area = this.feature.getArea()
+    // const minimum = Math.min(area, 10000)
+    this.health = area
+    console.log('this.health test:', this.health)
     this.maximumHealth = this.health
     setTimeout(() => {
       this.spawning = false
@@ -44,7 +47,10 @@ export default class Scenery extends Actor {
       const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
       const collideForce = Matter.Vector.magnitude(collideMomentum)
       const collidePower = collideForce * massB / (massA + massB)
-      const damage = collidePower * 50 * scale
+      // console.log('collidePower test:', collidePower)
+      const impact = Math.max(collidePower, 0.01)
+      // console.log('impact test:', impact)
+      const damage = impact * 50 * scale
       this.health = this.health - damage
       if (this.health <= 0) {
         const actorIsIt = this.stage.it === actor
@@ -54,11 +60,12 @@ export default class Scenery extends Actor {
           }
         } else if (actor?.feature.body.label === 'character') {
           const area = this.feature.getArea()
-          const log = Math.log10(area)
-          const shrink = log * 0.01
+          const log = Math.log2(area)
+          const shrink = log * 0.001
           const groundedShrink = Math.max(0.001, shrink)
           const scale = 1 - groundedShrink
-          const floored = Math.max(scale, 0.9)
+          const floored = Math.max(scale, 0.5)
+          console.log('floored', floored)
           Matter.Body.scale(actor.feature.body, floored, floored)
           actor.feature.setColor({ blue: 255, green: 255, red: 0 })
           const delay = (1 - floored) * 10000

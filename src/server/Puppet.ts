@@ -50,12 +50,12 @@ export default class Puppet extends Scenery {
     }
   }
 
-  getScaled ({ label }: { label: string}): number {
+  getScale ({ label }: { label: string}): number {
     switch (label) {
       case 'wall':
         return 0.01
       case 'character':
-        return 2
+        return 10
       default:
         return 1
     }
@@ -68,9 +68,8 @@ export default class Puppet extends Scenery {
     normal: Matter.Vector
     scale?: number
   }): void {
-    const scaled = this.getScaled({ label: body.label })
     return super.collide({
-      actor, body, delta, normal, scale: scaled
+      actor, body, delta, normal, scale: this.getScale({ label: body.label })
     })
   }
 }

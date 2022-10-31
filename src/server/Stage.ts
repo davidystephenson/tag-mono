@@ -27,6 +27,7 @@ export default class Stage {
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
   collisionStartCount = 0
+  debugBored: boolean
   debugCharacters: boolean
   debugChase: boolean
   debugOpenWaypoints: boolean
@@ -85,6 +86,7 @@ export default class Stage {
     cornerBots = false,
     country = true,
     countryBots = false,
+    debugBored = false,
     debugCharacters = false,
     debugChase = false,
     debugOpenWaypoints = false,
@@ -123,6 +125,7 @@ export default class Stage {
     cornerBots?: boolean
     country?: boolean
     countryBots?: boolean
+    debugBored?: boolean
     debugCharacters?: boolean
     debugChase?: boolean
     debugOpenWaypoints?: boolean
@@ -158,6 +161,7 @@ export default class Stage {
     wildBricks?: boolean
   }) {
     this.spawnTime = Date.now()
+    this.debugBored = debugBored
     this.debugCharacters = debugCharacters
     this.debugChase = debugChase
     this.debugOpenWaypoints = debugOpenWaypoints
@@ -308,6 +312,8 @@ export default class Stage {
 
     console.log('navigation complete')
     if (wildBricks) {
+      void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
@@ -613,35 +619,20 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       labels: this.labels,
       torsoId: player.feature.body.id
     }
-    const scores = player.goals.filter(goal => goal.scored)
-    scores.forEach((score, index) => {
+    player.goals.forEach((goal) => {
+      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.15)'
       const circle = new Circle({
-        color: 'rgba(255, 255, 255, 0.25)',
-        radius: 7.5,
-        x: score.position.x,
-        y: score.position.y
-      })
-      message.circles = [...message.circles, circle]
-      const label = new Label({
-        color: 'white',
-        text: String(player.score + index + 1),
-        x: score.position.x,
-        y: score.position.y
-      })
-      message.labels = [...message.labels, label]
-    })
-    const goals = player.goals.filter(goal => !goal.scored)
-    goals.forEach((goal) => {
-      const circle = new Circle({
-        color: 'rgba(255, 0, 0, 0.1)',
+        color: circleColor,
         radius: 7.5,
         x: goal.position.x,
         y: goal.position.y
       })
       message.circles = [...message.circles, circle]
+      const labelColor = goal.scored ? 'white' : 'red'
+      const text = goal.scored ? goal.number : player.score + 1
       const label = new Label({
-        color: 'red',
-        text: String(player.score + scores.length + 1),
+        color: labelColor,
+        text: String(text),
         x: goal.position.x,
         y: goal.position.y
       })
@@ -652,7 +643,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       throw new Error('More than one pass')
     }
     passes.forEach(pass => {
-      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.25)'
+      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.15)'
       const circle = new Circle({
         color,
         radius: 10,
