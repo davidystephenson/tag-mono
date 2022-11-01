@@ -653,15 +653,15 @@ export default class Character extends Actor {
           : 0
         */
         // const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
-        console.log('brickWidth', brickWidth)
-        console.log('brickHeight', brickHeight)
-        // return new Brick({
-        //   x: box.center.x,
-        //   y: box.center.y,
-        //   width: brickWidth,
-        //   height: brickHeight,
-        //   stage: this.stage
-        // })
+        // console.log('brickWidth', brickWidth)
+        // console.log('brickHeight', brickHeight)
+        return new Brick({
+          x: box.center.x,
+          y: box.center.y,
+          width: brickWidth,
+          height: brickHeight,
+          stage: this.stage
+        })
       }
     } else {
       throw new Error('Unclear scenery')

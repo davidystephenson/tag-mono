@@ -623,11 +623,10 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const shapes = visibleFeatures.map(feature => {
       const shape = new Shape(feature.body)
       if (shape.id === player.feature.body.id) {
-        if (this.it === player) {
-          shape.render.strokeStyle = 'hotpink'
-        } else {
-          shape.render.strokeStyle = 'limegreen'
-        }
+        const color = this.it === player ? 'hotpink' : 'limegreen'
+        const newRender = { ...shape.render, strokeStyle: color }
+        const newShape = { ...shape, render: newRender }
+        return newShape
       }
       return shape
     })
