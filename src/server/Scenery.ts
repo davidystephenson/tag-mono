@@ -29,14 +29,25 @@ export default class Scenery extends Actor {
     }, 5000)
   }
 
-  collide ({ actor, body, delta, normal, scale = 1 }: {
+  getScale ({ label }: { label: string}): number {
+    switch (label) {
+      case 'wall':
+        return 0.01
+      case 'character':
+        return 100
+      default:
+        return 1
+    }
+  }
+
+  collide ({ actor, body, delta, normal }: {
     actor?: Actor
     body: Matter.Body
     delta?: number
     normal: Matter.Vector
     scale?: number
   }): void {
-    super.collide({ actor, body, delta, normal, scale })
+    super.collide({ actor, body, delta, normal })
     if (!this.spawning) {
       const massA = this.feature.body.mass
       const velocityA = this.feature.body.velocity
@@ -47,10 +58,9 @@ export default class Scenery extends Actor {
       const collideMomentum = Matter.Vector.sub(projectionA, projectionB)
       const collideForce = Matter.Vector.magnitude(collideMomentum)
       const collidePower = collideForce * massB / (massA + massB)
-      // console.log('collidePower test:', collidePower)
-      const impact = Math.max(collidePower, 0.01)
-      // console.log('impact test:', impact)
-      const damage = impact * 50 * scale
+      const scale = this.getScale({ label: body.label })
+      const impact = collidePower * scale
+      const damage = Math.max(impact, 0.01)
       this.health = this.health - damage
       if (this.health <= 0) {
         const actorIsIt = this.stage.it === actor

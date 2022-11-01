@@ -17,6 +17,8 @@ import Shape from '../shared/Shape'
 import { UpdateMessage } from '../shared/socket'
 import { VISION_INNER_WIDTH, VISION_INNER_HEIGHT } from '../shared/VISION'
 import { getRandomRectangleSize } from './math'
+import Puppet from './Puppet'
+import { NORTH_VECTOR } from '../shared/math'
 
 export default class Stage {
   activeCollisionCount = 0
@@ -119,7 +121,8 @@ export default class Stage {
     wallBots = false,
     waypointBots = false,
     waypointBricks = false,
-    wildBricks = true
+    wildBricks = true,
+    wildPuppets = true
   }: {
     centerBot?: boolean
     cornerBots?: boolean
@@ -159,6 +162,7 @@ export default class Stage {
     waypointBots?: boolean
     waypointBricks?: boolean
     wildBricks?: boolean
+    wildPuppets?: boolean
   }) {
     this.spawnTime = Date.now()
     this.debugBored = debugBored
@@ -349,6 +353,21 @@ export default class Stage {
       this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
       this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
+    if (wildPuppets) {
+      const vertices = [
+        { x: 100.75, y: 253.97279832749837 },
+        { x: 100.75, y: -153.97279832749837 },
+        { x: -100.75, y: 0 }
+      ]
+      void new Puppet({
+        x: 500,
+        y: 700,
+        direction: NORTH_VECTOR,
+        force: 0.0000,
+        stage: this,
+        vertices
+      })
+    }
     if (centerBot) {
       void new Bot({ x: 100, y: 0, stage: this })
     }
@@ -422,7 +441,7 @@ export default class Stage {
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           const averageRays = Math.floor(this.raycast.rayCountTotal / this.stepCount)
-          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
+          console.warn(`Warning! ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${this.raycast.stepRayCount} rays (μ${averageRays})`)
           this.warningTime = newTime
         }

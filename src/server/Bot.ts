@@ -56,7 +56,7 @@ export default class Bot extends Character {
 
   chooseDirection (): Matter.Vector | null {
     if (this.stage.it == null) {
-      console.warn('No it')
+      console.warn('No it!!!')
       return null
     }
     const isIt = this.stage.it === this
@@ -307,7 +307,7 @@ export default class Bot extends Character {
     }
   }
 
-  loseIt ({ newIt }: { newIt: Character }): Scenery {
+  loseIt ({ newIt }: { newIt: Character }): Scenery | undefined {
     this.unblockTries = undefined
     this.setPath({ path: [], label: 'reset' })
     return super.loseIt({ newIt })

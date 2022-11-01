@@ -319,7 +319,7 @@ export default class Character extends Actor {
     })
   }
 
-  loseIt ({ newIt }: { newIt: Character }): Scenery {
+  loseIt ({ newIt }: { newIt: Character }): Scenery | undefined {
     this.blocked = false
     this.loseReady({})
     const radius = this.feature.getRadius()
@@ -345,7 +345,7 @@ export default class Character extends Actor {
     const westHit = this.stage.raycast.getHit({ start: thisPoint, end: west, obstacles })
     const eastHit = this.stage.raycast.getHit({ start: thisPoint, end: east, obstacles })
     const sideEntryPoints = [northHit.entryPoint, eastHit.entryPoint, southHit.entryPoint, westHit.entryPoint]
-    console.log('sideEntryPoints', sideEntryPoints)
+    // console.log('sideEntryPoints', sideEntryPoints)
     sideEntryPoints.forEach(point => this.stage.circle({
       color: 'limegreen', radius: 7, x: point.x, y: point.y
     }))
@@ -389,17 +389,17 @@ export default class Character extends Actor {
     const visibleFeatures = this.getVisibleFeatures()
     const visibleBodies = visibleFeatures.map(feature => feature.body)
     if (horizontal) {
-      console.log('horizontal case')
+      // console.log('horizontal case')
       const corners = []
       if (farthestSidePoint.x > thisPoint.x) {
-        console.log('right side')
-        console.log('farthestSidePoint', farthestSidePoint)
+        // console.log('right side')
+        // console.log('farthestSidePoint', farthestSidePoint)
         const botNorth = { x: thisPoint.x + radius, y: northY }
         const botSouth = { x: thisPoint.x + radius, y: southY }
         corners.push(...[botNorth, northEast, southEast, botSouth])
       }
       if (farthestSidePoint.x < thisPoint.x) {
-        console.log('left side')
+        // console.log('left side')
         const botNorth = { x: thisPoint.x - radius, y: northY }
         const botSouth = { x: thisPoint.x - radius, y: southY }
         corners.push(...[northWest, botNorth, botSouth, southWest])
@@ -432,8 +432,8 @@ export default class Character extends Actor {
       if (farthestSidePoint.x > thisPoint.x) {
         const lefts = boxQuery.map(body => body.bounds.min.x)
         const leftsRight = lefts.filter(x => x > thisPoint.x + radius)
-        console.log('visibleBoxQuery.length', boxQuery.length)
-        console.log('leftsRight', leftsRight)
+        // console.log('visibleBoxQuery.length', boxQuery.length)
+        // console.log('leftsRight', leftsRight)
         farthestSidePoint.x = Math.min(...leftsRight, farthestSidePoint.x)
       } else {
         const rights = boxQuery.map(body => body.bounds.max.x)
@@ -449,24 +449,24 @@ export default class Character extends Actor {
       const yMin = Math.max(...bottomsAbove, northY)
       const yMax = Math.min(...topsBelow, southY)
       const offset = Math.sign(farthestSidePoint.x - thisPoint.x) * radius * 1
-      console.log('offset', offset)
+      // console.log('offset', offset)
       box.center = { x: 0.5 * (thisPoint.x + offset) + 0.5 * farthestSidePoint.x, y: 0.5 * yMin + 0.5 * yMax }
       box.height = (yMax - yMin) * 0.9
       box.width = Math.abs(thisPoint.x + offset - farthestSidePoint.x) * 0.9
-      console.log('botPoint', thisPoint)
-      console.log('farthestSidePoint', farthestSidePoint)
-      console.log('box', box)
+      // console.log('botPoint', thisPoint)
+      // console.log('farthestSidePoint', farthestSidePoint)
+      // console.log('box', box)
     } else {
-      console.log('vertical case')
+      // console.log('vertical case')
       const corners = []
       if (farthestSidePoint.y > thisPoint.y) {
-        console.log('far point below')
+        // console.log('far point below')
         const botEast = { x: eastX, y: thisPoint.y + radius }
         const botWest = { x: westX, y: thisPoint.y + radius }
         corners.push(...[botWest, botEast, southEast, southWest])
       }
       if (farthestSidePoint.y < thisPoint.y) {
-        console.log('far point above')
+        // console.log('far point above')
         const botEast = { x: eastX, y: thisPoint.y - radius }
         const botWest = { x: westX, y: thisPoint.y - radius }
         corners.push(...[northWest, northEast, botEast, botWest])
@@ -631,6 +631,7 @@ export default class Character extends Actor {
         const z = (0.8 * m / 5 * size / maxSize) ** 3
         console.log('z test:', z)
         const direction = vectorToPoint(v)
+        console.log('force test:', z)
         return new Puppet({
           x: center.x,
           y: center.y,
@@ -654,13 +655,13 @@ export default class Character extends Actor {
         // const boxHeight = !horizontal ? Math.sign(this.feature.body.position.y - box.center.y) * 0.5 * box.height * (1 - scale) : 0
         console.log('brickWidth', brickWidth)
         console.log('brickHeight', brickHeight)
-        return new Brick({
-          x: box.center.x,
-          y: box.center.y,
-          width: brickWidth,
-          height: brickHeight,
-          stage: this.stage
-        })
+        // return new Brick({
+        //   x: box.center.x,
+        //   y: box.center.y,
+        //   width: brickWidth,
+        //   height: brickHeight,
+        //   stage: this.stage
+        // })
       }
     } else {
       throw new Error('Unclear scenery')
@@ -722,7 +723,6 @@ export default class Character extends Actor {
             const direction = Matter.Vector.normalise(difference)
             const power = 2000000 / distance
             const force = Matter.Vector.mult(direction, power)
-            console.log('force test:', force)
             Matter.Body.applyForce(feature.body, pushPoint, force)
             Matter.Body.update(feature.body, 0.01, 1, 0)
           }

@@ -36,7 +36,7 @@ export default class Puppet extends Scenery {
   }) {
     const figure = new VerticesFeature({ blue, density, green, red, stage, vertices, x, y })
     super({ feature: figure, stage })
-    this.feature.body.label = 'figure'
+    this.feature.body.label = 'puppet'
     this.direction = direction
     this.targetSpeed = targetSpeed
     this.force = force
@@ -50,16 +50,16 @@ export default class Puppet extends Scenery {
     }
   }
 
-  getScale ({ label }: { label: string}): number {
-    switch (label) {
-      case 'wall':
-        return 0.01
-      case 'character':
-        return 10
-      default:
-        return 1
-    }
-  }
+  // getScale ({ label }: { label: string}): number {
+  //   switch (label) {
+  //     case 'wall':
+  //       return 0.01
+  //     case 'character':
+  //       return 10
+  //     default:
+  //       return 1
+  //   }
+  // }
 
   collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
@@ -69,7 +69,7 @@ export default class Puppet extends Scenery {
     scale?: number
   }): void {
     return super.collide({
-      actor, body, delta, normal, scale: this.getScale({ label: body.label })
+      actor, body, delta, normal, scale
     })
   }
 }
