@@ -11,13 +11,7 @@ import { boxToTriangle, getDistance, isPointInVisionRange } from './math'
 import Puppet from './Puppet'
 import Scenery from './Scenery'
 import Stage from './Stage'
-import Waypoint from './Waypoint'
-
-interface Heading {
-  waypoint: Waypoint
-  time: number
-  distance: number
-}
+import { Goal, Heading } from './types'
 
 export default class Character extends Actor {
   static MAXIMUM_RADIUS = 15
@@ -123,11 +117,18 @@ export default class Character extends Actor {
     this.stage.characterBodies = this.stage.characterBodies.filter(body => body.id !== this.feature.body.id)
   }
 
+  exploreHeading ({ heading }: { heading: Heading }): Heading {
+    const group = this.getGroup()
+    this.headings[group][heading.waypoint.id].time = Date.now()
+    heading.explored = true
+    return heading
+  }
+
   getDistance (point: Matter.Vector): number {
     return getDistance(this.feature.body.position, point)
   }
 
-  getExplorePoint ({ debug }: { debug?: boolean }): Matter.Vector | null {
+  getExploreHeading ({ debug, goals }: { debug?: boolean, goals?: Goal[] }): Heading | null {
     const group = this.getGroup()
     const headings = this.headings[group]
     const inRangeHeadings = headings.filter(heading => this.isPointInRange(heading.waypoint.position))
@@ -140,17 +141,22 @@ export default class Character extends Actor {
       })
     })
     const isOneWall = wallClearHeadings.length === 1
-    if (debug === true && isOneWall) {
-      wallClearHeadings.forEach(heading => {
+    if (isOneWall) {
+      const heading = wallClearHeadings[0]
+      if (debug === true) {
         this.stage.circle({
           color: 'white',
           radius: 5,
           x: heading.waypoint.position.x,
           y: heading.waypoint.position.y
         })
-      })
-      console.log('isOneWall', wallClearHeadings[0].waypoint.position)
-      this.stage.paused = true
+        console.log('isOneWall', heading.waypoint.position)
+        this.stage.paused = true
+      }
+      if (!heading.explored) {
+        heading.tight = true
+      }
+      return heading
     }
     const otherCharacterBodies = this.stage.characterBodies.filter(body => body !== this.feature.body)
     const characterClearHeadings = wallClearHeadings.filter((heading) => {
@@ -162,63 +168,81 @@ export default class Character extends Actor {
       })
     }, {})
     const isOneCharacter = characterClearHeadings.length === 1
-    if (debug === true && isOneCharacter) {
-      characterClearHeadings.forEach(heading => {
-        this.stage.circle({
-          color: 'aqua',
-          radius: 5,
-          x: heading.waypoint.position.x,
-          y: heading.waypoint.position.y
+    if (isOneCharacter) {
+      if (debug === true) {
+        wallClearHeadings.forEach(heading => {
+          this.stage.circle({
+            color: 'limegreen',
+            radius: 5,
+            x: heading.waypoint.position.x,
+            y: heading.waypoint.position.y
+          })
+          this.stage.raycast.isPointClear({
+            debug: true,
+            end: heading.waypoint.position,
+            obstacles: otherCharacterBodies,
+            start: this.feature.body.position
+          })
+          const collisions = this.stage.raycast.raycast({ end: heading.waypoint.position, start: this.feature.body.position, obstacles: otherCharacterBodies })
+          console.log('collisions test:', collisions.length)
+          collisions.forEach(collision => {
+            this.stage.circle({
+              color: 'aqua',
+              radius: 5,
+              x: collision.bodyA.position.x,
+              y: collision.bodyA.position.y
+            })
+            this.stage.circle({
+              color: 'hotpink',
+              radius: 5,
+              x: collision.bodyB.position.x,
+              y: collision.bodyB.position.y
+            })
+          })
         })
-      })
-      console.log('oneCharacter', characterClearHeadings[0].waypoint.position)
-
-      inRangeHeadings.forEach(heading => {
-        this.stage.circle({
-          color: 'orange',
-          radius: 5,
-          x: heading.waypoint.position.x,
-          y: heading.waypoint.position.y
-        })
-      })
-      wallClearHeadings.forEach(heading => {
-        this.stage.circle({
-          color: 'limegreen',
-          radius: 5,
-          x: heading.waypoint.position.x,
-          y: heading.waypoint.position.y
-        })
-        this.stage.raycast.isPointClear({
-          debug: true,
-          end: heading.waypoint.position,
-          obstacles: otherCharacterBodies,
-          start: this.feature.body.position
-        })
-        const collisions = this.stage.raycast.raycast({ end: heading.waypoint.position, start: this.feature.body.position, obstacles: otherCharacterBodies })
-        console.log('collisions test:', collisions.length)
-        collisions.forEach(collision => {
+        characterClearHeadings.forEach(heading => {
           this.stage.circle({
             color: 'aqua',
             radius: 5,
-            x: collision.bodyA.position.x,
-            y: collision.bodyA.position.y
-          })
-          this.stage.circle({
-            color: 'hotpink',
-            radius: 5,
-            x: collision.bodyB.position.x,
-            y: collision.bodyB.position.y
+            x: heading.waypoint.position.x,
+            y: heading.waypoint.position.y
           })
         })
-      })
+
+        inRangeHeadings.forEach(heading => {
+          this.stage.circle({
+            color: 'orange',
+            radius: 5,
+            x: heading.waypoint.position.x,
+            y: heading.waypoint.position.y
+          })
+        })
+      }
+      const heading = characterClearHeadings[0]
+      console.log('one character', heading.waypoint.position)
+      if (!heading.explored) {
+        heading.tight = true
+      }
+      return heading
     }
     if (characterClearHeadings.length === 0) {
       if (wallClearHeadings.length === 0) {
         return null
       }
-      return this.getHeadingPoint({ headings: wallClearHeadings })
+      return this.getEarlyFarHeading({ headings: wallClearHeadings, tight: true })
     } else {
-      return this.getHeadingPoint({ headings: characterClearHeadings })
+      if (goals != null) {
+        const clearGoals = goals.filter(goal => characterClearHeadings.find(heading => heading.waypoint.id === goal.heading.waypoint.id))
+        if (clearGoals.length === characterClearHeadings.length) {
+          const unscoredGoals = clearGoals.filter(goals => !goals.scored)
+          if (unscoredGoals.length === 1) {
+            const goal = unscoredGoals[0]
+            goal.heading.tight = true
+            return this.exploreHeading({ heading: goal.heading })
+          }
+        }
+      }
+      return this.getEarlyFarHeading({ headings: characterClearHeadings })
     }
   }
 
@@ -229,7 +253,13 @@ export default class Character extends Actor {
     return capped
   }
 
-  getHeadingPoint ({ headings }: { headings: Heading[] }): Matter.Vector {
+  getEarlyFarHeading ({ headings, tight }: { headings: Heading[], tight?: boolean }): Heading {
+    const unexploredHeadings = headings.filter(heading => !heading.explored)
+    if (unexploredHeadings.length === 1) {
+      const unexploredHeading = unexploredHeadings[0]
+      unexploredHeading.tight = true
+      return this.exploreHeading({ heading: unexploredHeading })
+    }
     const earlyHeading = headings.reduce((headingA, headingB) => {
       if (headingA.time < headingB.time) return headingA
       return headingB
@@ -243,10 +273,10 @@ export default class Character extends Actor {
       }
       return headingA
     })
-    const group = this.getGroup()
-    this.headings[group][farHeading.waypoint.id].time = Date.now()
-
-    return farHeading.waypoint.position
+    if (tight === true) {
+      farHeading.tight = true
+    }
+    return this.exploreHeading({ heading: farHeading })
   }
 
   getInRangeFeatures (): Feature[] {
@@ -272,7 +302,7 @@ export default class Character extends Actor {
       this.headings[radius] = this.stage.waypointGroups[radius].map((waypoint) => {
         const distance = this.getDistance(waypoint.position)
         const time = -distance
-        return { waypoint, time, distance }
+        return { waypoint, time, distance, only: false, tight: false, explored: false }
       })
     })
   }

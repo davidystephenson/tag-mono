@@ -102,15 +102,20 @@ export default class Bot extends Character {
   }
 
   explore (debug = this.stage.debugExplore): Matter.Vector | null {
-    const explorePoint = this.getExplorePoint({ debug })
-    if (explorePoint == null) return this.loseWay()
-    const isPosition = samePoint({ a: explorePoint, b: this.feature.body.position })
+    const exploreHeading = this.getExploreHeading({ debug })
+    if (exploreHeading == null) return this.loseWay()
+    const isPosition = samePoint({ a: exploreHeading.waypoint.position, b: this.feature.body.position })
     if (isPosition) {
-      console.log('insular', explorePoint)
-      this.stage.circle({ color: 'red', radius: 12.5, x: explorePoint.x, y: explorePoint.y })
+      console.log('insular', exploreHeading)
+      this.stage.circle({
+        color: 'red',
+        radius: 12.5,
+        x: exploreHeading.waypoint.position.x,
+        y: exploreHeading.waypoint.position.y
+      })
       this.stage.paused = true
     }
-    this.setPath({ path: [explorePoint], label: 'explore' })
+    this.setPath({ path: [exploreHeading.waypoint.position], label: 'explore' })
     return this.path[0]
   }
 

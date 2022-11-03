@@ -549,8 +549,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   join (id: string): void {
-    const point = this.it?.getExplorePoint({}) ?? { x: 0, y: 0 }
-    void new Player({ id, observer: this.observer, x: point.x, y: point.y, stage: this })
+    const position = this.it?.getExploreHeading({})?.waypoint.position ?? { x: 0, y: 0 }
+    void new Player({
+      id,
+      observer: this.observer,
+      x: position.x,
+      y: position.y,
+      stage: this
+    })
   }
 
   leave (id: string): void {
@@ -638,21 +644,26 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       torsoId: player.feature.body.id
     }
     player.goals.forEach((goal) => {
-      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : goal.heading.tight ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.25)'
+      const radius = goal.heading.tight ? 15 : 7.5
       const circle = new Circle({
         color: circleColor,
-        radius: 7.5,
-        x: goal.position.x,
-        y: goal.position.y
+        radius,
+        x: goal.heading.waypoint.position.x,
+        y: goal.heading.waypoint.position.y
       })
       message.circles = [...message.circles, circle]
       const labelColor = goal.scored ? 'white' : 'red'
-      const text = goal.scored ? goal.number : player.score + 1
+      const text = goal.scored
+        ? goal.number
+        : goal.heading.tight
+          ? player.score + 5
+          : player.score + 1
       const label = new Label({
         color: labelColor,
         text: String(text),
-        x: goal.position.x,
-        y: goal.position.y
+        x: goal.heading.waypoint.position.x,
+        y: goal.heading.waypoint.position.y
       })
       message.labels = [...message.labels, label]
     })
@@ -665,8 +676,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       const circle = new Circle({
         color,
         radius: 10,
-        x: pass.position.x,
-        y: pass.position.y
+        x: pass.heading.waypoint.position.x,
+        y: pass.heading.waypoint.position.y
       })
       message.circles = [...message.circles, circle]
     })

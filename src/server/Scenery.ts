@@ -4,6 +4,7 @@ import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
 import Bot from './Bot'
+import Wall from './Wall'
 
 export default class Scenery extends Actor {
   static BLUE = 255
@@ -14,6 +15,7 @@ export default class Scenery extends Actor {
   health: number
   readonly maximumHealth: number
   spawning = true
+  spawnWalls = new Array<Wall>()
   constructor ({ feature, stage }: {
     feature: Feature
     stage: Stage
@@ -27,6 +29,18 @@ export default class Scenery extends Actor {
     setTimeout(() => {
       this.spawning = false
     }, 5000)
+    // @ts-expect-error
+    this.spawnWalls = this.stage.walls.filter(wall => Matter.Collision.collides(this.feature.body, wall.body))
+  }
+
+  act (): void {
+    super.act()
+    // @ts-expect-error
+    this.spawnWalls = this.spawnWalls.filter(wall => Matter.Collision.collides(this.feature.body, wall.body))
+    this.spawnWalls.forEach(wall => {
+      const normal = { x: 1, y: 0 }
+      this.collide({ actor: wall.actor, body: wall.body, normal })
+    })
   }
 
   getScale ({ label }: { label: string}): number {
@@ -71,13 +85,21 @@ export default class Scenery extends Actor {
         } else if (actor?.feature.body.label === 'character') {
           const area = this.feature.getArea()
           const log = Math.log2(area)
-          const shrink = log * 0.001
+          const shrink = log * 0.0033
           const groundedShrink = Math.max(0.001, shrink)
           const scale = 1 - groundedShrink
+          if (scale < 0.5) {
+            console.log('scale test:', scale)
+            this.stage.paused = true
+          }
           const floored = Math.max(scale, 0.5)
           console.log('floored', floored)
-          Matter.Body.scale(actor.feature.body, floored, floored)
-          actor.feature.setColor({ blue: 255, green: 255, red: 0 })
+          if (actor.feature.body.circleRadius != null && actor.feature.body.circleRadius > 7.5) {
+            Matter.Body.scale(actor.feature.body, floored, floored)
+            actor.feature.setColor({ blue: 255, green: 255, red: 0 })
+          } else {
+            actor.feature.setColor({ blue: 255, green: 128, red: 0 })
+          }
           const delay = (1 - floored) * 10000
           setTimeout(actor.beReady, delay)
         }
