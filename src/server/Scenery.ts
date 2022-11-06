@@ -4,7 +4,6 @@ import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
 import Bot from './Bot'
-import Wall from './Wall'
 
 export default class Scenery extends Actor {
   static BLUE = 255
@@ -15,7 +14,7 @@ export default class Scenery extends Actor {
   health: number
   readonly maximumHealth: number
   spawning = true
-  spawnWalls = new Array<Wall>()
+  spawnBodies = new Array<Matter.Body>()
   constructor ({ feature, stage }: {
     feature: Feature
     stage: Stage
@@ -24,22 +23,21 @@ export default class Scenery extends Actor {
     const area = this.feature.getArea()
     // const minimum = Math.min(area, 10000)
     this.health = area
-    console.log('this.health test:', this.health)
     this.maximumHealth = this.health
     setTimeout(() => {
       this.spawning = false
     }, 5000)
     // @ts-expect-error
-    this.spawnWalls = this.stage.walls.filter(wall => Matter.Collision.collides(this.feature.body, wall.body))
+    this.spawnBodies = this.stage.bodies.filter(body => body.id !== this.feature.body.id && Matter.Collision.collides(this.feature.body, body))
   }
 
   act (): void {
     super.act()
     // @ts-expect-error
-    this.spawnWalls = this.spawnWalls.filter(wall => Matter.Collision.collides(this.feature.body, wall.body))
-    this.spawnWalls.forEach(wall => {
-      const normal = { x: 1, y: 0 }
-      this.collide({ actor: wall.actor, body: wall.body, normal })
+    this.spawnBodies = this.spawnBodies.filter(body => Matter.Collision.collides(this.feature.body, body))
+    this.spawnBodies.forEach(wall => {
+      const damage = this.maximumHealth / 1000
+      this.takeDamage({ damage })
     })
   }
 
@@ -75,39 +73,43 @@ export default class Scenery extends Actor {
       const scale = this.getScale({ label: body.label })
       const impact = collidePower * scale
       const damage = Math.max(impact, 0.01)
-      this.health = this.health - damage
-      if (this.health <= 0) {
-        const actorIsIt = this.stage.it === actor
-        if (actorIsIt) {
-          if (this.stage.scenerySpawn) {
-            void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
-          }
-        } else if (actor?.feature.body.label === 'character') {
-          const area = this.feature.getArea()
-          const log = Math.log2(area)
-          const shrink = log * 0.0033
-          const groundedShrink = Math.max(0.001, shrink)
-          const scale = 1 - groundedShrink
-          if (scale < 0.5) {
-            console.log('scale test:', scale)
-            this.stage.paused = true
-          }
-          const floored = Math.max(scale, 0.5)
-          console.log('floored', floored)
-          if (actor.feature.body.circleRadius != null && actor.feature.body.circleRadius > 7.5) {
-            Matter.Body.scale(actor.feature.body, floored, floored)
-            actor.feature.setColor({ blue: 255, green: 255, red: 0 })
-          } else {
-            actor.feature.setColor({ blue: 255, green: 128, red: 0 })
-          }
-          const delay = (1 - floored) * 10000
-          setTimeout(actor.beReady, delay)
+      this.takeDamage({ damage, actor })
+    }
+  }
+
+  takeDamage ({ damage, actor }: {
+    damage: number
+    actor?: Actor
+  }): void {
+    this.health = this.health - damage
+    if (this.health <= 0) {
+      const actorIsIt = this.stage.it === actor
+      if (actorIsIt) {
+        if (this.stage.scenerySpawn) {
+          void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
-        this.destroy()
-      } else {
-        const alpha = this.health / this.maximumHealth
-        this.feature.setColor({ alpha })
+      } else if (actor?.feature.body.label === 'character') {
+        const area = this.feature.getArea()
+        const root = Math.sqrt(area)
+        const shrink = root * 0.001
+        const groundedShrink = Math.max(0.001, shrink)
+        const scale = 1 - groundedShrink
+        const floored = Math.max(scale, 0.5)
+        Matter.Body.scale(actor.feature.body, floored, floored)
+        actor.feature.setColor({ blue: 255, green: 255, red: 0 })
+        const radius = actor.feature.getRadius()
+        if (radius < 10) {
+          const needed = 10 / radius
+          actor.feature.setColor({ blue: 0, green: 0, red: 0 })
+          Matter.Body.scale(actor.feature.body, needed, needed)
+        }
+        const delay = (1 - floored) * 10000
+        setTimeout(actor.beReady, delay)
       }
+      this.destroy()
+    } else {
+      const alpha = this.health / this.maximumHealth
+      this.feature.setColor({ alpha })
     }
   }
 }

@@ -178,7 +178,7 @@ export default class Bot extends Character {
   flee ({ character }: { character: Character }): Matter.Vector {
     this.setPath({ path: [], label: 'flee' })
     const start = this.feature.body.position
-    const product = Matter.Vector.mult(character.feature.body.velocity, 10)
+    const product = Matter.Vector.mult(character.feature.body.velocity, 5)
     const avoidPosition = Matter.Vector.add(character.feature.body.position, product)
     const avoidDirection = Matter.Vector.sub(start, avoidPosition)
     const toPoint = Matter.Vector.add(start, avoidDirection)
