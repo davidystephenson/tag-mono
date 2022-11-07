@@ -58,7 +58,7 @@ export default class Stage {
   oldest?: Bot
   oldTime = Date.now()
   paused = false
-  radii = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+  radii = [9, 10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
   scenery: Matter.Body[] = []
