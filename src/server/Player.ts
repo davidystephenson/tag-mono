@@ -102,7 +102,14 @@ export default class Player extends Character {
     if (heading == null) {
       throw new Error('Can not set goal')
     }
-    this.goals.forEach(goal => { goal.passed = false })
+    this.goals = this.goals.filter(goal =>
+      goal.heading.waypoint.position.x !== heading.waypoint.position.x ||
+      goal.heading.waypoint.position.y !== heading.waypoint.position.y
+    )
+    const newGoal = { heading, passed: false, scored: false, number: 0 }
+    this.goals.push(newGoal)
+    this.goalTime = Date.now()
+    /*
     const oldGoal = this.goals.find(oldGoal =>
       oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
       oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
@@ -114,5 +121,6 @@ export default class Player extends Character {
     } else {
       oldGoal.passed = true
     }
+    */
   }
 }
