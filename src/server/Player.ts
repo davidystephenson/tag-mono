@@ -79,7 +79,7 @@ export default class Player extends Character {
         const goalLimit = 10000 - spawnLimit
         const limited = Math.max(goalLimit, 5000)
         if (goalDifference > limited) {
-          this.setGoal({})
+          this.setGoal({ timed: true })
         }
       }
     }
@@ -96,31 +96,30 @@ export default class Player extends Character {
     this.setGoal({})
   }
 
-  setGoal ({ scoring }: { scoring?: boolean }): void {
+  setGoal ({ scoring, timed }: { scoring?: boolean, timed?: boolean }): void {
     const goals = scoring === true ? this.goals : undefined
     const heading = this.getExploreHeading({ debug: false, goals })
     if (heading == null) {
       throw new Error('Can not set goal')
     }
-    this.goals = this.goals.filter(goal =>
-      goal.heading.waypoint.position.x !== heading.waypoint.position.x ||
-      goal.heading.waypoint.position.y !== heading.waypoint.position.y
-    )
-    const newGoal = { heading, passed: false, scored: false, number: 0 }
-    this.goals.push(newGoal)
-    this.goalTime = Date.now()
-    /*
-    const oldGoal = this.goals.find(oldGoal =>
-      oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
-      oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
-    )
-    if (oldGoal == null) {
+    if (timed === true) {
+      const oldGoal = this.goals.find(oldGoal =>
+        oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
+        oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
+      )
+      if (oldGoal == null) {
+        const newGoal = { heading, passed: false, scored: false, number: 0 }
+        this.goals.push(newGoal)
+        this.goalTime = Date.now()
+      }
+    } else {
+      this.goals = this.goals.filter(goal =>
+        goal.heading.waypoint.position.x !== heading.waypoint.position.x ||
+        goal.heading.waypoint.position.y !== heading.waypoint.position.y
+      )
       const newGoal = { heading, passed: false, scored: false, number: 0 }
       this.goals.push(newGoal)
       this.goalTime = Date.now()
-    } else {
-      oldGoal.passed = true
     }
-    */
   }
 }
