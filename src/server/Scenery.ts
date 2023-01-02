@@ -102,6 +102,7 @@ export default class Scenery extends Actor {
           const needed = 10 / radius
           actor.feature.setColor({ blue: 0, green: 0, red: 0 })
           Matter.Body.scale(actor.feature.body, needed, needed)
+          void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
         const delay = (1 - floored) * 10000
         setTimeout(actor.beReady, delay)
