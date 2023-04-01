@@ -352,6 +352,9 @@ export default class Character extends Actor {
   loseIt ({ newIt }: { newIt: Character }): PropActor | undefined {
     this.blocked = false
     this.loseReady({})
+    if (!this.stage.spawnOnTag) {
+      return undefined
+    }
     const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({

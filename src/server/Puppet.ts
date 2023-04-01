@@ -13,12 +13,16 @@ export default class Puppet extends PropActor {
     blue = PropActor.BLUE,
     density = PropActor.DENSITY,
     direction = EAST_VECTOR,
-    force = 0.001,
+    force = 0.01,
     green = PropActor.GREEN,
     red = PropActor.RED,
     stage,
     targetSpeed = 0.5,
-    vertices,
+    vertices = [
+      { x: 100, y: 100 },
+      { x: 100, y: -100 },
+      { x: -100, y: 0 }
+    ],
     x,
     y
   }: {
@@ -30,7 +34,7 @@ export default class Puppet extends PropActor {
     red?: number
     stage: Stage
     targetSpeed?: number
-    vertices: Matter.Vector[]
+    vertices?: Matter.Vector[]
     x: number
     y: number
   }) {

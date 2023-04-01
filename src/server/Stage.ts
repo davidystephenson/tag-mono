@@ -18,7 +18,7 @@ import { UpdateMessage } from '../shared/socket'
 import { VISION_INNER_WIDTH, VISION_INNER_HEIGHT } from '../shared/VISION'
 import { getRandomRectangleSize } from './math'
 import Puppet from './Puppet'
-import { NORTH_VECTOR } from '../shared/math'
+import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from '../shared/math'
 
 export default class Stage {
   activeCollisionCount = 0
@@ -65,11 +65,12 @@ export default class Stage {
   sceneryBodies: Matter.Body[] = []
   spawnOnDestroy: boolean
   spawnOnScore: boolean
+  spawnOnTag: boolean
+  spawnOnTimer: boolean
   stepCount = 0
   stepTimeLimit: number
   spawnTime: number
   timers = new Map<number, [number, () => void]>()
-  spawnOnTimer: boolean
   totalBodyCount = 0
   totalCollisionCount = 0
   wallBodies: Matter.Body[] = []
@@ -78,7 +79,6 @@ export default class Stage {
   warningDifferenceTotal = 0
   warningTime = Date.now()
   readonly warnings10: number[] = []
-  // waypoints: Waypoint[] = []
   waypointGroups: Record<number, Waypoint[]> = { }
   xFactor = 2
   xSegment: number
@@ -114,6 +114,7 @@ export default class Stage {
     observer = false,
     spawnOnDestroy = true,
     spawnOnScore = true,
+    spawnOnTag = true,
     spawnOnTimer = true,
     size = 3000,
     stepTimeLimit = 35,
@@ -154,9 +155,10 @@ export default class Stage {
     observer?: boolean
     spawnOnDestroy?: boolean
     spawnOnScore?: boolean
+    spawnOnTag?: boolean
+    spawnOnTimer?: boolean
     size?: number
     stepTimeLimit?: number
-    spawnOnTimer?: boolean
     town?: boolean
     townBots?: boolean
     wallBots?: boolean
@@ -187,8 +189,9 @@ export default class Stage {
     this.observer = observer
     this.spawnOnDestroy = spawnOnDestroy
     this.spawnOnScore = spawnOnScore
-    this.stepTimeLimit = stepTimeLimit
+    this.spawnOnTag = spawnOnTag
     this.spawnOnTimer = spawnOnTimer
+    this.stepTimeLimit = stepTimeLimit
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
     this.radii.forEach(radius => { this.waypointGroups[radius] = [] })
@@ -305,17 +308,7 @@ export default class Stage {
         waypoint.setPaths()
       })
     })
-    /*
-    console.log('debugging waypoints...')
-    this.waypoints.forEach(waypoint => {
-      if (this.debugWaypointLabels) {
-        const y = this.debugWaypointCircles ? waypoint.y + 20 : waypoint.y
-        this.label({ text: String(waypoint.id), x: waypoint.x, y })
-      }
-    })
-    */
-
-    console.log('navigation complete')
+    console.log('Pathfinding complete!')
     if (wildBricks) {
       void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
       this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
@@ -335,7 +328,6 @@ export default class Stage {
       this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
       this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
       this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
-      this.randomBrick({ x: 800, y: 200, height: 200, width: 100 })
       this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
       this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
       this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
@@ -361,10 +353,30 @@ export default class Stage {
         { x: -100.75, y: 0 }
       ]
       void new Puppet({
-        x: 500,
-        y: 700,
+        x: -1200,
+        y: -1200,
+        direction: SOUTH_VECTOR,
+        stage: this,
+        vertices
+      })
+      void new Puppet({
+        x: 1350,
+        y: -200,
         direction: NORTH_VECTOR,
-        force: 0.0000,
+        force: 0.0001,
+        stage: this
+      })
+      void new Puppet({
+        x: 1000,
+        y: 0,
+        force: 0.008,
+        direction: WEST_VECTOR,
+        stage: this
+      })
+      void new Puppet({
+        x: -1700,
+        y: 1700,
+        direction: EAST_VECTOR,
         stage: this,
         vertices
       })
@@ -372,20 +384,23 @@ export default class Stage {
     if (centerBot) {
       void new Bot({ x: 100, y: 0, stage: this })
     }
-
     if (greekBots) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots) townWalls.forEach(wall => wall.spawnBots())
     if (gridBots) gridPoints.forEach(point => new Bot({ x: point.x, y: point.y, stage: this }))
     if (countryBots) countryWalls.forEach(wall => wall.spawnBots())
-    if (waypointBots) {
-      // this.waypoints.forEach(waypoint => {
-      //   void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
-      // })
-    }
-    if (waypointBricks) {
-      // this.waypoints.forEach(waypoint => {
-      //   this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
-      // })
+    if (waypointBots || waypointBricks) {
+      const waypointArrays = Object.values(this.waypointGroups)
+      const waypoints = waypointArrays.reduce((waypoints, waypointArray) => [...waypoints, ...waypointArray], [])
+      if (waypointBots) {
+        waypoints.forEach(waypoint => {
+          void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
+        })
+      }
+      if (waypointBricks) {
+        waypoints.forEach(waypoint => {
+          this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+        })
+      }
     }
     if (cornerBots) {
       void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
