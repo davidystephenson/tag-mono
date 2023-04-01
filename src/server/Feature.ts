@@ -8,15 +8,23 @@ export default class Feature {
   blue: number
   green: number
   readonly body: Matter.Body
-  readonly isObstacle: boolean
+  readonly isPropBody: boolean
   red: number
   readonly stage: Stage
-  constructor ({ body, blue = 128, density = 0.001, green = 128, isObstacle = true, red = 128, stage }: {
+  constructor ({
+    body,
+    blue = 128,
+    density = 0.001,
+    green = 128,
+    isPropBody = true,
+    red = 128,
+    stage
+  }: {
     body: Matter.Body
     blue?: number
     density?: number
     green?: number
-    isObstacle?: boolean
+    isPropBody?: boolean
     red?: number
     stage: Stage
   }) {
@@ -28,7 +36,7 @@ export default class Feature {
     const color = `rgb(${this.red}, ${this.green}, ${this.blue})`
     this.body.render.fillStyle = color
     this.body.render.strokeStyle = color
-    this.isObstacle = isObstacle
+    this.isPropBody = isPropBody
     Matter.Composite.add(this.stage.engine.world, this.body)
     this.body.restitution = 0
     this.body.friction = 0
@@ -36,7 +44,7 @@ export default class Feature {
     Matter.Body.setDensity(this.body, density)
     this.stage.features.set(this.body.id, this)
     this.stage.bodies.push(this.body)
-    if (this.isObstacle) this.stage.scenery.push(this.body)
+    if (this.isPropBody) this.stage.propBodies.push(this.body)
   }
 
   getArea (): number {
@@ -75,8 +83,8 @@ export default class Feature {
   destroy (): void {
     Matter.Composite.remove(this.stage.engine.world, this.body)
     this.stage.features.delete(this.body.id)
-    if (this.isObstacle) {
-      this.stage.scenery = this.stage.scenery.filter(obstacle => obstacle.id !== this.body.id)
+    if (this.isPropBody) {
+      this.stage.propBodies = this.stage.propBodies.filter(obstacle => obstacle.id !== this.body.id)
     }
   }
 

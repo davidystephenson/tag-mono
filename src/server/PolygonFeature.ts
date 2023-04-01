@@ -18,7 +18,7 @@ export default class PolygonFeature extends Feature {
     radius: number
   }): boolean {
     const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
-    const otherScenery = this.stage.scenery.filter(obstacle => this.body.id !== obstacle.id)
+    const otherPropBodies = this.stage.propBodies.filter(obstacle => this.body.id !== obstacle.id)
     const ends = [...this.body.vertices, this.body.position]
     return ends.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
@@ -26,7 +26,7 @@ export default class PolygonFeature extends Feature {
       return this.stage.raycast.isSomeStartClear({
         starts: viewpoints,
         end: vertex,
-        obstacles: otherScenery
+        obstacles: otherPropBodies
       })
     })
   }

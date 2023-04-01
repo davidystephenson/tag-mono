@@ -52,7 +52,7 @@ export default class Player extends Character {
             this.score = this.score + points
             goal.number = this.score
             goal.scored = true
-            if (this.stage.scoreSpawn) {
+            if (this.stage.spawnOnScore) {
               void new Bot({ stage: this.stage, x: 0, y: 0 })
             }
             this.setGoal({ scoring: true })

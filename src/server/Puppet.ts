@@ -1,21 +1,21 @@
 import Matter from 'matter-js'
 import { EAST_VECTOR } from '../shared/math'
 import Actor from './Actor'
-import Scenery from './Scenery'
+import PropActor from './PropActor'
 import Stage from './Stage'
 import VerticesFeature from './VerticesFeature'
 
-export default class Puppet extends Scenery {
+export default class Puppet extends PropActor {
   readonly direction: Matter.Vector
   readonly targetSpeed: number
   readonly force: number
   constructor ({
-    blue = Scenery.BLUE,
-    density = Scenery.DENSITY,
+    blue = PropActor.BLUE,
+    density = PropActor.DENSITY,
     direction = EAST_VECTOR,
     force = 0.001,
-    green = Scenery.GREEN,
-    red = Scenery.RED,
+    green = PropActor.GREEN,
+    red = PropActor.RED,
     stage,
     targetSpeed = 0.5,
     vertices,

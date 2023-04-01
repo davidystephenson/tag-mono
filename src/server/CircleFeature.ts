@@ -17,7 +17,7 @@ export default class CircleFeature extends Feature {
     y: number
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, blue, density, green, isObstacle, red, stage })
+    super({ body, blue, density, green, isPropBody: isObstacle, red, stage })
   }
 
   getArea (): number {
@@ -45,7 +45,7 @@ export default class CircleFeature extends Feature {
   }): boolean {
     return this.stage.raycast.isCircleShown({
       debug,
-      obstacles: this.stage.scenery,
+      obstacles: this.stage.propBodies,
       end: this.body.position,
       endRadius: this.getRadius(),
       start: center,
@@ -75,7 +75,7 @@ export default class CircleFeature extends Feature {
     if (!inRange) return false
     return this.stage.raycast.isCircleShown({
       debug,
-      obstacles: this.stage.scenery,
+      obstacles: this.stage.propBodies,
       end: this.body.position,
       endRadius: this.getRadius(),
       start: center,

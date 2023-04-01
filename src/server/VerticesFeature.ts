@@ -15,6 +15,6 @@ export default class VerticesFeature extends PolygonFeature {
     y: number
   }) {
     const body = Matter.Bodies.fromVertices(x, y, [vertices])
-    super({ blue, body, density, green, isObstacle, red, stage })
+    super({ blue, body, density, green, isPropBody: isObstacle, red, stage })
   }
 }

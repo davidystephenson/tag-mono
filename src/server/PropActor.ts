@@ -5,7 +5,7 @@ import Actor from './Actor'
 import { project } from './math'
 import Bot from './Bot'
 
-export default class Scenery extends Actor {
+export default class PropActor extends Actor {
   static BLUE = 255
   static DENSITY = 0.00003
   static GREEN = 255
@@ -21,7 +21,6 @@ export default class Scenery extends Actor {
   }) {
     super({ feature, stage })
     const area = this.feature.getArea()
-    // const minimum = Math.min(area, 10000)
     this.health = area
     this.maximumHealth = this.health
     setTimeout(() => {
@@ -85,7 +84,7 @@ export default class Scenery extends Actor {
     if (this.health <= 0) {
       const actorIsIt = this.stage.it === actor
       if (actorIsIt) {
-        if (this.stage.scenerySpawn) {
+        if (this.stage.spawnOnDestroy) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
       } else if (actor?.feature.body.label === 'character') {

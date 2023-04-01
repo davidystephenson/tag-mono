@@ -1,6 +1,6 @@
 import Matter from 'matter-js'
 import Feature from './Feature'
-import Scenery from './Scenery'
+import PropActor from './PropActor'
 import Stage from './Stage'
 
 export default class Actor {
@@ -33,8 +33,8 @@ export default class Actor {
     this.stage.actors.delete(this.feature.body.id)
   }
 
-  loseReady ({ scenery, time }: {
-    scenery?: Scenery
+  loseReady ({ propActor, time }: {
+    propActor?: PropActor
     time?: number
   }): void {}
 }

@@ -61,14 +61,14 @@ export default class Stage {
   radii = [9, 10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
-  scenery: Matter.Body[] = []
-  scenerySpawn: boolean
-  scoreSpawn: boolean
+  propBodies: Matter.Body[] = []
+  spawnOnDestroy: boolean
+  spawnOnScore: boolean
   stepCount = 0
   stepTimeLimit: number
   spawnTime: number
   timers = new Map<number, [number, () => void]>()
-  timeSpawn: boolean
+  spawnOnTimer: boolean
   totalBodyCount = 0
   totalCollisionCount = 0
   wallBodies: Matter.Body[] = []
@@ -111,11 +111,11 @@ export default class Stage {
     gridBots = false,
     midpointBots = false,
     observer = false,
-    scenerySpawn = true,
-    scoreSpawn = true,
+    spawnOnDestroy = true,
+    spawnOnScore = true,
+    spawnOnTimer = true,
     size = 3000,
     stepTimeLimit = 35,
-    timeSpawn = true,
     town = true,
     townBots = false,
     wallBots = false,
@@ -151,11 +151,11 @@ export default class Stage {
     gridBots?: boolean
     midpointBots?: boolean
     observer?: boolean
-    scenerySpawn?: boolean
-    scoreSpawn?: boolean
+    spawnOnDestroy?: boolean
+    spawnOnScore?: boolean
     size?: number
     stepTimeLimit?: number
-    timeSpawn?: boolean
+    spawnOnTimer?: boolean
     town?: boolean
     townBots?: boolean
     wallBots?: boolean
@@ -184,10 +184,10 @@ export default class Stage {
     this.debugWaypointCircles = debugWaypointCircles
     this.debugWaypointLabels = debugWaypointLabels
     this.observer = observer
-    this.scenerySpawn = scenerySpawn
-    this.scoreSpawn = scoreSpawn
+    this.spawnOnDestroy = spawnOnDestroy
+    this.spawnOnScore = spawnOnScore
     this.stepTimeLimit = stepTimeLimit
-    this.timeSpawn = timeSpawn
+    this.spawnOnTimer = spawnOnTimer
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
     this.radii.forEach(radius => { this.waypointGroups[radius] = [] })
@@ -463,7 +463,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       this.actors.forEach(actor => actor.act())
-      if (this.timeSpawn) {
+      if (this.spawnOnTimer) {
         const now = Date.now()
         const spawnDifference = now - this.spawnTime
         const spawnLimit = this.getSpawnLimit()

@@ -9,7 +9,7 @@ import CircleFeature from './CircleFeature'
 import Feature from './Feature'
 import { boxToTriangle, getDistance, isPointInVisionRange } from './math'
 import Puppet from './Puppet'
-import Scenery from './Scenery'
+import PropActor from './PropActor'
 import Stage from './Stage'
 import { Goal, Heading } from './types'
 
@@ -349,7 +349,7 @@ export default class Character extends Actor {
     })
   }
 
-  loseIt ({ newIt }: { newIt: Character }): Scenery | undefined {
+  loseIt ({ newIt }: { newIt: Character }): PropActor | undefined {
     this.blocked = false
     this.loseReady({})
     const radius = this.feature.getRadius()
@@ -694,7 +694,7 @@ export default class Character extends Actor {
         })
       }
     } else {
-      throw new Error('Unclear scenery')
+      throw new Error('Unclear prop spawn')
     }
   }
 
@@ -732,13 +732,13 @@ export default class Character extends Actor {
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
     this.feature.setColor({ red: 255, green: 0, blue: 0 })
-    const scenery = oldIt?.loseIt({ newIt: this })
+    const propActor = oldIt?.loseIt({ newIt: this })
     if (this.stage.engine.timing.timestamp > 1000) {
       const inRangeFeatures = this.getInRangeFeatures()
       inRangeFeatures.forEach(feature => {
         if (
           feature.body.id !== this.feature.body.id &&
-          feature.body.id !== scenery?.feature.body.id &&
+          feature.body.id !== propActor?.feature.body.id &&
           !feature.body.isStatic
         ) {
           const distance = this.getDistance(feature.body.position)
