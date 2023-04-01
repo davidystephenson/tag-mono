@@ -5,11 +5,11 @@ import { getSides, isPointInRange } from './math'
 import Stage from './Stage'
 
 export default class CircleFeature extends Feature {
-  constructor ({ blue = 128, density = 0.001, green = 128, isObstacle = false, radius, red = 128, stage, x, y }: {
+  constructor ({ blue = 128, density = 0.001, green = 128, scenery = false, radius, red = 128, stage, x, y }: {
     blue?: number
     density?: number
     green?: number
-    isObstacle?: boolean
+    scenery?: boolean
     radius: number
     red?: number
     stage: Stage
@@ -17,7 +17,7 @@ export default class CircleFeature extends Feature {
     y: number
   }) {
     const body = Matter.Bodies.circle(x, y, radius)
-    super({ body, blue, density, green, isPropBody: isObstacle, red, stage })
+    super({ body, blue, density, green, scenery, red, stage })
   }
 
   getArea (): number {
@@ -45,7 +45,7 @@ export default class CircleFeature extends Feature {
   }): boolean {
     return this.stage.raycast.isCircleShown({
       debug,
-      obstacles: this.stage.propBodies,
+      obstacles: this.stage.sceneryBodies,
       end: this.body.position,
       endRadius: this.getRadius(),
       start: center,
@@ -75,7 +75,7 @@ export default class CircleFeature extends Feature {
     if (!inRange) return false
     return this.stage.raycast.isCircleShown({
       debug,
-      obstacles: this.stage.propBodies,
+      obstacles: this.stage.sceneryBodies,
       end: this.body.position,
       endRadius: this.getRadius(),
       start: center,

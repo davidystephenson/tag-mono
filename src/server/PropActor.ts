@@ -26,15 +26,18 @@ export default class PropActor extends Actor {
     setTimeout(() => {
       this.spawning = false
     }, 5000)
-    // @ts-expect-error
-    this.spawnBodies = this.stage.bodies.filter(body => body.id !== this.feature.body.id && Matter.Collision.collides(this.feature.body, body))
+    this.spawnBodies = this
+      .stage
+      .bodies
+      // @ts-expect-error
+      .filter(body => body.id !== this.feature.body.id && Matter.Collision.collides(this.feature.body, body))
   }
 
   act (): void {
     super.act()
     // @ts-expect-error
     this.spawnBodies = this.spawnBodies.filter(body => Matter.Collision.collides(this.feature.body, body))
-    this.spawnBodies.forEach(wall => {
+    this.spawnBodies.forEach(() => {
       const damage = this.maximumHealth / 1000
       this.takeDamage({ damage })
     })

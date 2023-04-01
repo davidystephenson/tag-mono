@@ -23,7 +23,7 @@ export default class Waypoint {
     this.y = y
     this.position = { x, y }
     this.id = this.stage.waypointGroups[radius].length
-    const obstacle = this.stage.walls.find(wall => {
+    const blockingWall = this.stage.walls.find(wall => {
       const dX = Math.abs(this.x - wall.x)
       const dY = Math.abs(this.y - wall.y)
       const coveredX = dX < wall.halfWidth + radius + 1
@@ -31,7 +31,7 @@ export default class Waypoint {
       const covered = coveredX && coveredY
       return covered
     })
-    if (obstacle == null) {
+    if (blockingWall == null) {
       this.stage.waypointGroups[radius].push(this)
     }
   }
