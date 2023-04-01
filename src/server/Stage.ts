@@ -281,7 +281,7 @@ export default class Stage {
       }
     }
     this.radii.forEach(radius => {
-      console.log('Begin navigation for', radius)
+      console.log('Pathfinding for radius:', radius)
       const group = this.waypointGroups[radius]
       if (group.length === 0) {
         throw new Error(`No waypoints for radius ${radius}`)
