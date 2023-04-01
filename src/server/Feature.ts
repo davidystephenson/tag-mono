@@ -5,11 +5,12 @@ import Stage from './Stage'
 export default class Feature {
   actor?: Actor
   alpha = 1
+  readonly body: Matter.Body
   blue: number
   green: number
-  readonly body: Matter.Body
-  readonly scenery: boolean
+  otherSceneryBodies?: Matter.Body[]
   red: number
+  readonly scenery: boolean
   readonly stage: Stage
   constructor ({
     body,
@@ -44,7 +45,14 @@ export default class Feature {
     Matter.Body.setDensity(this.body, density)
     this.stage.features.set(this.body.id, this)
     this.stage.bodies.push(this.body)
-    if (this.scenery) this.stage.sceneryBodies.push(this.body)
+    if (this.scenery) {
+      this.stage.sceneryFeatures.forEach(feature => {
+        feature.otherSceneryBodies?.push(this.body)
+      })
+      this.otherSceneryBodies = this.stage.sceneryBodies
+      this.stage.sceneryFeatures.push(this)
+      this.stage.sceneryBodies.push(this.body)
+    }
   }
 
   getArea (): number {
@@ -85,6 +93,9 @@ export default class Feature {
     this.stage.features.delete(this.body.id)
     if (this.scenery) {
       this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
+      this.stage.sceneryFeatures.forEach(feature => {
+        feature.otherSceneryBodies = feature.otherSceneryBodies?.filter(body => body.id !== this.body.id)
+      })
     }
   }
 

@@ -61,6 +61,7 @@ export default class Stage {
   radii = [9, 10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
+  sceneryFeatures: Feature[] = []
   sceneryBodies: Matter.Body[] = []
   spawnOnDestroy: boolean
   spawnOnScore: boolean
