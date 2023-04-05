@@ -15,7 +15,7 @@ import Controls from '../shared/controls'
 import Label from '../shared/Label'
 import Shape from '../shared/Shape'
 import { UpdateMessage } from '../shared/socket'
-import { VISION_INNER_WIDTH, VISION_INNER_HEIGHT } from '../shared/VISION'
+import { VISION_INNER } from '../shared/VISION'
 import { getRandomRectangleSize } from './math'
 import Puppet from './Puppet'
 import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from '../shared/math'
@@ -263,13 +263,13 @@ export default class Stage {
     const innerSize = size - Character.MARGIN * 2
     this.xFactor = 2
     this.xSegment = innerSize / this.xFactor
-    while (this.xSegment > VISION_INNER_WIDTH) {
+    while (this.xSegment > VISION_INNER.width) {
       this.xFactor = this.xFactor + 1
       this.xSegment = innerSize / this.xFactor
     }
     this.yFactor = 2
     this.ySegment = innerSize / this.yFactor
-    while (this.ySegment > VISION_INNER_HEIGHT) {
+    while (this.ySegment > VISION_INNER.height) {
       this.yFactor = this.yFactor + 1
       this.ySegment = innerSize / this.yFactor
     }

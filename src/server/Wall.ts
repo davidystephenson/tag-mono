@@ -1,5 +1,5 @@
 import Matter from 'matter-js'
-import { VISION_INNER_HEIGHT, VISION_INNER_WIDTH } from '../shared/VISION'
+import { VISION_INNER } from '../shared/VISION'
 import Bot from './Bot'
 import Character from './Character'
 import RectangleFeature from './RectangleFeature'
@@ -63,10 +63,10 @@ export default class Wall extends RectangleFeature {
             }
           }
         })
-        if (this.height > VISION_INNER_HEIGHT) {
+        if (this.height > VISION_INNER.height) {
           let factor = 2
           let segment = this.height / factor
-          while (segment > VISION_INNER_HEIGHT) {
+          while (segment > VISION_INNER.height) {
             factor = factor + 1
             segment = this.height / factor
           }
@@ -76,10 +76,10 @@ export default class Wall extends RectangleFeature {
             void new Waypoint({ stage: this.stage, x: rightMargin, y, radius })
           }
         }
-        if (this.width > VISION_INNER_WIDTH) {
+        if (this.width > VISION_INNER.width) {
           let factor = 2
           let segment = this.width / factor
-          while (segment > VISION_INNER_WIDTH) {
+          while (segment > VISION_INNER.width) {
             factor = factor + 1
             segment = this.width / factor
           }
