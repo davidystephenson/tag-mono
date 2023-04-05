@@ -101,11 +101,11 @@ export default class Bot extends Character {
   }
 
   explore (debug = this.stage.debugExplore): Matter.Vector | null {
+    this.stage.stepExplores += 1
     const exploreHeading = this.getExploreHeading({ debug })
     if (exploreHeading == null) return this.loseWay()
     const isPosition = samePoint({ a: exploreHeading.waypoint.position, b: this.feature.body.position })
     if (isPosition) {
-      console.log('insular', exploreHeading)
       this.stage.circle({
         color: 'red',
         radius: 12.5,
@@ -175,6 +175,7 @@ export default class Bot extends Character {
   }
 
   flee ({ character }: { character: Character }): Matter.Vector {
+    this.stage.stepFlees += 1
     this.setPath({ path: [], label: 'flee' })
     const start = this.feature.body.position
     const product = Matter.Vector.mult(character.feature.body.velocity, 5)
@@ -356,6 +357,7 @@ export default class Bot extends Character {
   }
 
   unblock ({ character }: { character: Character }): Matter.Vector | null {
+    this.stage.stepUnblocks += 1
     const group = this.getGroup()
     const eligible = this.stage.waypointGroups[group].filter(waypoint => {
       const tried = this.unblockTries?.[waypoint.id] === true

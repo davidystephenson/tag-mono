@@ -21,14 +21,14 @@ import Puppet from './Puppet'
 import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from '../shared/math'
 
 export default class Stage {
-  activeCollisionCount = 0
+  stepActiveCollisionCount = 0
   actors = new Map<number, Actor>()
   bodies: Matter.Body[] = []
   botCount = 0
   characters = new Map<number, Character>()
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
-  collisionStartCount = 0
+  stepCollisionStartCount = 0
   debugBored: boolean
   debugCharacters: boolean
   debugChase: boolean
@@ -68,6 +68,9 @@ export default class Stage {
   spawnOnTimer: boolean
   stepCount = 0
   stepPursues = 0
+  stepUnblocks = 0
+  stepExplores = 0
+  stepFlees = 0
   stepTimeLimit: number
   spawnTime: number
   timers = new Map<number, [number, () => void]>()
@@ -415,11 +418,11 @@ export default class Stage {
       void new Bot({ x: -marginEdge, y: 0, stage: this })
     }
     Matter.Runner.run(this.runner, this.engine)
-    const { append } = csvAppend('data.csv')
+    const { append } = csvAppend('steps.csv')
     Matter.Events.on(this.engine, 'afterUpdate', () => {
       this.stepCount = this.stepCount + 1
       this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
-      this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
+      this.totalCollisionCount = this.totalCollisionCount + this.stepCollisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(this.engine.world)
       this.totalBodyCount = this.totalBodyCount + bodies.length
       this.timers.forEach((value, index) => {
@@ -453,7 +456,7 @@ export default class Stage {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStartCount + this.activeCollisionCount
+          const stepCollisions = this.stepCollisionStartCount + this.stepActiveCollisionCount
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           const averageRays = Math.floor(this.raycast.rayCountTotal / this.stepCount)
@@ -493,31 +496,37 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         steps: this.stepCount,
         time: newTime,
         difference,
-        activeCollisions: this.activeCollisionCount,
-        collisionStarts: this.collisionStartCount,
+        activeCollisions: this.stepActiveCollisionCount,
+        collisionStarts: this.stepCollisionStartCount,
         characters: this.characters.size,
         bodies: bodies.length,
         raycasts: this.raycast.stepRaycasts,
-        clears: this.raycast.stepClears
+        clears: this.raycast.stepClears,
+        unblocks: this.stepUnblocks,
+        explores: this.stepExplores,
+        flees: this.stepFlees
       }
       append(record)
-      this.collisionStartCount = 0
-      this.activeCollisionCount = 0
+      this.stepCollisionStartCount = 0
+      this.stepActiveCollisionCount = 0
       this.stepPursues = 0
+      this.stepExplores = 0
+      this.stepFlees = 0
+      this.stepUnblocks = 0
       this.raycast.stepRayCount = 0
       this.raycast.stepClears = 0
     })
 
     Matter.Events.on(this.engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
-        this.collisionStartCount = this.collisionStartCount + 1
+        this.stepCollisionStartCount = this.stepCollisionStartCount + 1
         this.collide({ pair })
       })
     })
 
     Matter.Events.on(this.engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
-        this.activeCollisionCount = this.activeCollisionCount + 1
+        this.stepActiveCollisionCount = this.stepActiveCollisionCount + 1
         const delta = this.engine.timing.lastDelta
         this.collide({ delta, pair })
       })
