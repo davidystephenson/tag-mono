@@ -23,12 +23,14 @@ export default class Character extends Actor {
   force = 0.0001
   headings: Record<number, Heading[]> = {}
   isPlayer = false
+  it: boolean
   moving = false
   observer = false
   ready = true
-  constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
+  constructor ({ blue = 0, green = 128, it = false, radius = 15, red = 0, stage, x = 0, y = 0 }: {
     blue?: number
     green?: number
+    it?: boolean
     radius?: number
     red?: number
     stage: Stage
@@ -38,6 +40,7 @@ export default class Character extends Actor {
     const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
     super({ feature, stage })
+    this.it = it
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
@@ -46,9 +49,6 @@ export default class Character extends Actor {
 
   act (): void {
     super.act()
-    // if (this.feature.blue === 255 && this.feature.green === 255 && this.feature.red === 0) {
-    //   this.feature.setColor({ blue: 0, green: 128, red: 0 })
-    // }
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
@@ -102,10 +102,10 @@ export default class Character extends Actor {
     normal: Matter.Vector
     scale?: number
   }): void {
-    if (actor != null && this.stage.it === actor) {
-      const it = actor as Character
-      if (it.ready && this.ready) {
-        this.makeIt({ oldIt: it })
+    if (actor != null && actor.feature.body.label === 'character') {
+      const character = actor as Character
+      if (character.ready && this.ready && character.it) {
+        this.makeIt({ oldIt: character })
       }
     }
     super.collide({ actor, body, delta, normal, scale })
@@ -351,6 +351,7 @@ export default class Character extends Actor {
 
   loseIt ({ newIt }: { newIt: Character }): PropActor | undefined {
     this.blocked = false
+    this.it = false
     this.loseReady({})
     if (!this.stage.spawnOnTag) {
       return undefined
@@ -712,9 +713,10 @@ export default class Character extends Actor {
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
     if (this.stage.debugMakeIt) console.log('makeIt', this.feature.body.id)
-    if (this.stage.it === this) {
-      // throw new Error('Already it')
+    if (this.it) {
+      throw new Error('Already it')
     }
+    this.it = true
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
       if (character === this || character === oldIt) return
@@ -728,7 +730,6 @@ export default class Character extends Actor {
       return isVisible
     })?.character
     bystander?.destroy()
-    this.stage.it = this
     const spawnLimit = this.stage.getSpawnLimit()
     this.stage.spawnTime = this.stage.spawnTime + spawnLimit
     const radius = this.feature.getRadius()

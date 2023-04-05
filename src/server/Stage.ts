@@ -50,7 +50,6 @@ export default class Stage {
   engine = Matter.Engine.create()
   features = new Map<number, Feature>()
   initial = true
-  it?: Character
   labels: Label[] = []
   lines: Line[] = []
   lostPoints: Matter.Vector[] = []
@@ -68,6 +67,7 @@ export default class Stage {
   spawnOnTag: boolean
   spawnOnTimer: boolean
   stepCount = 0
+  stepPursues = 0
   stepTimeLimit: number
   spawnTime: number
   timers = new Map<number, [number, () => void]>()
@@ -503,6 +503,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       append(record)
       this.collisionStartCount = 0
       this.activeCollisionCount = 0
+      this.stepPursues = 0
       this.raycast.stepRayCount = 0
       this.raycast.stepClears = 0
     })

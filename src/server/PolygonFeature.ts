@@ -26,7 +26,8 @@ export default class PolygonFeature extends Feature {
       return this.stage.raycast.isSomeStartClear({
         starts: viewpoints,
         end: vertex,
-        obstacles: otherSceneryBodies
+        obstacles: otherSceneryBodies,
+        debug: true
       })
     })
   }
