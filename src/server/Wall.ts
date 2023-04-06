@@ -15,7 +15,9 @@ export default class Wall extends RectangleFeature {
   readonly rightSide: number
   readonly topSide: number
   readonly bottomSide: number
-  constructor ({ blue = 255, green = 0, height = 100, red = 0, stage, waypoints = true, width = 100, x = 0, y = 0 }: {
+  constructor ({
+    blue = 255, green = 0, height = 100, red = 0, stage, waypoints = true, width = 100, x = 0, y = 0
+  }: {
     blue?: number
     green?: number
     height: number

@@ -49,7 +49,7 @@ export default class Feature {
       this.stage.sceneryFeatures.forEach(feature => {
         feature.otherSceneryBodies?.push(this.body)
       })
-      this.otherSceneryBodies = this.stage.sceneryBodies
+      this.otherSceneryBodies = [...this.stage.sceneryBodies]
       this.stage.sceneryFeatures.push(this)
       this.stage.sceneryBodies.push(this.body)
     }
@@ -65,8 +65,9 @@ export default class Feature {
     return true
   }
 
-  isVisible ({ center, radius }: {
+  isVisible ({ center, debug, radius }: {
     center: Matter.Vector
+    debug?: boolean
     radius: number
   }): boolean {
     return true
@@ -92,7 +93,7 @@ export default class Feature {
     Matter.Composite.remove(this.stage.engine.world, this.body)
     this.stage.features.delete(this.body.id)
     if (this.scenery) {
-      this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
+      // this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
       this.stage.sceneryFeatures.forEach(feature => {
         feature.otherSceneryBodies = feature.otherSceneryBodies?.filter(body => body.id !== this.body.id)
       })

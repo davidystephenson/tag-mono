@@ -7,7 +7,7 @@ import socketIo from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import Stage from './Stage'
 const stage = new Stage({
-  // town: false, country: false, greek: false, centerBot: false, spawnOnTimer: false, spawnOnDestroy: false, spawnOnScore: false, spawnOnTag: false, wildBricks: false, debugFeatures: true
+  // town: false, country: false, greek: false, centerBot: false, spawnOnTimer: false, spawnOnDestroy: false, spawnOnScore: false, spawnOnTag: true, wildBricks: true, wildPuppets: false, debugFeatures: false
 })
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')
@@ -51,6 +51,9 @@ async function start (): Promise<void> {
     stage.join(socket.id)
     socket.on('updateServer', message => {
       stage.control({ id: socket.id, controls: message.controls })
+    })
+    socket.on('debug', () => {
+      stage.debug({ label: 'client' })
     })
     socket.on('disconnect', () => {
       console.log('disconnect:', socket.id)

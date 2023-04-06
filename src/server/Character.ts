@@ -23,7 +23,6 @@ export default class Character extends Actor {
   force = 0.0001
   headings: Record<number, Heading[]> = {}
   isPlayer = false
-  it: boolean
   moving = false
   observer = false
   ready = true
@@ -39,12 +38,11 @@ export default class Character extends Actor {
   }) {
     const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
-    super({ feature, stage })
-    this.it = it
+    super({ feature, it, stage })
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
-    if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
     this.initializeHeadings()
+    this.restoreColor()
   }
 
   act (): void {
@@ -87,11 +85,8 @@ export default class Character extends Actor {
       this.feature.setColor({ red: 255, green: 255, blue: 255 })
     } else {
       this.ready = true
-      if (this.stage.it === this) {
-        this.feature.setColor({ red: 255, green: 0, blue: 0 })
-      } else {
-        this.feature.setColor({ red: 0, green: 128, blue: 0 })
-      }
+      console.log('this.it test:', this.it)
+      this.restoreColor()
     }
   }
 
@@ -353,6 +348,7 @@ export default class Character extends Actor {
     this.blocked = false
     this.it = false
     this.loseReady({})
+    console.log('this.stage.spawnOnTag', this.stage.spawnOnTag)
     if (!this.stage.spawnOnTag) {
       return undefined
     }
@@ -719,7 +715,7 @@ export default class Character extends Actor {
     this.it = true
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
-      if (character === this || character === oldIt) return
+      if (character.it || character === oldIt) return
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
     })
@@ -767,6 +763,14 @@ export default class Character extends Actor {
           }
         }
       })
+    }
+  }
+
+  restoreColor (): void {
+    if (this.it) {
+      this.feature.setColor({ red: 255, green: 0, blue: 0 })
+    } else {
+      this.feature.setColor({ red: 0, green: 128, blue: 0 })
     }
   }
 }

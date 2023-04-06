@@ -5,12 +5,15 @@ import Stage from './Stage'
 
 export default class Actor {
   readonly feature: Feature
+  it: boolean
   readonly stage: Stage
-  constructor ({ feature, stage }: {
+  constructor ({ feature, it = false, stage }: {
     feature: Feature
+    it?: boolean
     stage: Stage
   }) {
     this.feature = feature
+    this.it = it
     this.stage = stage
     this.feature.actor = this
     this.stage.actors.set(this.feature.body.id, this)

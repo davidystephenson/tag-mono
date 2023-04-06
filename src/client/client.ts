@@ -24,6 +24,7 @@ window.onclick = function () {
   oldTime = newTime
   console.log('state:', state)
   console.log('camera:', camera)
+  socket.emit('debug', {})
 }
 
 window.onkeydown = function (event: KeyboardEvent) {

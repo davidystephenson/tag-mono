@@ -24,7 +24,7 @@ export default class Stage {
   stepActiveCollisionCount = 0
   actors = new Map<number, Actor>()
   bodies: Matter.Body[] = []
-  botCount = 0
+  bots: Bot[] = []
   characters = new Map<number, Character>()
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
@@ -205,7 +205,9 @@ export default class Stage {
       { x: size, y: 0, width: size, height: wallSize },
       { x: -size, y: 0, width: size, height: wallSize }
     ]
-    wallProps.forEach(props => new Wall({ ...props, waypoints: false, stage: this }))
+    wallProps.forEach((props) => {
+      void new Wall({ ...props, waypoints: false, stage: this })
+    })
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
@@ -313,41 +315,41 @@ export default class Stage {
     })
     console.log('Pathfinding complete!')
     if (wildBricks) {
-      void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
-      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
-      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
-      this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
-      this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
-      this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
-      this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
-      this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
-      this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
-      this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
-      this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
-      this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
-      this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
-      this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
-      this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
-      this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
-      this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
-      this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
-      this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
-      this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
-      this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
-      this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
-      this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
+      // void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
+      // this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      // this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      // this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
+      // this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
+      // this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
+      // this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
+      // this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
+      // this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
+      // this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
+      // this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
+      // this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
+      // this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
+      // this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
+      // this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
+      // this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
+      // this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
+      // this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
+      // this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
+      // this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
+      // this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
+      // this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
+      // this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (wildPuppets) {
       const vertices = [
@@ -504,7 +506,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         clears: this.raycast.stepClears,
         unblocks: this.stepUnblocks,
         explores: this.stepExplores,
-        flees: this.stepFlees
+        flees: this.stepFlees,
+        pursues: this.stepPursues
       }
       append(record)
       this.stepCollisionStartCount = 0
@@ -570,13 +573,48 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
   }
 
+  debug ({ label }: { label?: string | number }): void {
+    console.log(label, 'length:', this.sceneryBodies.length)
+    const positions = this.sceneryBodies.map(body => {
+      return { ...body.position, id: body.id }
+    })
+    console.log(label, 'positions:', positions)
+  }
+
+  getAllIts (): Character[] {
+    const its: Character[] = []
+    const characters = this.characters.values()
+    for (const character of characters) {
+      if (character.it) its.push(character)
+    }
+    return its
+  }
+
+  getFirstIt (): Character | undefined {
+    const characters = this.characters.values()
+    for (const character of characters) {
+      if (character.it) return character
+    }
+  }
+
   getSpawnLimit (): number {
     return this.characters.size * 500
   }
 
-  join (id: string): void {
-    const position = this.it?.getExploreHeading({})?.waypoint.position ?? { x: 0, y: 0 }
-    void new Player({
+  join (id: string): Player {
+    const firstIt = this.getFirstIt()
+    if (firstIt == null) {
+      return new Player({
+        id,
+        observer: this.observer,
+        x: 0,
+        y: 0,
+        stage: this,
+        it: true
+      })
+    }
+    const position = firstIt?.getExploreHeading({})?.waypoint.position ?? { x: 0, y: 0 }
+    return new Player({
       id,
       observer: this.observer,
       x: position.x,
@@ -587,7 +625,14 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
   leave (id: string): void {
     const player = Player.players.get(id)
-    if (this.it === player) this.oldest?.makeIt({ oldIt: this.oldest })
+    if (player == null) return
+    if (player?.it) {
+      const its = this.getAllIts()
+      if (its.length === 1) {
+        const notItBots = this.bots.filter(bot => !bot.it)
+        notItBots[0]?.makeIt({ oldIt: player })
+      }
+    }
     player?.destroy()
   }
 
@@ -651,11 +696,15 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         })
       })
     }
+    const allIts = this.getAllIts()
+    if (allIts.length === 0) {
+      console.warn('No it!')
+    }
     const visibleFeatures = this.debugFeatures ? [...this.features.values()] : player.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => {
       const shape = new Shape(feature.body)
       if (shape.id === player.feature.body.id) {
-        const color = this.it === player ? 'hotpink' : 'limegreen'
+        const color = player.it ? 'hotpink' : 'limegreen'
         const newRender = { ...shape.render, strokeStyle: color }
         const newShape = { ...shape, render: newRender }
         return newShape

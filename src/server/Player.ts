@@ -12,6 +12,7 @@ export default class Player extends Character {
   score = 0
   constructor ({
     id,
+    it = false,
     observer = false,
     radius = 15,
     stage,
@@ -19,13 +20,14 @@ export default class Player extends Character {
     y = 0
   }: {
     id: string
+    it?: boolean
     observer?: boolean
     radius?: number
     stage: Stage
     x: number
     y: number
   }) {
-    super({ x, y, radius, stage })
+    super({ it, radius, stage, x, y })
     this.observer = observer
     if (this.observer) {
       this.ready = false
@@ -38,7 +40,7 @@ export default class Player extends Character {
 
   act (): void {
     super.act()
-    if (this.stage.it === this) {
+    if (this.it) {
       if (this.goals.length === 0 || this.goalTime == null) {
         this.setGoal({})
       } else {

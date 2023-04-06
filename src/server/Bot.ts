@@ -27,7 +27,7 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    this.stage.botCount = this.stage.botCount + 1
+    this.stage.bots.push(this)
     if (this.stage.oldest == null) this.stage.oldest = this
     this.loseReady({})
   }
@@ -55,15 +55,13 @@ export default class Bot extends Character {
   }
 
   chooseDirection (): Matter.Vector | null {
-    if (this.stage.it == null) {
-      console.warn('No it!!!')
-      return null
-    }
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
       if (character === this || character.observer) return
       if (this.it) {
         if (character.it || !character.ready) return
+      } else {
+        if (!character.it) return
       }
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
@@ -89,14 +87,14 @@ export default class Bot extends Character {
         this.setPath({ path: [point], label: 'pursue' })
         return point
       }
-    } else if (isIt) {
+    } else if (this.it) {
       this.blocked = false
       this.unblockTries = undefined
     }
     if (this.isBored()) {
       return this.explore()
     }
-    const debug = isIt ? this.stage.debugItChoice : this.stage.debugNotItChoice
+    const debug = this.it ? this.stage.debugItChoice : this.stage.debugNotItChoice
     return this.followPath(debug)
   }
 
@@ -188,7 +186,7 @@ export default class Bot extends Character {
   followPath (debug?: boolean): Matter.Vector | null {
     const debugging = debug === true || this.stage.debugPathing
     if (debugging) {
-      const color = this.stage.it === this ? 'red' : 'green'
+      const color = this.it ? 'red' : 'green'
       this.path.forEach((point, index) => {
         const end = this.path[index + 1]
         if (end == null) return

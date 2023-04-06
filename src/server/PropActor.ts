@@ -85,8 +85,7 @@ export default class PropActor extends Actor {
   }): void {
     this.health = this.health - damage
     if (this.health <= 0) {
-      const actorIsIt = this.stage.it === actor
-      if (actorIsIt) {
+      if (actor?.it != null && actor?.it) {
         if (this.stage.spawnOnDestroy) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
