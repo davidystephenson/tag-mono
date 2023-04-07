@@ -105,7 +105,6 @@ export default class PropActor extends Actor {
           const needed = 10 / radius
           actor.feature.setColor(PropActor.COLOR)
           Matter.Body.scale(actor.feature.body, needed, needed)
-          void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         } else {
           const character = actor as Character
           character.setRadiusColor()

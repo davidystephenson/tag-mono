@@ -7,7 +7,8 @@ import socketIo from 'socket.io'
 import { ClientToServerEvents, ServerToClientEvents } from '../shared/socket'
 import Stage from './Stage'
 const stage = new Stage({
-  // town: false, country: false, greek: false, centerBot: true, spawnOnTimer: false, spawnOnDestroy: false, spawnOnScore: false, spawnOnTag: true, wildBricks: true, wildPuppets: false, debugFeatures: false, debugPlayerVision: true
+  //  spawnOnScore: false
+  town: false, country: false, greek: false, centerBot: true, spawnOnTimer: false, spawnOnDestroy: false, spawnOnScore: false, spawnOnTag: true, wildBricks: true, wildPuppets: false, debugFeatures: true, debugPlayerVision: true
 })
 const app = express()
 const staticPath = path.join(__dirname, '..', '..', 'dist')

@@ -44,9 +44,9 @@ export default class Player extends Character {
 
   act (): void {
     super.act()
-    if (this.isIt()) {
+    if (!this.isIt()) {
       if (this.goals.length === 0 || this.goalTime == null) {
-        this.setGoal({})
+        this.setGoal()
       } else {
         this.goals.forEach((goal, index) => {
           if (goal.scored) return
@@ -61,7 +61,7 @@ export default class Player extends Character {
             if (this.stage.spawnOnScore) {
               void new Bot({ stage: this.stage, x: 0, y: 0 })
             }
-            this.setGoal({ scoring: true })
+            this.setGoal()
           }
         })
         const scores = this.goals.filter(goal => goal.scored)
@@ -75,7 +75,7 @@ export default class Player extends Character {
           })
           this.goals = [highest]
           this.initializeHeadings()
-          this.setGoal({})
+          this.setGoal()
         }
 
         const now = Date.now()
@@ -84,7 +84,7 @@ export default class Player extends Character {
         const goalLimit = 10000 - spawnLimit
         const limited = Math.max(goalLimit, 5000)
         if (goalDifference > limited) {
-          this.setGoal({ timed: true })
+          this.setGoal()
         }
       }
     }
@@ -98,30 +98,19 @@ export default class Player extends Character {
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
     super.makeIt({ oldIt })
-    this.setGoal({})
+    this.setGoal()
   }
 
-  setGoal ({ scoring, timed }: { scoring?: boolean, timed?: boolean }): void {
-    const goals = scoring === true ? this.goals : undefined
-    const heading = this.getExploreHeading({ debug: false, goals })
+  setGoal (): void {
+    const heading = this.getExploreHeading({ debug: false, goals: this.goals })
     if (heading == null) {
       throw new Error('Can not set goal')
     }
-    if (timed === true) {
-      const oldGoal = this.goals.find(oldGoal =>
-        oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
-        oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
-      )
-      if (oldGoal == null) {
-        const newGoal = { heading, passed: false, scored: false, number: 0 }
-        this.goals.push(newGoal)
-        this.goalTime = Date.now()
-      }
-    } else {
-      this.goals = this.goals.filter(goal =>
-        goal.heading.waypoint.position.x !== heading.waypoint.position.x ||
-        goal.heading.waypoint.position.y !== heading.waypoint.position.y
-      )
+    const oldGoal = this.goals.find(oldGoal =>
+      oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
+      oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
+    )
+    if (oldGoal == null) {
       const newGoal = { heading, passed: false, scored: false, number: 0 }
       this.goals.push(newGoal)
       this.goalTime = Date.now()

@@ -732,7 +732,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       torsoId: player.feature.body.id
     }
     player.goals.forEach((goal) => {
-      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : goal.heading.tight ? 'rgba(255, 0, 0, 0.25)' : 'rgba(255, 0, 0, 0.25)'
+      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : goal.heading.tight ? 'rgba(0, 128, 0, 0.25)' : 'rgba(0, 255, 0, 0.25)'
       const radius = goal.heading.tight ? 15 : 7.5
       const circle = new Circle({
         color: circleColor,
@@ -741,7 +741,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         y: goal.heading.waypoint.position.y
       })
       message.circles = [...message.circles, circle]
-      const labelColor = goal.scored ? 'white' : 'red'
+      const labelColor = 'white'
       const text = goal.scored
         ? goal.number
         : goal.heading.tight
@@ -760,7 +760,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       throw new Error('More than one pass')
     }
     passes.forEach(pass => {
-      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 0, 0, 0.15)'
+      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 255, 0, 0.15)'
       const circle = new Circle({
         color,
         radius: 10,
