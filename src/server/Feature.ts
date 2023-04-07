@@ -93,7 +93,7 @@ export default class Feature {
     Matter.Composite.remove(this.stage.engine.world, this.body)
     this.stage.features.delete(this.body.id)
     if (this.scenery) {
-      // this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
+      this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
       this.stage.sceneryFeatures.forEach(feature => {
         feature.otherSceneryBodies = feature.otherSceneryBodies?.filter(body => body.id !== this.body.id)
       })

@@ -5,15 +5,13 @@ import Stage from './Stage'
 
 export default class Actor {
   readonly feature: Feature
-  it: boolean
+  isPlayer = false
   readonly stage: Stage
-  constructor ({ feature, it = false, stage }: {
+  constructor ({ feature, stage }: {
     feature: Feature
-    it?: boolean
     stage: Stage
   }) {
     this.feature = feature
-    this.it = it
     this.stage = stage
     this.feature.actor = this
     this.stage.actors.set(this.feature.body.id, this)
@@ -32,8 +30,15 @@ export default class Actor {
   }): void {}
 
   destroy (): void {
+    if (this.isIt()) {
+      throw new Error('Cannot destroy the it actor')
+    }
     this.feature.destroy()
     this.stage.actors.delete(this.feature.body.id)
+  }
+
+  isIt (): boolean {
+    return false
   }
 
   loseReady ({ propActor, time }: {

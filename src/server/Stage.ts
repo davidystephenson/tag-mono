@@ -41,6 +41,7 @@ export default class Stage {
   debugMakeIt: boolean
   debugNotItChoice: boolean
   debugPathing: boolean
+  debugPlayerVision: boolean
   debugPosition: boolean
   debugSpeed: boolean
   debugStepTime: boolean
@@ -57,7 +58,7 @@ export default class Stage {
   oldest?: Bot
   oldTime = Date.now()
   paused = false
-  radii = [9, 10, 11, 12, 13, 14, 15]
+  radii = [10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
   sceneryFeatures: Feature[] = []
@@ -105,6 +106,7 @@ export default class Stage {
     debugMakeIt = false,
     debugNotItChoice = false,
     debugPathing = false,
+    debugPlayerVision = false,
     debugPosition = false,
     debugSpeed = false,
     debugStepTime = true,
@@ -147,6 +149,7 @@ export default class Stage {
     debugNotItChoice?: boolean
     debugPathing?: boolean
     debugPosition?: boolean
+    debugPlayerVision?: boolean
     debugSpeed?: boolean
     debugStepTime?: boolean
     debugWaypointCircles?: boolean
@@ -183,6 +186,7 @@ export default class Stage {
     this.debugMakeIt = debugMakeIt
     this.debugNotItChoice = debugNotItChoice
     this.debugPathing = debugPathing
+    this.debugPlayerVision = debugPlayerVision
     this.debugPosition = debugPosition
     this.debugSpeed = debugSpeed
     this.debugStepTime = debugStepTime
@@ -290,7 +294,7 @@ export default class Stage {
       }
     }
     this.radii.forEach(radius => {
-      console.log('Pathfinding for radius:', radius)
+      console.info('Pathfinding for radius:', radius)
       const group = this.waypointGroups[radius]
       if (group.length === 0) {
         throw new Error(`No waypoints for radius ${radius}`)
@@ -298,58 +302,58 @@ export default class Stage {
       group.forEach(waypoint => {
         waypoint.distances = group.map(() => Infinity)
       })
-      console.log('Setting neighbors...')
+      console.info('Setting neighbors...')
       group.forEach(waypoint => {
         waypoint.setNeighbors()
         if (waypoint.neighbors.length === 0) {
-          console.log('neighbors', waypoint.id, waypoint.neighbors.length)
+          console.info('neighbors', waypoint.id, waypoint.neighbors.length)
           this.circle({ radius: 10, x: waypoint.x, y: waypoint.y, color: 'orange' })
         }
       })
-      console.log('Updating distances...')
+      console.info('Updating distances...')
       group.forEach(() => group.forEach(waypoint => waypoint.updateDistances()))
-      console.log('Setting paths...')
+      console.info('Setting paths...')
       group.forEach(waypoint => {
         waypoint.setPaths()
       })
     })
-    console.log('Pathfinding complete!')
+    console.info('Pathfinding complete!')
     if (wildBricks) {
-      // void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
-      // this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
-      // this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
-      // this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
-      // this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
-      // this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
-      // this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
-      // this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
-      // this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
-      // this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
-      // this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
-      // this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
-      // this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
-      // this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
-      // this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
-      // this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
-      // this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
-      // this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
-      // this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
-      // this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
-      // this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
-      // this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
-      // this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
+      void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
+      this.randomBrick({ x: 0, y: -30, height: 30, width: 100 })
+      this.randomBrick({ x: 30, y: 0, height: 30, width: 50 })
+      this.randomBrick({ x: -30, y: 0, height: 50, width: 30 })
+      this.randomBrick({ x: -800, y: 0, height: 80, width: 30 })
+      this.randomBrick({ x: -900, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1000, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1100, y: 0, height: 90, width: 80 })
+      this.randomBrick({ x: -1200, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1300, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: -1400, y: 0, height: 50, width: 50 })
+      this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
+      this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
+      this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 800, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 850, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 900, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 950, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1000, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1050, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1100, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1150, y: 1300, height: 100, width: 30 })
+      this.randomBrick({ x: 1200, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1250, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1300, y: 1300, height: 300, width: 30 })
+      this.randomBrick({ x: 1350, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
+      this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
     if (wildPuppets) {
       const vertices = [
@@ -386,9 +390,7 @@ export default class Stage {
         vertices
       })
     }
-    if (centerBot) {
-      void new Bot({ x: 100, y: 0, stage: this })
-    }
+    if (centerBot) void new Bot({ x: 100, y: 0, stage: this })
     if (greekBots) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots) townWalls.forEach(wall => wall.spawnBots())
     if (gridBots) gridPoints.forEach(point => new Bot({ x: point.x, y: point.y, stage: this }))
@@ -422,6 +424,12 @@ export default class Stage {
     Matter.Runner.run(this.runner, this.engine)
     const { append } = csvAppend('steps.csv')
     Matter.Events.on(this.engine, 'afterUpdate', () => {
+      const allIts = this.getAllIts()
+      if (allIts.length === 0) {
+        console.warn('empty allIts:', allIts)
+        // throw new Error('No it!')
+        this.paused = true
+      }
       this.stepCount = this.stepCount + 1
       this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
       this.totalCollisionCount = this.totalCollisionCount + this.stepCollisionStartCount // + this.activeCollisions
@@ -444,7 +452,7 @@ export default class Stage {
       const difference = newTime - this.oldTime
       if (this.debugStepTime) {
         if (this.initial) {
-          console.log('initial difference:', difference)
+          console.debug('initial difference:', difference)
           this.initial = false
         }
 
@@ -574,18 +582,19 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   debug ({ label }: { label?: string | number }): void {
-    console.log(label, 'length:', this.sceneryBodies.length)
+    console.debug(label, 'sceneryBodies length:', this.sceneryBodies.length)
     const positions = this.sceneryBodies.map(body => {
       return { ...body.position, id: body.id }
     })
-    console.log(label, 'positions:', positions)
+    console.debug(label, 'sceneryBodies positions:', positions)
   }
 
   getAllIts (): Character[] {
     const its: Character[] = []
     const characters = this.characters.values()
     for (const character of characters) {
-      if (character.it) its.push(character)
+      const it = character.isIt()
+      if (it) its.push(character)
     }
     return its
   }
@@ -593,7 +602,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   getFirstIt (): Character | undefined {
     const characters = this.characters.values()
     for (const character of characters) {
-      if (character.it) return character
+      if (character.isIt()) return character
     }
   }
 
@@ -610,7 +619,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         x: 0,
         y: 0,
         stage: this,
-        it: true
+        blue: Character.IT_COLOR.blue,
+        green: Character.IT_COLOR.green,
+        red: Character.IT_COLOR.red
       })
     }
     const position = firstIt?.getExploreHeading({})?.waypoint.position ?? { x: 0, y: 0 }
@@ -626,10 +637,10 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   leave (id: string): void {
     const player = Player.players.get(id)
     if (player == null) return
-    if (player?.it) {
+    if (player?.isIt()) {
       const its = this.getAllIts()
       if (its.length === 1) {
-        const notItBots = this.bots.filter(bot => !bot.it)
+        const notItBots = this.bots.filter(bot => !bot.isIt())
         notItBots[0]?.makeIt({ oldIt: player })
       }
     }
@@ -696,15 +707,19 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         })
       })
     }
-    const allIts = this.getAllIts()
-    if (allIts.length === 0) {
-      console.warn('No it!')
-    }
     const visibleFeatures = this.debugFeatures ? [...this.features.values()] : player.getVisibleFeatures()
     const shapes = visibleFeatures.map(feature => {
-      const shape = new Shape(feature.body)
+      const shape = new Shape({
+        alpha: feature.alpha,
+        blue: feature.blue,
+        body: feature.body,
+        green: feature.green,
+        red: feature.red
+      })
       if (shape.id === player.feature.body.id) {
-        const color = player.it ? 'hotpink' : 'limegreen'
+        const color = player.isIt()
+          ? 'hotpink'
+          : 'limegreen'
         const newRender = { ...shape.render, strokeStyle: color }
         const newShape = { ...shape, render: newRender }
         return newShape

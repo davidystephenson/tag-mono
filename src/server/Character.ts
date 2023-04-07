@@ -16,33 +16,53 @@ import { Goal, Heading } from './types'
 export default class Character extends Actor {
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
+  static IT_COLOR = { blue: 0, green: 0, red: 255 }
+  static NOT_IT_COLOR = { blue: 0, green: 128, red: 0 }
+  static OBSERVER_COLOR = { blue: 255, green: 255, red: 255 }
 
   blocked = true // Philosophical
   controls = new Input().controls
   declare feature: CircleFeature
   force = 0.0001
   headings: Record<number, Heading[]> = {}
-  isPlayer = false
   moving = false
   observer = false
   ready = true
-  constructor ({ blue = 0, green = 128, it = false, radius = 15, red = 0, stage, x = 0, y = 0 }: {
+  constructor ({
+    blue = Character.NOT_IT_COLOR.blue,
+    green = Character.NOT_IT_COLOR.green,
+    radius = 15,
+    red = Character.NOT_IT_COLOR.red,
+    stage,
+    x = 0,
+    y = 0
+  }: {
     blue?: number
     green?: number
-    it?: boolean
     radius?: number
     red?: number
     stage: Stage
     x: number
     y: number
   }) {
-    const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
+    const allIts = stage.getAllIts()
+    const noIts = allIts.length === 0
+    const feature = noIts
+      ? new CircleFeature({
+        blue: Character.IT_COLOR.blue,
+        green: Character.IT_COLOR.green,
+        x,
+        y,
+        radius,
+        red: Character.IT_COLOR.red,
+        stage
+      })
+      : new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
-    super({ feature, it, stage })
+    super({ feature, stage })
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
     this.initializeHeadings()
-    this.restoreColor()
   }
 
   act (): void {
@@ -81,12 +101,14 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
+    if (this.isIt()) {
+      return
+    }
     if (this.observer) {
-      this.feature.setColor({ red: 255, green: 255, blue: 255 })
+      this.feature.setColor(Character.OBSERVER_COLOR)
     } else {
       this.ready = true
-      console.log('this.it test:', this.it)
-      this.restoreColor()
+      this.feature.setColor(Character.NOT_IT_COLOR)
     }
   }
 
@@ -99,7 +121,7 @@ export default class Character extends Actor {
   }): void {
     if (actor != null && actor.feature.body.label === 'character') {
       const character = actor as Character
-      if (character.ready && this.ready && character.it) {
+      if (character.ready && this.ready && character.isIt()) {
         this.makeIt({ oldIt: character })
       }
     }
@@ -145,7 +167,6 @@ export default class Character extends Actor {
           x: heading.waypoint.position.x,
           y: heading.waypoint.position.y
         })
-        console.log('isOneWall', heading.waypoint.position)
         this.stage.paused = true
       }
       if (!heading.explored) {
@@ -179,7 +200,6 @@ export default class Character extends Actor {
             start: this.feature.body.position
           })
           const collisions = this.stage.raycast.raycast({ end: heading.waypoint.position, start: this.feature.body.position, obstacles: otherCharacterBodies })
-          console.log('collisions test:', collisions.length)
           collisions.forEach(collision => {
             this.stage.circle({
               color: 'aqua',
@@ -214,7 +234,6 @@ export default class Character extends Actor {
         })
       }
       const heading = characterClearHeadings[0]
-      console.log('one character', heading.waypoint.position)
       if (!heading.explored) {
         heading.tight = true
       }
@@ -307,11 +326,29 @@ export default class Character extends Actor {
   }
 
   isFeatureVisible (feature: Feature): boolean {
+    const debug = this.stage.debugPlayerVision && this.isPlayer
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
-      radius: this.feature.getRadius() * 0.9
+      radius: this.feature.getRadius() * 0.9,
+      debug
     })
     return isVisible
+  }
+
+  isIt (): boolean {
+    if (this.feature.red !== Character.IT_COLOR.red) {
+      return false
+    }
+
+    if (this.feature.green !== Character.IT_COLOR.green) {
+      return false
+    }
+
+    if (this.feature.blue !== Character.IT_COLOR.blue) {
+      return false
+    }
+
+    return true
   }
 
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
@@ -346,9 +383,7 @@ export default class Character extends Actor {
 
   loseIt ({ newIt }: { newIt: Character }): PropActor | undefined {
     this.blocked = false
-    this.it = false
     this.loseReady({})
-    console.log('this.stage.spawnOnTag', this.stage.spawnOnTag)
     if (!this.stage.spawnOnTag) {
       return undefined
     }
@@ -703,25 +738,25 @@ export default class Character extends Actor {
   }): void {
     super.loseReady({})
     this.ready = false
-    this.feature.setColor({ red: 255, green: 255, blue: 255 })
+    this.feature.setColor(Character.OBSERVER_COLOR)
     setTimeout(this.beReady, time)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
-    if (this.stage.debugMakeIt) console.log('makeIt', this.feature.body.id)
-    if (this.it) {
+    if (this.stage.debugMakeIt) console.debug('makeIt', this.feature.body.id)
+    if (this.isIt()) {
       throw new Error('Already it')
     }
-    this.it = true
+    this.feature.setColor({ ...Character.IT_COLOR, alpha: 1 })
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
-      if (character.it || character === oldIt) return
+      if (character.isIt() || character === oldIt || character === this) return
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
     })
     profiles.sort((a, b) => a.distance - b.distance)
     const bystander = profiles.find(profile => {
-      if (profile.character.isPlayer) return false
+      if (profile.character === oldIt || profile.character.isPlayer || profile.character.isIt()) return false
       const isVisible = this.isFeatureVisible(profile.character.feature)
       return isVisible
     })?.character
@@ -731,7 +766,6 @@ export default class Character extends Actor {
     const radius = this.feature.getRadius()
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
-    this.feature.setColor({ red: 255, green: 0, blue: 0 })
     const propActor = oldIt?.loseIt({ newIt: this })
     if (this.stage.engine.timing.timestamp > 1000) {
       const inRangeFeatures = this.getInRangeFeatures()
@@ -763,14 +797,6 @@ export default class Character extends Actor {
           }
         }
       })
-    }
-  }
-
-  restoreColor (): void {
-    if (this.it) {
-      this.feature.setColor({ red: 255, green: 0, blue: 0 })
-    } else {
-      this.feature.setColor({ red: 0, green: 128, blue: 0 })
     }
   }
 }

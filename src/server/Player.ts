@@ -11,27 +11,31 @@ export default class Player extends Character {
   goalTime?: number
   score = 0
   constructor ({
+    blue = Character.NOT_IT_COLOR.blue,
+    green = Character.NOT_IT_COLOR.green,
     id,
-    it = false,
     observer = false,
     radius = 15,
+    red = Character.NOT_IT_COLOR.red,
     stage,
     x = 0,
     y = 0
   }: {
+    blue?: number
+    green?: number
     id: string
-    it?: boolean
     observer?: boolean
     radius?: number
+    red?: number
     stage: Stage
     x: number
     y: number
   }) {
-    super({ it, radius, stage, x, y })
+    super({ blue, green, radius, red, stage, x, y })
     this.observer = observer
     if (this.observer) {
       this.ready = false
-      this.feature.setColor({ red: 255, green: 255, blue: 255 })
+      this.feature.setColor(Character.OBSERVER_COLOR)
     }
     this.id = id
     Player.players.set(this.id, this)
@@ -40,7 +44,7 @@ export default class Player extends Character {
 
   act (): void {
     super.act()
-    if (this.it) {
+    if (this.isIt()) {
       if (this.goals.length === 0 || this.goalTime == null) {
         this.setGoal({})
       } else {
@@ -69,7 +73,6 @@ export default class Player extends Character {
           const highest = scores.reduce((a, b) => {
             return a.number > b.number ? a : b
           })
-          console.log('highest test:', highest)
           this.goals = [highest]
           this.initializeHeadings()
           this.setGoal({})
@@ -86,10 +89,10 @@ export default class Player extends Character {
       }
     }
     if (this.stage.debugPosition) {
-      console.log('player position', this.feature.body.position)
+      console.debug('player position', this.feature.body.position)
     }
     if (this.stage.debugSpeed) {
-      console.log('player speed', this.feature.body.speed)
+      console.debug('player speed', this.feature.body.speed)
     }
   }
 

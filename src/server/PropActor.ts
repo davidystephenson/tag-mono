@@ -4,12 +4,15 @@ import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
 import Bot from './Bot'
+import Character from './Character'
 
 export default class PropActor extends Actor {
   static BLUE = 255
   static DENSITY = 0.00003
   static GREEN = 255
   static RED = 0
+  static COLOR = { blue: PropActor.BLUE, green: PropActor.GREEN, red: PropActor.RED }
+  static LIMIT_COLOR = { blue: 0, green: 0, red: 0 }
 
   health: number
   readonly maximumHealth: number
@@ -85,7 +88,7 @@ export default class PropActor extends Actor {
   }): void {
     this.health = this.health - damage
     if (this.health <= 0) {
-      if (actor?.it != null && actor?.it) {
+      if (actor?.isIt() === true) {
         if (this.stage.spawnOnDestroy) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
@@ -97,16 +100,34 @@ export default class PropActor extends Actor {
         const scale = 1 - groundedShrink
         const floored = Math.max(scale, 0.5)
         Matter.Body.scale(actor.feature.body, floored, floored)
-        actor.feature.setColor({ blue: 255, green: 255, red: 0 })
         const radius = actor.feature.getRadius()
         if (radius < 10) {
           const needed = 10 / radius
-          actor.feature.setColor({ blue: 0, green: 0, red: 0 })
+          actor.feature.setColor(PropActor.COLOR)
           Matter.Body.scale(actor.feature.body, needed, needed)
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
+        } else {
+          const radiusDifference = Character.MAXIMUM_RADIUS - radius
+          const radiusRatio = radiusDifference / 5
+          const greenGrowth = (radiusRatio * Character.NOT_IT_COLOR.green)
+          const green = Character.NOT_IT_COLOR.green + greenGrowth
+          const greenRound = Math.ceil(green)
+          const blue = radiusRatio * PropActor.BLUE
+          const blueRound = Math.ceil(blue)
+          if (actor.isPlayer) {
+            console.log('--------PROP COLOR--------')
+            console.log('radiusRatio', radiusRatio)
+            console.log('greenRound', greenRound)
+            console.log('blueRound', blueRound)
+          }
+          actor.feature.setColor({ green: greenRound, blue: blueRound, red: 0 })
         }
-        const delay = (1 - floored) * 10000
-        setTimeout(actor.beReady, delay)
+        // const delay = (1 - floored) * 10000
+        // setTimeout(() => {
+        //   if (!actor.isIt()) {
+        //     actor.beReady()
+        //   }
+        // }, delay)
       }
       this.destroy()
     } else {
