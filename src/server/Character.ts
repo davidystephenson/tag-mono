@@ -312,12 +312,6 @@ export default class Character extends Actor {
     const greenRound = Math.ceil(green)
     const blue = radiusRatio * PropActor.BLUE
     const blueRound = Math.ceil(blue)
-    if (this.isPlayer) {
-      console.log('--------PROP COLOR--------')
-      console.log('radiusRatio', radiusRatio)
-      console.log('greenRound', greenRound)
-      console.log('blueRound', blueRound)
-    }
     this.feature.setColor({ green: greenRound, blue: blueRound, red: 0 })
   }
 

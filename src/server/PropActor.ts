@@ -110,12 +110,6 @@ export default class PropActor extends Actor {
           const character = actor as Character
           character.setRadiusColor()
         }
-        // const delay = (1 - floored) * 10000
-        // setTimeout(() => {
-        //   if (!actor.isIt()) {
-        //     actor.beReady()
-        //   }
-        // }, delay)
       }
       this.destroy()
     } else {
