@@ -16,17 +16,28 @@ import { Goal, Heading } from './types'
 export default class Character extends Actor {
   static MAXIMUM_RADIUS = 15
   static MARGIN = Character.MAXIMUM_RADIUS + 1
+  static IT_COLOR = { blue: 0, green: 0, red: 255 }
+  static NOT_IT_COLOR = { blue: 0, green: 128, red: 0 }
+  static OBSERVER_COLOR = { blue: 255, green: 255, red: 255 }
 
+  isPlayer = false
   blocked = true // Philosophical
   controls = new Input().controls
   declare feature: CircleFeature
   force = 0.0001
   headings: Record<number, Heading[]> = {}
-  isPlayer = false
   moving = false
   observer = false
   ready = true
-  constructor ({ blue = 0, green = 128, radius = 15, red = 0, stage, x = 0, y = 0 }: {
+  constructor ({
+    blue = Character.NOT_IT_COLOR.blue,
+    green = Character.NOT_IT_COLOR.green,
+    radius = 15,
+    red = Character.NOT_IT_COLOR.red,
+    stage,
+    x = 0,
+    y = 0
+  }: {
     blue?: number
     green?: number
     radius?: number
@@ -35,20 +46,28 @@ export default class Character extends Actor {
     x: number
     y: number
   }) {
-    const feature = new CircleFeature({ blue, green, x, y, radius, red, stage })
+    const allIts = stage.getAllIts()
+    const noIts = allIts.length === 0
+    const feature = noIts
+      ? new CircleFeature({
+        blue: Character.IT_COLOR.blue,
+        green: Character.IT_COLOR.green,
+        x,
+        y,
+        radius,
+        red: Character.IT_COLOR.red,
+        stage
+      })
+      : new CircleFeature({ blue, green, x, y, radius, red, stage })
     feature.body.label = 'character'
     super({ feature, stage })
     this.stage.characterBodies.push(this.feature.body)
     this.stage.characters.set(this.feature.body.id, this)
-    if (this.stage.characters.size === 1) setTimeout(() => this.makeIt({ oldIt: this }), 300)
     this.initializeHeadings()
   }
 
   act (): void {
     super.act()
-    // if (this.feature.blue === 255 && this.feature.green === 255 && this.feature.red === 0) {
-    //   this.feature.setColor({ blue: 0, green: 128, red: 0 })
-    // }
     if (this.stage.debugCharacters) {
       this.stage.circle({
         color: this.feature.body.render.strokeStyle,
@@ -83,15 +102,14 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
+    if (this.isIt()) {
+      return
+    }
     if (this.observer) {
-      this.feature.setColor({ red: 255, green: 255, blue: 255 })
+      this.feature.setColor(Character.OBSERVER_COLOR)
     } else {
       this.ready = true
-      if (this.stage.it === this) {
-        this.feature.setColor({ red: 255, green: 0, blue: 0 })
-      } else {
-        this.feature.setColor({ red: 0, green: 128, blue: 0 })
-      }
+      this.setRadiusColor()
     }
   }
 
@@ -102,10 +120,10 @@ export default class Character extends Actor {
     normal: Matter.Vector
     scale?: number
   }): void {
-    if (actor != null && this.stage.it === actor) {
-      const it = actor as Character
-      if (it.ready && this.ready) {
-        this.makeIt({ oldIt: it })
+    if (actor != null && actor.feature.body.label === 'character') {
+      const character = actor as Character
+      if (character.ready && this.ready && character.isIt()) {
+        this.makeIt({ oldIt: character })
       }
     }
     super.collide({ actor, body, delta, normal, scale })
@@ -150,7 +168,6 @@ export default class Character extends Actor {
           x: heading.waypoint.position.x,
           y: heading.waypoint.position.y
         })
-        console.log('isOneWall', heading.waypoint.position)
         this.stage.paused = true
       }
       if (!heading.explored) {
@@ -184,7 +201,6 @@ export default class Character extends Actor {
             start: this.feature.body.position
           })
           const collisions = this.stage.raycast.raycast({ end: heading.waypoint.position, start: this.feature.body.position, obstacles: otherCharacterBodies })
-          console.log('collisions test:', collisions.length)
           collisions.forEach(collision => {
             this.stage.circle({
               color: 'aqua',
@@ -219,7 +235,6 @@ export default class Character extends Actor {
         })
       }
       const heading = characterClearHeadings[0]
-      console.log('one character', heading.waypoint.position)
       if (!heading.explored) {
         heading.tight = true
       }
@@ -288,6 +303,18 @@ export default class Character extends Actor {
     return inRangeFeatures
   }
 
+  setRadiusColor (): void {
+    const radius = this.feature.getRadius()
+    const radiusDifference = Character.MAXIMUM_RADIUS - radius
+    const radiusRatio = radiusDifference / 5
+    const greenGrowth = (radiusRatio * Character.NOT_IT_COLOR.green)
+    const green = Character.NOT_IT_COLOR.green + greenGrowth
+    const greenRound = Math.ceil(green)
+    const blue = radiusRatio * PropActor.BLUE
+    const blueRound = Math.ceil(blue)
+    this.feature.setColor({ green: greenRound, blue: blueRound, red: 0 })
+  }
+
   getVisibleFeatures (): Feature[] {
     const visibleFeatures: Feature[] = []
     this.stage.features.forEach(feature => {
@@ -312,11 +339,29 @@ export default class Character extends Actor {
   }
 
   isFeatureVisible (feature: Feature): boolean {
+    const debug = this.stage.debugPlayerVision && this.isPlayer
     const isVisible = feature.isVisible({
       center: this.feature.body.position,
-      radius: this.feature.getRadius() * 0.9
+      radius: this.feature.getRadius() * 0.9,
+      debug
     })
     return isVisible
+  }
+
+  isIt (): boolean {
+    if (this.feature.red !== Character.IT_COLOR.red) {
+      return false
+    }
+
+    if (this.feature.green !== Character.IT_COLOR.green) {
+      return false
+    }
+
+    if (this.feature.blue !== Character.IT_COLOR.blue) {
+      return false
+    }
+
+    return true
   }
 
   isPointClose ({ point, limit = 45 }: { point: Matter.Vector, limit?: number }): boolean {
@@ -704,37 +749,35 @@ export default class Character extends Actor {
   loseReady ({ time = 5000 }: {
     time?: number
   }): void {
-    super.loseReady({})
     this.ready = false
-    this.feature.setColor({ red: 255, green: 255, blue: 255 })
+    this.feature.setColor(Character.OBSERVER_COLOR)
     setTimeout(this.beReady, time)
   }
 
   makeIt ({ oldIt }: { oldIt?: Character }): void {
-    if (this.stage.debugMakeIt) console.log('makeIt', this.feature.body.id)
-    if (this.stage.it === this) {
-      // throw new Error('Already it')
+    if (this.stage.debugMakeIt) console.debug('makeIt', this.feature.body.id)
+    if (this.isIt()) {
+      throw new Error('Already it')
     }
+    this.feature.setColor({ ...Character.IT_COLOR, alpha: 1 })
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
-      if (character === this || character === oldIt) return
+      if (character.isIt() || character === oldIt || character === this) return
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
     })
     profiles.sort((a, b) => a.distance - b.distance)
     const bystander = profiles.find(profile => {
-      if (profile.character.isPlayer) return false
+      if (profile.character === oldIt || profile.character.isPlayer || profile.character.isIt()) return false
       const isVisible = this.isFeatureVisible(profile.character.feature)
       return isVisible
     })?.character
     bystander?.destroy()
-    this.stage.it = this
     const spawnLimit = this.stage.getSpawnLimit()
     this.stage.spawnTime = this.stage.spawnTime + spawnLimit
     const radius = this.feature.getRadius()
     const needed = 15 / radius
     Matter.Body.scale(this.feature.body, needed, needed)
-    this.feature.setColor({ red: 255, green: 0, blue: 0 })
     const propActor = oldIt?.loseIt({ newIt: this })
     if (this.stage.engine.timing.timestamp > 1000) {
       const inRangeFeatures = this.getInRangeFeatures()
@@ -760,9 +803,9 @@ export default class Character extends Actor {
             Matter.Body.update(feature.body, 0.01, 1, 0)
           }
           if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
-            const actor = this.stage.actors.get(feature.body.id)
+            const character = this.stage.characters.get(feature.body.id)
             const time = 5000 / (distance / 30)
-            actor?.loseReady({ time })
+            character?.loseReady({ time })
           }
         }
       })

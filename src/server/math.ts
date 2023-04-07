@@ -170,20 +170,14 @@ export function project (a: Matter.Vector, b: Matter.Vector): Matter.Vector {
 
 export function whichMax <Element> (array: Element[], numbers: number[]): Element {
   if (array.length === 0) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error('Empty array')
   }
   if (array.length !== numbers.length) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error('Array and numbers length mismatch')
   }
   const minimum = Math.max(...numbers)
   const index = numbers.indexOf(minimum)
   if (array.length <= index) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error(`Invalid index: ${index}`)
   }
   const element = array[index]
@@ -193,20 +187,14 @@ export function whichMax <Element> (array: Element[], numbers: number[]): Elemen
 
 export function whichMin <Element> (array: Element[], numbers: number[]): Element {
   if (array.length === 0) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error('Empty array')
   }
   if (array.length !== numbers.length) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error('Array and numbers length mismatch')
   }
   const minimum = Math.min(...numbers)
   const index = numbers.indexOf(minimum)
   if (array.length <= index) {
-    console.warn('array', array)
-    console.warn('numbers', numbers)
     throw new Error(`Invalid index: ${index}`)
   }
   const element = array[index]

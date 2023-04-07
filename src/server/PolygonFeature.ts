@@ -13,20 +13,22 @@ export default class PolygonFeature extends Feature {
     })
   }
 
-  isVisible ({ center, radius }: {
+  isVisible ({ center, debug, radius }: {
     center: Matter.Vector
+    debug?: boolean
     radius: number
   }): boolean {
     const viewpoints = getViewpoints({ start: center, end: this.body.position, radius })
-    const otherSceneryBodies = this.otherSceneryBodies ?? this.stage.sceneryBodies.filter(body => this.body.id !== body.id)
-    const ends = [...this.body.vertices, this.body.position]
+    const otherSceneryBodies = this.stage.sceneryBodies.filter(body => this.body.id !== body.id)
+    const ends = [this.body.position, ...this.body.vertices]
     return ends.some(vertex => {
       const inRange = isPointInVisionRange({ start: center, end: vertex })
       if (!inRange) return false
       return this.stage.raycast.isSomeStartClear({
         starts: viewpoints,
         end: vertex,
-        obstacles: otherSceneryBodies
+        obstacles: otherSceneryBodies,
+        debug
       })
     })
   }

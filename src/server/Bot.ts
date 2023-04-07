@@ -27,9 +27,11 @@ export default class Bot extends Character {
     y: number
   }) {
     super({ x, y, radius, stage })
-    this.stage.botCount = this.stage.botCount + 1
+    this.stage.bots.push(this)
     if (this.stage.oldest == null) this.stage.oldest = this
-    this.loseReady({})
+    if (!this.isIt()) {
+      this.loseReady({})
+    }
   }
 
   act (): void {
@@ -43,7 +45,7 @@ export default class Bot extends Character {
     if (target == null) {
       return STILL
     }
-    const debug = this.stage.debugPathing || this.stage.it === this ? this.stage.debugItChoice : this.stage.debugNotItChoice
+    const debug = this.stage.debugPathing || this.isIt() ? this.stage.debugItChoice : this.stage.debugNotItChoice
     if (debug) {
       const color = this.getPathColor()
       this.stage.line({ color, start: this.feature.body.position, end: target })
@@ -55,16 +57,14 @@ export default class Bot extends Character {
   }
 
   chooseDirection (): Matter.Vector | null {
-    if (this.stage.it == null) {
-      console.warn('No it!!!')
-      return null
-    }
-    const isIt = this.stage.it === this
     const profiles: Profile[] = []
+    const it = this.isIt()
     this.stage.characters.forEach(character => {
       if (character === this || character.observer) return
-      if (!isIt) {
-        if (this.stage.it !== character || !character.ready) return
+      if (it) {
+        if (character.isIt() || !character.ready) return
+      } else {
+        if (!character.isIt()) return
       }
       const distance = this.getDistance(character.feature.body.position)
       profiles.push({ character, distance })
@@ -76,7 +76,7 @@ export default class Bot extends Character {
     })?.character
 
     if (enemy != null) {
-      if (isIt) {
+      if (it) {
         this.blocked = this.isBlocked({ character: enemy })
         const trapped = this.blocked && this.isBored()
         if (trapped) {
@@ -90,14 +90,14 @@ export default class Bot extends Character {
         this.setPath({ path: [point], label: 'pursue' })
         return point
       }
-    } else if (isIt) {
+    } else if (it) {
       this.blocked = false
       this.unblockTries = undefined
     }
     if (this.isBored()) {
       return this.explore()
     }
-    const debug = isIt ? this.stage.debugItChoice : this.stage.debugNotItChoice
+    const debug = it ? this.stage.debugItChoice : this.stage.debugNotItChoice
     return this.followPath(debug)
   }
 
@@ -133,7 +133,7 @@ export default class Bot extends Character {
     })
     if (visibleFromStart.length === 0) {
       if (this.stage.debugLost) {
-        console.warn('Invisible path start')
+        console.debug('Invisible path start')
       }
       return this.loseWay()
     }
@@ -148,7 +148,7 @@ export default class Bot extends Character {
     })
     if (visibleFromEnd.length === 0) {
       if (this.stage.debugLost) {
-        console.warn('Invisible path goal')
+        console.debug('Invisible path goal')
       }
       return this.loseWay()
     }
@@ -189,7 +189,7 @@ export default class Bot extends Character {
   followPath (debug?: boolean): Matter.Vector | null {
     const debugging = debug === true || this.stage.debugPathing
     if (debugging) {
-      const color = this.stage.it === this ? 'red' : 'green'
+      const color = this.isIt() ? 'red' : 'green'
       this.path.forEach((point, index) => {
         const end = this.path[index + 1]
         if (end == null) return
@@ -342,6 +342,13 @@ export default class Bot extends Character {
     console.log('Bot.makeIt test')
     this.setPath({ path: [], label: 'reset' })
     this.blocked = false
+  }
+
+  pursue ({ enemy }: { enemy: Character }): Matter.Vector {
+    this.stage.stepPursues += 1
+    const point = vectorToPoint(enemy.feature.body.position)
+    this.setPath({ path: [point], label: 'pursue' })
+    return point
   }
 
   setPath ({ path, label }: { path: Matter.Vector[], label: typeof Bot.pathLabels[number] }): void {

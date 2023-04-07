@@ -1,6 +1,5 @@
 import Matter from 'matter-js'
 import Feature from './Feature'
-import PropActor from './PropActor'
 import Stage from './Stage'
 
 export default class Actor {
@@ -18,8 +17,6 @@ export default class Actor {
 
   act (): void {}
 
-  beReady (): void {}
-
   collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
     body: Matter.Body
@@ -29,12 +26,14 @@ export default class Actor {
   }): void {}
 
   destroy (): void {
+    if (this.isIt()) {
+      throw new Error('Cannot destroy the it actor')
+    }
     this.feature.destroy()
     this.stage.actors.delete(this.feature.body.id)
   }
 
-  loseReady ({ propActor, time }: {
-    propActor?: PropActor
-    time?: number
-  }): void {}
+  isIt (): boolean {
+    return false
+  }
 }

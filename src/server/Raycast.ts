@@ -86,6 +86,20 @@ export default class Raycast {
         this.stage.line({ color: 'green', end, start })
       } else {
         this.stage.line({ color: 'rgba(255, 0, 0, 0.5)', end, start })
+        collisions.forEach(collision => {
+          this.stage.circle({
+            color: 'aqua',
+            radius: 5,
+            x: collision.bodyA.position.x,
+            y: collision.bodyA.position.y
+          })
+          this.stage.circle({
+            color: 'hotpink',
+            radius: 5,
+            x: collision.bodyB.position.x,
+            y: collision.bodyB.position.y
+          })
+        })
       }
     }
     return !collide

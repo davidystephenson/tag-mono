@@ -4,12 +4,15 @@ import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
 import Bot from './Bot'
+import Character from './Character'
 
 export default class PropActor extends Actor {
   static BLUE = 255
   static DENSITY = 0.00003
   static GREEN = 255
   static RED = 0
+  static COLOR = { blue: PropActor.BLUE, green: PropActor.GREEN, red: PropActor.RED }
+  static LIMIT_COLOR = { blue: 0, green: 0, red: 0 }
 
   health: number
   readonly maximumHealth: number
@@ -85,8 +88,7 @@ export default class PropActor extends Actor {
   }): void {
     this.health = this.health - damage
     if (this.health <= 0) {
-      const actorIsIt = this.stage.it === actor
-      if (actorIsIt) {
+      if (actor?.isIt() === true) {
         if (this.stage.spawnOnDestroy) {
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         }
@@ -98,16 +100,16 @@ export default class PropActor extends Actor {
         const scale = 1 - groundedShrink
         const floored = Math.max(scale, 0.5)
         Matter.Body.scale(actor.feature.body, floored, floored)
-        actor.feature.setColor({ blue: 255, green: 255, red: 0 })
         const radius = actor.feature.getRadius()
         if (radius < 10) {
           const needed = 10 / radius
-          actor.feature.setColor({ blue: 0, green: 0, red: 0 })
+          actor.feature.setColor(PropActor.COLOR)
           Matter.Body.scale(actor.feature.body, needed, needed)
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
+        } else {
+          const character = actor as Character
+          character.setRadiusColor()
         }
-        const delay = (1 - floored) * 10000
-        setTimeout(actor.beReady, delay)
       }
       this.destroy()
     } else {
