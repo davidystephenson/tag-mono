@@ -425,12 +425,6 @@ export default class Stage {
     Matter.Runner.run(this.runner, this.engine)
     const { append } = csvAppend('steps.csv')
     Matter.Events.on(this.engine, 'afterUpdate', () => {
-      const allIts = this.getAllIts()
-      if (allIts.length === 0) {
-        console.warn('empty allIts:', allIts)
-        // throw new Error('No it!')
-        this.paused = true
-      }
       this.stepCount = this.stepCount + 1
       this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
       this.totalCollisionCount = this.totalCollisionCount + this.stepCollisionStartCount // + this.activeCollisions
@@ -610,6 +604,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
   join (id: string): Player {
     const firstIt = this.getFirstIt()
+    console.log('firstIt', firstIt)
     if (firstIt == null) {
       return new Player({
         id,

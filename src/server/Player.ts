@@ -106,11 +106,14 @@ export default class Player extends Character {
     if (heading == null) {
       throw new Error('Can not set goal')
     }
-    const oldGoal = this.goals.find(oldGoal =>
-      oldGoal.heading.waypoint.position.x === heading.waypoint.position.x &&
-      oldGoal.heading.waypoint.position.y === heading.waypoint.position.y
-    )
-    if (oldGoal == null) {
+    const closeGoal = this.goals.find(goal => {
+      const xDifference = Math.abs(goal.heading.waypoint.position.x - heading.waypoint.position.x)
+      const yDifference = Math.abs(goal.heading.waypoint.position.y - heading.waypoint.position.y)
+      const xClose = xDifference < 5
+      const yClose = yDifference < 5
+      return xClose && yClose
+    })
+    if (closeGoal == null) {
       const newGoal = { heading, passed: false, scored: false, number: 0 }
       this.goals.push(newGoal)
       this.goalTime = Date.now()

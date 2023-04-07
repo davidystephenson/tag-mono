@@ -29,9 +29,6 @@ export default class Bot extends Character {
     super({ x, y, radius, stage })
     this.stage.bots.push(this)
     if (this.stage.oldest == null) this.stage.oldest = this
-    if (!this.isIt()) {
-      this.loseReady({})
-    }
   }
 
   act (): void {

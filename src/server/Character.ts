@@ -102,14 +102,11 @@ export default class Character extends Actor {
   }
 
   beReady = (): void => {
-    if (this.isIt()) {
-      return
-    }
     if (this.observer) {
       this.feature.setColor(Character.OBSERVER_COLOR)
     } else {
       this.ready = true
-      this.setRadiusColor()
+      this.feature.setColor({ ...Character.IT_COLOR, alpha: 1 })
     }
   }
 
@@ -122,8 +119,9 @@ export default class Character extends Actor {
   }): void {
     if (actor != null && actor.feature.body.label === 'character') {
       const character = actor as Character
-      if (character.ready && this.ready && character.isIt()) {
+      if (character.ready && this.ready && character.isIt() && !this.isIt()) {
         this.makeIt({ oldIt: character })
+        this.loseReady({})
       }
     }
     super.collide({ actor, body, delta, normal, scale })
@@ -348,9 +346,29 @@ export default class Character extends Actor {
     return isVisible
   }
 
+  isObserverColor (): boolean {
+    if (this.feature.red !== Character.OBSERVER_COLOR.red) {
+      return false
+    }
+
+    if (this.feature.green !== Character.OBSERVER_COLOR.green) {
+      return false
+    }
+
+    if (this.feature.blue !== Character.OBSERVER_COLOR.blue) {
+      return false
+    }
+
+    return true
+  }
+
   isIt (): boolean {
     if (this.feature.red !== Character.IT_COLOR.red) {
       return false
+    }
+
+    if (this.isObserverColor() && !this.observer) {
+      return true
     }
 
     if (this.feature.green !== Character.IT_COLOR.green) {
@@ -396,10 +414,10 @@ export default class Character extends Actor {
 
   loseIt ({ newIt }: { newIt: Character }): PropActor | undefined {
     this.blocked = false
-    this.loseReady({})
     if (!this.stage.spawnOnTag) {
       return undefined
     }
+    this.feature.setColor(Character.NOT_IT_COLOR)
     const radius = this.feature.getRadius()
     const thisPoint = vectorToPoint(this.feature.body.position)
     this.stage.circle({
@@ -759,7 +777,6 @@ export default class Character extends Actor {
     if (this.isIt()) {
       throw new Error('Already it')
     }
-    this.feature.setColor({ ...Character.IT_COLOR, alpha: 1 })
     const profiles: Profile[] = []
     this.stage.characters.forEach(character => {
       if (character.isIt() || character === oldIt || character === this) return
@@ -801,11 +818,6 @@ export default class Character extends Actor {
             const force = Matter.Vector.mult(direction, power)
             Matter.Body.applyForce(feature.body, pushPoint, force)
             Matter.Body.update(feature.body, 0.01, 1, 0)
-          }
-          if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
-            const character = this.stage.characters.get(feature.body.id)
-            const time = 5000 / (distance / 30)
-            character?.loseReady({ time })
           }
         }
       })
