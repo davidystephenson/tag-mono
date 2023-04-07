@@ -107,20 +107,8 @@ export default class PropActor extends Actor {
           Matter.Body.scale(actor.feature.body, needed, needed)
           void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
         } else {
-          const radiusDifference = Character.MAXIMUM_RADIUS - radius
-          const radiusRatio = radiusDifference / 5
-          const greenGrowth = (radiusRatio * Character.NOT_IT_COLOR.green)
-          const green = Character.NOT_IT_COLOR.green + greenGrowth
-          const greenRound = Math.ceil(green)
-          const blue = radiusRatio * PropActor.BLUE
-          const blueRound = Math.ceil(blue)
-          if (actor.isPlayer) {
-            console.log('--------PROP COLOR--------')
-            console.log('radiusRatio', radiusRatio)
-            console.log('greenRound', greenRound)
-            console.log('blueRound', blueRound)
-          }
-          actor.feature.setColor({ green: greenRound, blue: blueRound, red: 0 })
+          const character = actor as Character
+          character.setRadiusColor()
         }
         // const delay = (1 - floored) * 10000
         // setTimeout(() => {

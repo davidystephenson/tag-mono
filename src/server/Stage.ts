@@ -224,7 +224,8 @@ export default class Stage {
       const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210, stage: this })
       const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2, stage: this })
       const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1, stage: this })
-      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100, stage: this })
+      const OUTPOST = new Wall({ x: -1350, y: -517, width: 175, height: 100, stage: this })
+      const ARMORY = new Wall({ x: -1125, y: -517, width: 175, height: 100, stage: this })
       const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610, stage: this })
       const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810, stage: this })
       const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610, stage: this })
@@ -232,7 +233,7 @@ export default class Stage {
       const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100, stage: this })
       const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100, stage: this })
       const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5, stage: this })
-      townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
+      townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, ARMORY, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
     }
 
     const greekWalls: Wall[] = []
@@ -582,11 +583,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
   }
 
   debug ({ label }: { label?: string | number }): void {
+    console.debug('CLIENT DEBUG:', label)
     console.debug(label, 'sceneryBodies length:', this.sceneryBodies.length)
-    const positions = this.sceneryBodies.map(body => {
-      return { ...body.position, id: body.id }
-    })
-    console.debug(label, 'sceneryBodies positions:', positions)
   }
 
   getAllIts (): Character[] {

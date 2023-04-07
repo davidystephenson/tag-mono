@@ -20,6 +20,7 @@ export default class Character extends Actor {
   static NOT_IT_COLOR = { blue: 0, green: 128, red: 0 }
   static OBSERVER_COLOR = { blue: 255, green: 255, red: 255 }
 
+  isPlayer = false
   blocked = true // Philosophical
   controls = new Input().controls
   declare feature: CircleFeature
@@ -108,7 +109,7 @@ export default class Character extends Actor {
       this.feature.setColor(Character.OBSERVER_COLOR)
     } else {
       this.ready = true
-      this.feature.setColor(Character.NOT_IT_COLOR)
+      this.setRadiusColor()
     }
   }
 
@@ -300,6 +301,24 @@ export default class Character extends Actor {
       if (isInRange) inRangeFeatures.push(feature)
     })
     return inRangeFeatures
+  }
+
+  setRadiusColor (): void {
+    const radius = this.feature.getRadius()
+    const radiusDifference = Character.MAXIMUM_RADIUS - radius
+    const radiusRatio = radiusDifference / 5
+    const greenGrowth = (radiusRatio * Character.NOT_IT_COLOR.green)
+    const green = Character.NOT_IT_COLOR.green + greenGrowth
+    const greenRound = Math.ceil(green)
+    const blue = radiusRatio * PropActor.BLUE
+    const blueRound = Math.ceil(blue)
+    if (this.isPlayer) {
+      console.log('--------PROP COLOR--------')
+      console.log('radiusRatio', radiusRatio)
+      console.log('greenRound', greenRound)
+      console.log('blueRound', blueRound)
+    }
+    this.feature.setColor({ green: greenRound, blue: blueRound, red: 0 })
   }
 
   getVisibleFeatures (): Feature[] {
@@ -736,7 +755,6 @@ export default class Character extends Actor {
   loseReady ({ time = 5000 }: {
     time?: number
   }): void {
-    super.loseReady({})
     this.ready = false
     this.feature.setColor(Character.OBSERVER_COLOR)
     setTimeout(this.beReady, time)
@@ -791,9 +809,9 @@ export default class Character extends Actor {
             Matter.Body.update(feature.body, 0.01, 1, 0)
           }
           if (feature.body.label === 'character' && this.isFeatureVisible(feature)) {
-            const actor = this.stage.actors.get(feature.body.id)
+            const character = this.stage.characters.get(feature.body.id)
             const time = 5000 / (distance / 30)
-            actor?.loseReady({ time })
+            character?.loseReady({ time })
           }
         }
       })

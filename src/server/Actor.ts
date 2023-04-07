@@ -1,11 +1,9 @@
 import Matter from 'matter-js'
 import Feature from './Feature'
-import PropActor from './PropActor'
 import Stage from './Stage'
 
 export default class Actor {
   readonly feature: Feature
-  isPlayer = false
   readonly stage: Stage
   constructor ({ feature, stage }: {
     feature: Feature
@@ -18,8 +16,6 @@ export default class Actor {
   }
 
   act (): void {}
-
-  beReady (): void {}
 
   collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
@@ -40,9 +36,4 @@ export default class Actor {
   isIt (): boolean {
     return false
   }
-
-  loseReady ({ propActor, time }: {
-    propActor?: PropActor
-    time?: number
-  }): void {}
 }
