@@ -3,7 +3,6 @@ import Feature from './Feature'
 import Stage from './Stage'
 import Actor from './Actor'
 import { project } from './math'
-import Bot from './Bot'
 import Character from './Character'
 
 export default class PropActor extends Actor {
@@ -90,8 +89,7 @@ export default class PropActor extends Actor {
     if (this.health <= 0) {
       if (actor?.isIt() === true) {
         if (this.stage.spawnOnDestroy) {
-          this.stage.paused = true
-          void new Bot({ stage: this.stage, x: this.feature.body.position.x, y: this.feature.body.position.y })
+          this.stage.spawnSafestBrick()
         }
       } else if (actor?.feature.body.label === 'character') {
         const area = this.feature.getArea()

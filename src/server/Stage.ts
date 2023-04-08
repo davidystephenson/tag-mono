@@ -492,7 +492,8 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         const spawnDifference = now - this.spawnTime
         const spawnLimit = this.getSpawnLimit()
         if (spawnDifference > spawnLimit) {
-          void new Bot({ x: 0, y: 0, stage: this })
+          const waypoint = this.getSafestWaypoint()
+          void new Bot({ x: waypoint.position.x, y: waypoint.position.y, stage: this })
           this.spawnTime = now
         }
       }
@@ -578,7 +579,7 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
   debug ({ label }: { label?: string | number }): void {
     console.debug('CLIENT DEBUG:', label)
-    console.debug(label, 'sceneryBodies length:', this.sceneryBodies.length)
+    console.debug(label, 'bots length:', this.bots.length)
   }
 
   getAllIts (): Character[] {
@@ -596,6 +597,22 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     for (const character of characters) {
       if (character.isIt()) return character
     }
+  }
+
+  getSafestWaypoint (): Waypoint {
+    const allIts = this.getAllIts()
+    const waypoints = this.waypointGroups[15]
+    const farthest = waypoints.reduce<{ waypoint?: Waypoint, distance: number }>((farthest, waypoint) => {
+      const distance = allIts.reduce((distance, it) => {
+        const d = Matter.Vector.magnitude(Matter.Vector.sub(it.feature.body.position, waypoint.position))
+        return d < distance ? d : distance
+      }, Infinity)
+      return distance > farthest.distance ? { waypoint, distance } : farthest
+    }, { distance: 0 })
+    if (farthest.waypoint == null) {
+      throw new Error('No farthest waypoint')
+    }
+    return farthest.waypoint
   }
 
   getSpawnLimit (): number {
@@ -673,6 +690,16 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
 
     return new Brick({
       x, y, width: rectangle.width, height: rectangle.height, stage: this
+    })
+  }
+
+  spawnSafestBrick (): void {
+    const waypoint = this.getSafestWaypoint()
+    this.randomBrick({
+      x: waypoint.position.x,
+      y: waypoint.position.y,
+      width: 30,
+      height: 30
     })
   }
 
