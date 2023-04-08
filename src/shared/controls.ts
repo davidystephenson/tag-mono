@@ -13,7 +13,6 @@ export const keyToControl = {
   ArrowDown: 'down',
   ArrowLeft: 'left',
   ArrowRight: 'right',
-  Enter: 'select',
   ' ': 'select'
 } as const
 export const controlValues = new Set(Object.values(keyToControl))

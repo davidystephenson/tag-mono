@@ -15,19 +15,22 @@ import Controls from '../shared/controls'
 import Label from '../shared/Label'
 import Shape from '../shared/Shape'
 import { UpdateMessage } from '../shared/socket'
-import { VISION_INNER_WIDTH, VISION_INNER_HEIGHT } from '../shared/VISION'
+import { VISION_INNER } from '../shared/VISION'
 import { getRandomRectangleSize } from './math'
+import Puppet from './Puppet'
+import { EAST_VECTOR, NORTH_VECTOR, SOUTH_VECTOR, WEST_VECTOR } from '../shared/math'
 
 export default class Stage {
-  activeCollisionCount = 0
+  stepActiveCollisionCount = 0
   actors = new Map<number, Actor>()
   bodies: Matter.Body[] = []
-  botCount = 0
+  bots: Bot[] = []
   characters = new Map<number, Character>()
   characterBodies: Matter.Body[] = []
   circles: Circle[] = []
-  collisionStartCount = 0
-  debugBotCircles: boolean
+  stepCollisionStartCount = 0
+  debugBored: boolean
+  debugCharacters: boolean
   debugChase: boolean
   debugOpenWaypoints: boolean
   debugCollision: boolean
@@ -38,27 +41,39 @@ export default class Stage {
   debugMakeIt: boolean
   debugNotItChoice: boolean
   debugPathing: boolean
+  debugPlayerVision: boolean
   debugPosition: boolean
   debugSpeed: boolean
   debugStepTime: boolean
-  debugWander: boolean
+  debugExplore: boolean
   debugWaypointCircles: boolean
   debugWaypointLabels: boolean
   engine = Matter.Engine.create()
   features = new Map<number, Feature>()
   initial = true
-  it?: Character
   labels: Label[] = []
   lines: Line[] = []
   lostPoints: Matter.Vector[] = []
+  observer: boolean
   oldest?: Bot
   oldTime = Date.now()
   paused = false
+  radii = [10, 11, 12, 13, 14, 15]
   raycast: Raycast
   runner = Matter.Runner.create()
-  scenery: Matter.Body[] = []
+  sceneryFeatures: Feature[] = []
+  sceneryBodies: Matter.Body[] = []
+  spawnOnDestroy: boolean
+  spawnOnScore: boolean
+  spawnOnTag: boolean
+  spawnOnTimer: boolean
   stepCount = 0
+  stepPursues = 0
+  stepUnblocks = 0
+  stepExplores = 0
+  stepFlees = 0
   stepTimeLimit: number
+  spawnTime: number
   timers = new Map<number, [number, () => void]>()
   totalBodyCount = 0
   totalCollisionCount = 0
@@ -68,20 +83,22 @@ export default class Stage {
   warningDifferenceTotal = 0
   warningTime = Date.now()
   readonly warnings10: number[] = []
-  waypoints: Waypoint[] = []
+  waypointGroups: Record<number, Waypoint[]> = { }
   xFactor = 2
   xSegment: number
   yFactor = 2
   ySegment: number
   constructor ({
-    centerBot = false,
+    centerBot = true,
     cornerBots = false,
-    country = false,
+    country = true,
     countryBots = false,
-    debugBotCircles = false,
+    debugBored = false,
+    debugCharacters = false,
     debugChase = false,
     debugOpenWaypoints = false,
     debugCollision = false,
+    debugExplore = false,
     debugFeatures = false,
     debugIsClear = false,
     debugItChoice = false,
@@ -89,33 +106,41 @@ export default class Stage {
     debugMakeIt = false,
     debugNotItChoice = false,
     debugPathing = false,
+    debugPlayerVision = false,
     debugPosition = false,
     debugSpeed = false,
     debugStepTime = true,
-    debugWander = false,
     debugWaypointCircles = false,
     debugWaypointLabels = false,
-    greek = false,
+    greek = true,
     greekBots = false,
     gridBots = false,
     midpointBots = false,
+    observer = false,
+    spawnOnDestroy = true,
+    spawnOnScore = true,
+    spawnOnTag = true,
+    spawnOnTimer = true,
     size = 3000,
     stepTimeLimit = 35,
-    town = false,
+    town = true,
     townBots = false,
     wallBots = false,
     waypointBots = false,
     waypointBricks = false,
-    wildBricks = false
+    wildBricks = true,
+    wildPuppets = true
   }: {
     centerBot?: boolean
     cornerBots?: boolean
     country?: boolean
     countryBots?: boolean
-    debugBotCircles?: boolean
+    debugBored?: boolean
+    debugCharacters?: boolean
     debugChase?: boolean
     debugOpenWaypoints?: boolean
     debugCollision?: boolean
+    debugExplore?: boolean
     debugFeatures?: boolean
     debugIsClear?: boolean
     debugItChoice?: boolean
@@ -124,16 +149,21 @@ export default class Stage {
     debugNotItChoice?: boolean
     debugPathing?: boolean
     debugPosition?: boolean
+    debugPlayerVision?: boolean
     debugSpeed?: boolean
     debugStepTime?: boolean
-    debugWander?: boolean
     debugWaypointCircles?: boolean
     debugWaypointLabels?: boolean
     greek?: boolean
     greekBots?: boolean
     gridBots?: boolean
     midpointBots?: boolean
-    size: number
+    observer?: boolean
+    spawnOnDestroy?: boolean
+    spawnOnScore?: boolean
+    spawnOnTag?: boolean
+    spawnOnTimer?: boolean
+    size?: number
     stepTimeLimit?: number
     town?: boolean
     townBots?: boolean
@@ -141,8 +171,11 @@ export default class Stage {
     waypointBots?: boolean
     waypointBricks?: boolean
     wildBricks?: boolean
+    wildPuppets?: boolean
   }) {
-    this.debugBotCircles = debugBotCircles
+    this.spawnTime = Date.now()
+    this.debugBored = debugBored
+    this.debugCharacters = debugCharacters
     this.debugChase = debugChase
     this.debugOpenWaypoints = debugOpenWaypoints
     this.debugCollision = debugCollision
@@ -153,15 +186,22 @@ export default class Stage {
     this.debugMakeIt = debugMakeIt
     this.debugNotItChoice = debugNotItChoice
     this.debugPathing = debugPathing
+    this.debugPlayerVision = debugPlayerVision
     this.debugPosition = debugPosition
     this.debugSpeed = debugSpeed
     this.debugStepTime = debugStepTime
-    this.stepTimeLimit = stepTimeLimit
-    this.debugWander = debugWander
+    this.debugExplore = debugExplore
     this.debugWaypointCircles = debugWaypointCircles
     this.debugWaypointLabels = debugWaypointLabels
+    this.observer = observer
+    this.spawnOnDestroy = spawnOnDestroy
+    this.spawnOnScore = spawnOnScore
+    this.spawnOnTag = spawnOnTag
+    this.spawnOnTimer = spawnOnTimer
+    this.stepTimeLimit = stepTimeLimit
     this.engine.gravity = { x: 0, y: 0, scale: 1 }
     this.raycast = new Raycast({ stage: this })
+    this.radii.forEach(radius => { this.waypointGroups[radius] = [] })
     const wallSize = size * 3
     const wallProps = [
       { x: 0, y: size, width: wallSize, height: size },
@@ -169,7 +209,9 @@ export default class Stage {
       { x: size, y: 0, width: size, height: wallSize },
       { x: -size, y: 0, width: size, height: wallSize }
     ]
-    wallProps.forEach(props => new Wall({ ...props, waypoints: false, stage: this }))
+    wallProps.forEach((props) => {
+      void new Wall({ ...props, waypoints: false, stage: this })
+    })
     const halfSize = size / 2
     const marginEdge = halfSize - Character.MARGIN
     const townWalls: Wall[] = []
@@ -182,7 +224,8 @@ export default class Stage {
       const MANSION = new Wall({ x: -520, y: -700, width: 460, height: 210, stage: this })
       const KNIFE = new Wall({ x: -1244.75, y: -659, width: 420.5, height: 2, stage: this })
       const SCALPEL = new Wall({ x: -1244.75, y: -612.5, width: 420.5, height: 1, stage: this })
-      const OUTPOST = new Wall({ x: -1244.75, y: -517, width: 420.5, height: 100, stage: this })
+      const OUTPOST = new Wall({ x: -1350, y: -517, width: 175, height: 100, stage: this })
+      const ARMORY = new Wall({ x: -1125, y: -517, width: 175, height: 100, stage: this })
       const DAGGER = new Wall({ x: -988, y: -500, width: 3, height: 610, stage: this })
       const RAPIER = new Wall({ x: -941, y: -400, width: 1, height: 810, stage: this })
       const PRECINCT = new Wall({ x: -845, y: -500, width: 100, height: 610, stage: this })
@@ -190,7 +233,7 @@ export default class Stage {
       const BAKER = new Wall({ x: -555, y: -500, width: 100, height: 100, stage: this })
       const CANDLESTICK = new Wall({ x: -375, y: -500, width: 170, height: 100, stage: this })
       const BAYONET = new Wall({ x: -1244.75, y: -419.5, width: 420.5, height: 5, stage: this })
-      townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
+      townWalls.push(PIT, BYTE, PALACE, BIT, FORT, MANSION, KNIFE, SCALPEL, OUTPOST, ARMORY, DAGGER, RAPIER, PRECINCT, BUTCHER, BAKER, CANDLESTICK, BAYONET)
     }
 
     const greekWalls: Wall[] = []
@@ -230,44 +273,55 @@ export default class Stage {
     const innerSize = size - Character.MARGIN * 2
     this.xFactor = 2
     this.xSegment = innerSize / this.xFactor
-    while (this.xSegment > VISION_INNER_WIDTH) {
+    while (this.xSegment > VISION_INNER.width) {
       this.xFactor = this.xFactor + 1
       this.xSegment = innerSize / this.xFactor
     }
     this.yFactor = 2
     this.ySegment = innerSize / this.yFactor
-    while (this.ySegment > VISION_INNER_HEIGHT) {
+    while (this.ySegment > VISION_INNER.height) {
       this.yFactor = this.yFactor + 1
       this.ySegment = innerSize / this.yFactor
     }
-    const gridWaypoints: Waypoint[] = []
+    const gridPoints: Matter.Vector[] = []
     for (let i = 0; i <= this.xFactor; i++) {
       for (let j = 0; j <= this.yFactor; j++) {
         const x = -innerSize / 2 + i * this.xSegment
         const y = -innerSize / 2 + j * this.ySegment
-
-        gridWaypoints.push(new Waypoint({ stage: this, x, y }))
+        gridPoints.push({ x, y })
+        this.radii.forEach(radius => {
+          void new Waypoint({ stage: this, x, y, radius })
+        })
       }
     }
-    console.log('begin navigation')
-    this.waypoints.forEach(waypoint => { waypoint.distances = this.waypoints.map(() => Infinity) })
-    console.log('setting neighbors...')
-    this.waypoints.forEach(waypoint => waypoint.setNeighbors())
-    console.log('updating distances...')
-    this.waypoints.forEach(() => this.waypoints.forEach(waypoint => waypoint.updateDistances()))
-    console.log('Wall.wall.length', this.walls.length)
-    console.log('setting paths...')
-    this.waypoints.forEach(waypoint => waypoint.setPaths())
-    console.log('debugging waypoints...')
-    this.waypoints.forEach(waypoint => {
-      if (this.debugWaypointLabels) {
-        const y = this.debugWaypointCircles ? waypoint.y + 20 : waypoint.y
-        this.label({ text: String(waypoint.id), x: waypoint.x, y })
+    this.radii.forEach(radius => {
+      console.info('Pathfinding for radius:', radius)
+      const group = this.waypointGroups[radius]
+      if (group.length === 0) {
+        throw new Error(`No waypoints for radius ${radius}`)
       }
+      group.forEach(waypoint => {
+        waypoint.distances = group.map(() => Infinity)
+      })
+      console.info('Setting neighbors...')
+      group.forEach(waypoint => {
+        waypoint.setNeighbors()
+        if (waypoint.neighbors.length === 0) {
+          console.info('neighbors', waypoint.id, waypoint.neighbors.length)
+          this.circle({ radius: 10, x: waypoint.x, y: waypoint.y, color: 'orange' })
+        }
+      })
+      console.info('Updating distances...')
+      group.forEach(() => group.forEach(waypoint => waypoint.updateDistances()))
+      console.info('Setting paths...')
+      group.forEach(waypoint => {
+        waypoint.setPaths()
+      })
     })
-
-    console.log('navigation complete')
+    console.info('Pathfinding complete!')
     if (wildBricks) {
+      void new Brick({ stage: this, x: -500, y: 0, width: 200, height: 500 })
+      this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: -30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 30, y: -30, height: 30, width: 30 })
       this.randomBrick({ x: 0, y: -30, height: 30, width: 30 })
@@ -284,7 +338,6 @@ export default class Stage {
       this.randomBrick({ x: 0, y: 30, height: 30, width: 30 })
       this.randomBrick({ x: 30, y: 30, height: 30, width: 30 })
       this.randomBrick({ x: -30, y: 30, height: 30, width: 30 })
-      this.randomBrick({ x: 800, y: 200, height: 200, width: 100 })
       this.randomBrick({ x: -500, y: 1400, height: 100, width: 200 })
       this.randomBrick({ x: -1300, y: 1300, height: 200, width: 30 })
       this.randomBrick({ x: 750, y: 1300, height: 200, width: 30 })
@@ -303,23 +356,59 @@ export default class Stage {
       this.randomBrick({ x: 1400, y: 1300, height: 200, width: 30 })
       this.randomBrick({ x: 1450, y: 1300, height: 200, width: 30 })
     }
-    if (centerBot) {
-      void new Bot({ x: 100, y: 0, stage: this })
+    if (wildPuppets) {
+      const vertices = [
+        { x: 100.75, y: 253.97279832749837 },
+        { x: 100.75, y: -153.97279832749837 },
+        { x: -100.75, y: 0 }
+      ]
+      void new Puppet({
+        x: -1200,
+        y: -1200,
+        direction: SOUTH_VECTOR,
+        stage: this,
+        vertices
+      })
+      void new Puppet({
+        x: 1350,
+        y: -200,
+        direction: NORTH_VECTOR,
+        force: 0.0001,
+        stage: this
+      })
+      void new Puppet({
+        x: 1000,
+        y: 0,
+        force: 0.008,
+        direction: WEST_VECTOR,
+        stage: this
+      })
+      void new Puppet({
+        x: -1700,
+        y: 1700,
+        direction: EAST_VECTOR,
+        stage: this,
+        vertices
+      })
     }
-
+    if (centerBot) void new Bot({ x: 100, y: 0, stage: this })
     if (greekBots) greekWalls.forEach(wall => wall.spawnBots())
     if (townBots) townWalls.forEach(wall => wall.spawnBots())
-    if (gridBots) gridWaypoints.forEach(waypoint => new Bot({ x: waypoint.x, y: waypoint.y, stage: this }))
+    if (gridBots) gridPoints.forEach(point => new Bot({ x: point.x, y: point.y, stage: this }))
     if (countryBots) countryWalls.forEach(wall => wall.spawnBots())
-    if (waypointBots) {
-      this.waypoints.forEach(waypoint => {
-        void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
-      })
-    }
-    if (waypointBricks) {
-      this.waypoints.forEach(waypoint => {
-        this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
-      })
+    if (waypointBots || waypointBricks) {
+      const waypointArrays = Object.values(this.waypointGroups)
+      const waypoints = waypointArrays.reduce((waypoints, waypointArray) => [...waypoints, ...waypointArray], [])
+      if (waypointBots) {
+        waypoints.forEach(waypoint => {
+          void new Bot({ x: waypoint.x, y: waypoint.y, stage: this })
+        })
+      }
+      if (waypointBricks) {
+        waypoints.forEach(waypoint => {
+          this.randomBrick({ x: waypoint.x, y: waypoint.y, width: Bot.MAXIMUM_RADIUS * 2, height: Bot.MAXIMUM_RADIUS * 2 })
+        })
+      }
     }
     if (cornerBots) {
       void new Bot({ x: -marginEdge, y: -marginEdge, stage: this })
@@ -334,11 +423,11 @@ export default class Stage {
       void new Bot({ x: -marginEdge, y: 0, stage: this })
     }
     Matter.Runner.run(this.runner, this.engine)
-    const { append } = csvAppend('data.csv')
+    const { append } = csvAppend('steps.csv')
     Matter.Events.on(this.engine, 'afterUpdate', () => {
       this.stepCount = this.stepCount + 1
       this.raycast.rayCountTotal = this.raycast.rayCountTotal + this.raycast.stepRayCount
-      this.totalCollisionCount = this.totalCollisionCount + this.collisionStartCount // + this.activeCollisions
+      this.totalCollisionCount = this.totalCollisionCount + this.stepCollisionStartCount // + this.activeCollisions
       const bodies = Matter.Composite.allBodies(this.engine.world)
       this.totalBodyCount = this.totalBodyCount + bodies.length
       this.timers.forEach((value, index) => {
@@ -358,7 +447,7 @@ export default class Stage {
       const difference = newTime - this.oldTime
       if (this.debugStepTime) {
         if (this.initial) {
-          console.log('initial difference:', difference)
+          console.debug('initial difference:', difference)
           this.initial = false
         }
 
@@ -372,11 +461,11 @@ export default class Stage {
             this.warnings10.pop()
           }
           const average10 = Math.floor(this.warnings10.reduce((a, b) => a + b, 0) / this.warnings10.length)
-          const stepCollisions = this.collisionStartCount + this.activeCollisionCount
+          const stepCollisions = this.stepCollisionStartCount + this.stepActiveCollisionCount
           const averageCollisions = Math.floor(this.totalCollisionCount / this.stepCount)
           const averageBodies = Math.floor(this.totalBodyCount / this.stepCount)
           const averageRays = Math.floor(this.raycast.rayCountTotal / this.stepCount)
-          console.warn(`Warning ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
+          console.warn(`Warning! ${this.warningCount}: ${difference}ms (∆${warningDifference}, μ${average}, 10μ${average10}) ${this.characters.size} characters
 ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (μ${averageBodies}), ${this.raycast.stepRayCount} rays (μ${averageRays})`)
           this.warningTime = newTime
         }
@@ -387,9 +476,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         this.lines = []
         this.circles = []
         if (this.debugWaypointCircles) {
-          this.waypoints.forEach(waypoint => {
+          this.waypointGroups[15].forEach(waypoint => {
             this.circle({
-              color: 'blue',
+              color: 'darkblue',
               radius: 5,
               x: waypoint.x,
               y: waypoint.y
@@ -398,43 +487,61 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
         }
       }
       this.actors.forEach(actor => actor.act())
+      if (this.spawnOnTimer) {
+        const now = Date.now()
+        const spawnDifference = now - this.spawnTime
+        const spawnLimit = this.getSpawnLimit()
+        if (spawnDifference > spawnLimit) {
+          const waypoint = this.getSafestWaypoint()
+          void new Bot({ x: waypoint.position.x, y: waypoint.position.y, stage: this })
+          this.spawnTime = now
+        }
+      }
       const record = {
         warnings: this.warningCount,
         steps: this.stepCount,
         time: newTime,
         difference,
-        activeCollisions: this.activeCollisionCount,
-        collisionStarts: this.collisionStartCount,
+        activeCollisions: this.stepActiveCollisionCount,
+        collisionStarts: this.stepCollisionStartCount,
         characters: this.characters.size,
         bodies: bodies.length,
         raycasts: this.raycast.stepRaycasts,
-        clears: this.raycast.stepClears
+        clears: this.raycast.stepClears,
+        unblocks: this.stepUnblocks,
+        explores: this.stepExplores,
+        flees: this.stepFlees,
+        pursues: this.stepPursues
       }
       append(record)
-      this.collisionStartCount = 0
-      this.activeCollisionCount = 0
+      this.stepCollisionStartCount = 0
+      this.stepActiveCollisionCount = 0
+      this.stepPursues = 0
+      this.stepExplores = 0
+      this.stepFlees = 0
+      this.stepUnblocks = 0
       this.raycast.stepRayCount = 0
       this.raycast.stepClears = 0
     })
 
     Matter.Events.on(this.engine, 'collisionStart', event => {
       event.pairs.forEach(pair => {
-        this.collisionStartCount = this.collisionStartCount + 1
+        this.stepCollisionStartCount = this.stepCollisionStartCount + 1
         this.collide({ pair })
       })
     })
 
     Matter.Events.on(this.engine, 'collisionActive', event => {
       event.pairs.forEach(pair => {
-        this.activeCollisionCount = this.activeCollisionCount + 1
+        this.stepActiveCollisionCount = this.stepActiveCollisionCount + 1
         const delta = this.engine.timing.lastDelta
         this.collide({ delta, pair })
       })
     })
   }
 
-  circle ({ color = 'black', radius, x, y }: {
-    color: string
+  circle ({ color = 'white', radius, x, y }: {
+    color?: string
     radius: number
     x: number
     y: number
@@ -470,13 +577,83 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     }
   }
 
-  join (id: string): void {
-    void new Player({ id, observer: false, x: -100, y: 0, stage: this })
+  debug ({ label }: { label?: string | number }): void {
+    console.debug('CLIENT DEBUG:', label)
+    console.debug(label, 'bots length:', this.bots.length)
+  }
+
+  getAllIts (): Character[] {
+    const its: Character[] = []
+    const characters = this.characters.values()
+    for (const character of characters) {
+      const it = character.isIt()
+      if (it) its.push(character)
+    }
+    return its
+  }
+
+  getFirstIt (): Character | undefined {
+    const characters = this.characters.values()
+    for (const character of characters) {
+      if (character.isIt()) return character
+    }
+  }
+
+  getSafestWaypoint (): Waypoint {
+    const allIts = this.getAllIts()
+    const waypoints = this.waypointGroups[15]
+    const farthest = waypoints.reduce<{ waypoint?: Waypoint, distance: number }>((farthest, waypoint) => {
+      const distance = allIts.reduce((distance, it) => {
+        const d = Matter.Vector.magnitude(Matter.Vector.sub(it.feature.body.position, waypoint.position))
+        return d < distance ? d : distance
+      }, Infinity)
+      return distance > farthest.distance ? { waypoint, distance } : farthest
+    }, { distance: 0 })
+    if (farthest.waypoint == null) {
+      throw new Error('No farthest waypoint')
+    }
+    return farthest.waypoint
+  }
+
+  getSpawnLimit (): number {
+    return this.characters.size * 500
+  }
+
+  join (id: string): Player {
+    const firstIt = this.getFirstIt()
+    console.log('firstIt', firstIt)
+    if (firstIt == null) {
+      return new Player({
+        id,
+        observer: this.observer,
+        x: 0,
+        y: 0,
+        stage: this,
+        blue: Character.IT_COLOR.blue,
+        green: Character.IT_COLOR.green,
+        red: Character.IT_COLOR.red
+      })
+    }
+    const position = firstIt?.getExploreHeading({})?.waypoint.position ?? { x: 0, y: 0 }
+    return new Player({
+      id,
+      observer: this.observer,
+      x: position.x,
+      y: position.y,
+      stage: this
+    })
   }
 
   leave (id: string): void {
     const player = Player.players.get(id)
-    if (this.it === player) this.oldest?.makeIt({ predator: this.oldest })
+    if (player == null) return
+    if (player?.isIt()) {
+      const its = this.getAllIts()
+      if (its.length === 1) {
+        const notItBots = this.bots.filter(bot => !bot.isIt())
+        notItBots[0]?.makeIt({ oldIt: player })
+      }
+    }
     player?.destroy()
   }
 
@@ -516,6 +693,16 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     })
   }
 
+  spawnSafestBrick (): void {
+    const waypoint = this.getSafestWaypoint()
+    this.randomBrick({
+      x: waypoint.position.x,
+      y: waypoint.position.y,
+      width: 30,
+      height: 30
+    })
+  }
+
   timeout (delay: number, action: () => void): void {
     const startTime = this.engine.timing.timestamp
     const endTime = startTime + delay
@@ -526,6 +713,9 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
     const player = Player.players.get(id)
     if (player == null) {
       throw new Error('Player not found')
+    }
+    if (this.lostPoints.length > 100) {
+      this.lostPoints = this.lostPoints.slice(-100)
     }
     if (this.debugLost) {
       this.lostPoints.forEach(point => {
@@ -538,7 +728,24 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       })
     }
     const visibleFeatures = this.debugFeatures ? [...this.features.values()] : player.getVisibleFeatures()
-    const shapes = visibleFeatures.map(feature => new Shape(feature.body))
+    const shapes = visibleFeatures.map(feature => {
+      const shape = new Shape({
+        alpha: feature.alpha,
+        blue: feature.blue,
+        body: feature.body,
+        green: feature.green,
+        red: feature.red
+      })
+      if (shape.id === player.feature.body.id) {
+        const color = player.isIt()
+          ? 'hotpink'
+          : 'limegreen'
+        const newRender = { ...shape.render, strokeStyle: color }
+        const newShape = { ...shape, render: newRender }
+        return newShape
+      }
+      return shape
+    })
     const message = {
       shapes,
       lines: this.lines,
@@ -546,6 +753,45 @@ ${stepCollisions} collisions (μ${averageCollisions}), ${bodies.length} bodies (
       labels: this.labels,
       torsoId: player.feature.body.id
     }
+    player.goals.forEach((goal) => {
+      const circleColor = goal.scored ? 'rgba(255, 255, 255, 0.25)' : goal.heading.tight ? 'rgba(0, 128, 0, 0.25)' : 'rgba(0, 255, 0, 0.25)'
+      const radius = goal.heading.tight ? 15 : 7.5
+      const circle = new Circle({
+        color: circleColor,
+        radius,
+        x: goal.heading.waypoint.position.x,
+        y: goal.heading.waypoint.position.y
+      })
+      message.circles = [...message.circles, circle]
+      const labelColor = 'white'
+      const text = goal.scored
+        ? goal.number
+        : goal.heading.tight
+          ? player.score + 5
+          : player.score + 1
+      const label = new Label({
+        color: labelColor,
+        text: String(text),
+        x: goal.heading.waypoint.position.x,
+        y: goal.heading.waypoint.position.y
+      })
+      message.labels = [...message.labels, label]
+    })
+    const passes = player.goals.filter(goal => goal.passed)
+    if (passes.length > 1) {
+      throw new Error('More than one pass')
+    }
+    passes.forEach(pass => {
+      const color = pass.scored ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 255, 0, 0.15)'
+      const circle = new Circle({
+        color,
+        radius: 10,
+        x: pass.heading.waypoint.position.x,
+        y: pass.heading.waypoint.position.y
+      })
+      message.circles = [...message.circles, circle]
+    })
+
     return message
   }
 }

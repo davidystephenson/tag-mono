@@ -20,10 +20,11 @@ let oldTime = Date.now()
 window.onclick = function () {
   const newTime = Date.now()
   const dt = newTime - oldTime
-  console.log('dt:', dt)
+  console.debug('dt:', dt)
   oldTime = newTime
-  console.log('state:', state)
-  console.log('camera:', camera)
+  console.debug('state:', state)
+  console.debug('camera:', camera)
+  socket.emit('debug', {})
 }
 
 window.onkeydown = function (event: KeyboardEvent) {
@@ -59,11 +60,16 @@ socket.on('updateClient', message => {
     if (stateShape == null) {
       newShapes.set(messageShape.id, messageShape)
     } else {
+      stateShape.circleRadius = messageShape.circleRadius
       stateShape.x = messageShape.x
       stateShape.y = messageShape.y
       stateShape.render = messageShape.render
       stateShape.vertices = messageShape.vertices
       stateShape.deleted = false
+      stateShape.alpha = messageShape.alpha
+      stateShape.blue = messageShape.blue
+      stateShape.green = messageShape.green
+      stateShape.red = messageShape.red
       newShapes.set(stateShape.id, stateShape)
     }
   })
@@ -90,6 +96,11 @@ const setupCamera = function (): void {
 const BACKGROUND_COLOR = '#0E0E10'
 const FOREGROUND_COLOR = '#343434'
 
+function hex (n: number): string {
+  const s = n.toString(16)
+  return s.length === 1 ? '0' + s : s
+}
+
 const draw = function (): void {
   window.requestAnimationFrame(draw)
   setupCamera()
@@ -113,17 +124,15 @@ const draw = function (): void {
     context.lineWidth = 2
     context.stroke()
     if (shape.circleRadius != null && shape.circleRadius > 0) {
-      const upper = String(context.fillStyle).toUpperCase()
-      const red = upper.slice(1, 3)
-      const green = upper.slice(3, 5)
-      const blue = upper.slice(5, 7)
-      context.fillStyle = 'white'
+      context.fillStyle = shape.green === 255 && shape.blue === 255
+        ? 'black'
+        : 'white'
       context.textAlign = 'center'
       context.textBaseline = 'middle'
       context.font = '10px sans'
-      context.fillText(red, shape.ix - camera.x, shape.iy - camera.y - 9)
-      context.fillText(green, shape.ix - camera.x, shape.iy - camera.y + 1)
-      context.fillText(blue, shape.ix - camera.x, shape.iy - camera.y + 11)
+      context.fillText(hex(shape.red), shape.ix - camera.x, shape.iy - camera.y - 9)
+      context.fillText(hex(shape.green), shape.ix - camera.x, shape.iy - camera.y + 1)
+      context.fillText(hex(shape.blue), shape.ix - camera.x, shape.iy - camera.y + 11)
     }
   })
   state.circles.forEach(circle => {
@@ -143,8 +152,10 @@ const draw = function (): void {
   state.labels.forEach(label => {
     context.fillStyle = label.color
     context.lineWidth = 4
-    context.font = '10px sans'
-    context.fillText(label.text, label.x - camera.x, label.y - camera.y)
+    const red = 'rgba(255, 0, 0, 0.5)'
+    context.font = label.color === red ? '28px sans' : '14px sans'
+    const offsetY = label.color === red ? 25 + Math.random() * 10 : 0
+    context.fillText(label.text, label.x - camera.x, label.y - camera.y - offsetY + 1)
   })
 }
 draw()

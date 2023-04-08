@@ -5,18 +5,27 @@ import Stage from './Stage'
 export default class Feature {
   actor?: Actor
   alpha = 1
+  readonly body: Matter.Body
   blue: number
   green: number
-  readonly body: Matter.Body
-  readonly isObstacle: boolean
+  otherSceneryBodies?: Matter.Body[]
   red: number
+  readonly scenery: boolean
   readonly stage: Stage
-  constructor ({ body, blue = 128, density = 0.001, green = 128, isObstacle = true, red = 128, stage }: {
+  constructor ({
+    body,
+    blue = 128,
+    density = 0.001,
+    green = 128,
+    scenery = true,
+    red = 128,
+    stage
+  }: {
     body: Matter.Body
     blue?: number
     density?: number
     green?: number
-    isObstacle?: boolean
+    scenery?: boolean
     red?: number
     stage: Stage
   }) {
@@ -28,7 +37,7 @@ export default class Feature {
     const color = `rgb(${this.red}, ${this.green}, ${this.blue})`
     this.body.render.fillStyle = color
     this.body.render.strokeStyle = color
-    this.isObstacle = isObstacle
+    this.scenery = scenery
     Matter.Composite.add(this.stage.engine.world, this.body)
     this.body.restitution = 0
     this.body.friction = 0
@@ -36,7 +45,14 @@ export default class Feature {
     Matter.Body.setDensity(this.body, density)
     this.stage.features.set(this.body.id, this)
     this.stage.bodies.push(this.body)
-    if (this.isObstacle) this.stage.scenery.push(this.body)
+    if (this.scenery) {
+      this.stage.sceneryFeatures.forEach(feature => {
+        feature.otherSceneryBodies?.push(this.body)
+      })
+      this.otherSceneryBodies = [...this.stage.sceneryBodies]
+      this.stage.sceneryFeatures.push(this)
+      this.stage.sceneryBodies.push(this.body)
+    }
   }
 
   getArea (): number {
@@ -49,8 +65,9 @@ export default class Feature {
     return true
   }
 
-  isVisible ({ center, radius }: {
+  isVisible ({ center, debug, radius }: {
     center: Matter.Vector
+    debug?: boolean
     radius: number
   }): boolean {
     return true
@@ -75,8 +92,15 @@ export default class Feature {
   destroy (): void {
     Matter.Composite.remove(this.stage.engine.world, this.body)
     this.stage.features.delete(this.body.id)
-    if (this.isObstacle) {
-      this.stage.scenery = this.stage.scenery.filter(obstacle => obstacle.id !== this.body.id)
+    if (this.scenery) {
+      this.stage.sceneryBodies = this.stage.sceneryBodies.filter(body => body.id !== this.body.id)
+      this.stage.sceneryFeatures.forEach(feature => {
+        feature.otherSceneryBodies = feature.otherSceneryBodies?.filter(body => body.id !== this.body.id)
+      })
     }
+  }
+
+  getRadius (): number {
+    throw new Error('Only circles have a radius')
   }
 }

@@ -17,15 +17,23 @@ export default class Actor {
 
   act (): void {}
 
-  collide ({ actor, body, delta, normal }: {
+  collide ({ actor, body, delta, normal, scale }: {
     actor?: Actor
     body: Matter.Body
     delta?: number
     normal: Matter.Vector
+    scale?: number
   }): void {}
 
   destroy (): void {
+    if (this.isIt()) {
+      throw new Error('Cannot destroy the it actor')
+    }
     this.feature.destroy()
     this.stage.actors.delete(this.feature.body.id)
+  }
+
+  isIt (): boolean {
+    return false
   }
 }

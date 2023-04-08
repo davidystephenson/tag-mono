@@ -19,4 +19,5 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   updateServer: ({ id, controls }: {id?: string, controls: Controls}) => void
+  debug: (empty: {}) => void
 }

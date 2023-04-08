@@ -4,7 +4,7 @@ export default class Label {
   readonly x: number
   readonly y: number
   constructor ({ color = 'white', text, x, y }: {
-    color: string
+    color?: string
     text: string
     x: number
     y: number
